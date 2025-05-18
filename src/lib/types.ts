@@ -41,7 +41,8 @@ export interface SearchFilters {
 
 export interface User {
   id: string;
-  email: string;
+  email: string; // Now fully part of the user object to be updated
   name: string;
   phone: string;
 }
+

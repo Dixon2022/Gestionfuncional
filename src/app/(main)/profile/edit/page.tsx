@@ -12,11 +12,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, UserCircle2, Phone } from 'lucide-react';
+import { Loader2, Save, UserCircle2, Phone, Mail } from 'lucide-react'; // Added Mail icon
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }), // Email remains for display, not edit
+  email: z.string().email({ message: 'Por favor ingresa un email válido.' }), 
   phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.' }),
 });
 
@@ -49,7 +49,7 @@ export default function EditProfilePage() {
     if (user) {
       form.reset({
         name: user.name || '',
-        email: user.email || '', // Keep email in form for display, but it's read-only
+        email: user.email || '', 
         phone: user.phone || '',
       });
     }
@@ -59,8 +59,7 @@ export default function EditProfilePage() {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Only update name and phone. Email is not updated from here in this mock.
-    updateUser({ name: data.name, phone: data.phone }); 
+    updateUser({ name: data.name, email: data.email, phone: data.phone }); 
     
     toast({
       title: '¡Perfil Actualizado!',
@@ -113,13 +112,13 @@ export default function EditProfilePage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email">Email (No editable)</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="tu@ejemplo.com"
                 {...form.register('email')}
-                disabled={true} // Email is not editable from this form
+                disabled={isLoading} // Email is now editable
               />
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>

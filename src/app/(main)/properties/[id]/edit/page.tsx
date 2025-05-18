@@ -8,7 +8,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Keep for standalone labels if any, though FormLabel is preferred
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,11 +22,12 @@ import {
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { getPropertyById, updateProperty } from '@/lib/property-store';
+import { getPropertyById, updateProperty, sqmToSqft } from '@/lib/property-store';
 import type { Property, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES } from '@/lib/constants';
-import { Loader2, Save, PencilLine } from 'lucide-react';
+import { Loader2, Save, PencilLine, Sparkles } from 'lucide-react';
 import Image from 'next/image';
+import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
 
 const editPropertySchema = z.object({
   title: z.string().min(5, { message: 'El título debe tener al menos 5 caracteres.' }),
@@ -55,6 +55,7 @@ export default function EditPropertyPage() {
   const [property, setProperty] = useState<Property | null>(null);
   const [isLoading, setIsLoading] = useState(true); 
   const [isSaving, setIsSaving] = useState(false); 
+  const [isGeneratingAIDescription, setIsGeneratingAIDescription] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
   const form = useForm<EditPropertyFormValues>({
@@ -119,6 +120,58 @@ export default function EditPropertyPage() {
     setIsLoading(false);
   }, [id, user, authLoading, router, form, toast, isClient]);
 
+  const handleGenerateAIDescription = async () => {
+    if (!property) return;
+    setIsGeneratingAIDescription(true);
+    const currentValues = form.getValues();
+    
+    let photoUriToUse = property.photoDataUri;
+    if (!photoUriToUse && property.images && property.images.length > 0) {
+      // Attempt to fetch and convert URL to data URI if it's a placeholder or external URL
+      // This is complex for a mock. For now, we'll prefer photoDataUri.
+      // If it's an external URL, it might not be directly usable unless fetched and converted.
+      // For simplicity, if photoDataUri is not present, AI generation on edit might be limited.
+      // A more robust solution would handle image fetching or require re-upload.
+      // For now, we will try to use the first image if photoDataUri is missing.
+      photoUriToUse = property.images[0];
+    }
+
+    if (!photoUriToUse) {
+        toast({ title: "Foto Requerida", description: "Se necesita una foto para generar la descripción con IA. Esta propiedad no tiene una foto principal adecuada.", variant: "destructive"});
+        setIsGeneratingAIDescription(false);
+        return;
+    }
+
+    // Check if the photoUriToUse is already a data URI
+    if (!photoUriToUse.startsWith('data:')) {
+        // If it's a URL (e.g. placeholder), it's problematic for Genkit's media input
+        // For this demo, we'll show a message. A real app would fetch and convert.
+        toast({ title: "Conversión de Foto Necesaria", description: "La foto principal es una URL. Para la generación con IA en edición, se prefiere una foto cargada directamente. Esta función puede no ser óptima.", variant: "default"});
+        // We can still try, but Genkit might fail if it's not a data URI it can process.
+    }
+
+
+    try {
+        const input: GeneratePropertyDescriptionInput = {
+            photoDataUri: photoUriToUse, // Must be a data URI
+            propertyType: currentValues.propertyType,
+            location: currentValues.city, // Using city for location context
+            numberOfBedrooms: currentValues.numberOfBedrooms,
+            numberOfBathrooms: currentValues.numberOfBathrooms,
+            squareFootage: sqmToSqft(currentValues.area), // Convert m² to sqft for AI
+            keyFeatures: currentValues.keyFeatures,
+        };
+        const result = await generatePropertyDescription(input);
+        form.setValue('description', result.description);
+        toast({ title: '¡Descripción Actualizada por IA!', description: 'La descripción ha sido re-generada.' });
+    } catch (error) {
+        console.error('Error generando descripción con IA en edición:', error);
+        toast({ title: 'Falló la Generación', description: (error as Error).message || 'Ocurrió un error al generar la descripción con IA.', variant: 'destructive' });
+    } finally {
+        setIsGeneratingAIDescription(false);
+    }
+  };
+
 
   const onSubmit = async (data: EditPropertyFormValues) => {
     if (!property || !user || user.id !== property.ownerId) {
@@ -138,7 +191,6 @@ export default function EditPropertyPage() {
         area: data.area,
         features: data.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
         description: data.description,
-        // photoDataUri and images are not updated in this form for simplicity
     };
 
     try {
@@ -185,7 +237,6 @@ export default function EditPropertyPage() {
     );
   }
   
-
   return (
     <div className="container py-8 md:py-12">
       <Card className="max-w-2xl mx-auto shadow-lg">
@@ -202,8 +253,8 @@ export default function EditPropertyPage() {
               <Image 
                 src={property.photoDataUri || property.images[0]} 
                 alt="Vista previa" 
-                layout="fill" 
-                objectFit="cover" 
+                fill={true}
+                style={{objectFit: "cover"}}
                 data-ai-hint="foto propiedad"
               />
             </div>
@@ -217,7 +268,7 @@ export default function EditPropertyPage() {
                   <FormItem>
                     <FormLabel>Título de la Propiedad</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Hermoso Apartamento con Vistas" {...field} disabled={isSaving} />
+                      <Input placeholder="Ej: Hermoso Apartamento con Vistas" {...field} disabled={isSaving || isGeneratingAIDescription} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,7 +283,7 @@ export default function EditPropertyPage() {
                     <FormItem>
                       <FormLabel>Precio (CRC)</FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isSaving} />
+                        <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isSaving || isGeneratingAIDescription} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -244,7 +295,7 @@ export default function EditPropertyPage() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo de Propiedad</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving}>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || isGeneratingAIDescription}>
                         <FormControl>
                           <SelectTrigger><SelectValue placeholder="Selecciona el tipo" /></SelectTrigger>
                         </FormControl>
@@ -265,7 +316,7 @@ export default function EditPropertyPage() {
                   <FormItem>
                     <FormLabel>Dirección Completa</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Calle Principal 123, Residencial Los Robles" {...field} disabled={isSaving} />
+                      <Input placeholder="Ej: Calle Principal 123, Residencial Los Robles" {...field} disabled={isSaving || isGeneratingAIDescription} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -278,7 +329,7 @@ export default function EditPropertyPage() {
                   <FormItem>
                     <FormLabel>Ciudad/Cantón</FormLabel>
                     <FormControl>
-                      <Input placeholder="Ej: Escazú" {...field} disabled={isSaving} />
+                      <Input placeholder="Ej: Escazú" {...field} disabled={isSaving || isGeneratingAIDescription} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -293,7 +344,7 @@ export default function EditPropertyPage() {
                     <FormItem>
                       <FormLabel>Habitaciones</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" {...field} disabled={isSaving} />
+                        <Input type="number" min="0" {...field} disabled={isSaving || isGeneratingAIDescription} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -306,7 +357,7 @@ export default function EditPropertyPage() {
                     <FormItem>
                       <FormLabel>Baños</FormLabel>
                       <FormControl>
-                        <Input type="number" min="0" step="0.5" {...field} disabled={isSaving} />
+                        <Input type="number" min="0" step="0.5" {...field} disabled={isSaving || isGeneratingAIDescription} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -319,7 +370,7 @@ export default function EditPropertyPage() {
                     <FormItem>
                       <FormLabel>Superficie (m²)</FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" {...field} disabled={isSaving} />
+                        <Input type="number" min="1" {...field} disabled={isSaving || isGeneratingAIDescription} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -337,7 +388,7 @@ export default function EditPropertyPage() {
                       <Textarea
                         placeholder="Ej: Cocina renovada, Suelos de parquet, Amplio jardín"
                         {...field}
-                        disabled={isSaving}
+                        disabled={isSaving || isGeneratingAIDescription}
                       />
                     </FormControl>
                      <FormMessage />
@@ -355,19 +406,32 @@ export default function EditPropertyPage() {
                         placeholder="Describe tu propiedad detalladamente..."
                         className="min-h-[120px]"
                         {...field}
-                        disabled={isSaving}
+                        disabled={isSaving || isGeneratingAIDescription}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleGenerateAIDescription} 
+                disabled={isGeneratingAIDescription || isSaving}
+                className="w-full"
+                >
+                {isGeneratingAIDescription ? (
+                    <> <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Regenerando Descripción con IA... </>
+                ) : (
+                    <> <Sparkles className="mr-2 h-4 w-4" /> Regenerar Descripción con IA </>
+                )}
+              </Button>
               
               <div className="flex justify-end space-x-3 pt-4">
-                  <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving}>
+                  <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSaving || isGeneratingAIDescription}>
                       Cancelar
                   </Button>
-                  <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSaving}>
+                  <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSaving || isGeneratingAIDescription}>
                   {isSaving ? (
                       <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...
