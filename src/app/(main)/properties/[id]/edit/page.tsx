@@ -23,8 +23,8 @@ import {
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { getPropertyById, updateProperty, sqmToSqft } from '@/lib/property-store';
-import type { Property, PropertyType } from '@/lib/types';
-import { PROPERTY_TYPES } from '@/lib/constants';
+import type { Property, PropertyType, ListingType } from '@/lib/types';
+import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
 import { Loader2, Save, PencilLine, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
@@ -33,6 +33,7 @@ const editPropertySchema = z.object({
   title: z.string().min(5, { message: 'El título debe tener al menos 5 caracteres.' }),
   price: z.coerce.number().min(1, { message: 'El precio debe ser mayor que 0.' }),
   propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }) as z.ZodType<PropertyType>,
+  listingType: z.string().min(1, { message: 'El tipo de listado es requerido.'}) as z.ZodType<ListingType>,
   address: z.string().min(5, { message: 'La dirección debe tener al menos 5 caracteres.' }),
   city: z.string().min(2, { message: 'La ciudad debe tener al menos 2 caracteres.' }),
   numberOfBedrooms: z.coerce.number().min(0, { message: 'El número de habitaciones no puede ser negativo.' }),
@@ -64,6 +65,7 @@ export default function EditPropertyPage() {
         title: '',
         price: 0,
         propertyType: 'Casa',
+        listingType: 'Venta',
         address: '',
         city: '',
         numberOfBedrooms: 0,
@@ -99,6 +101,7 @@ export default function EditPropertyPage() {
           title: fetchedProperty.title,
           price: fetchedProperty.price,
           propertyType: fetchedProperty.type,
+          listingType: fetchedProperty.listingType,
           address: fetchedProperty.address,
           city: fetchedProperty.city,
           numberOfBedrooms: fetchedProperty.bedrooms,
@@ -127,12 +130,6 @@ export default function EditPropertyPage() {
     
     let photoUriToUse = property.photoDataUri;
     if (!photoUriToUse && property.images && property.images.length > 0) {
-      // Attempt to fetch and convert URL to data URI if it's a placeholder or external URL
-      // This is complex for a mock. For now, we'll prefer photoDataUri.
-      // If it's an external URL, it might not be directly usable unless fetched and converted.
-      // For simplicity, if photoDataUri is not present, AI generation on edit might be limited.
-      // A more robust solution would handle image fetching or require re-upload.
-      // For now, we will try to use the first image if photoDataUri is missing.
       photoUriToUse = property.images[0];
     }
 
@@ -142,23 +139,18 @@ export default function EditPropertyPage() {
         return;
     }
 
-    // Check if the photoUriToUse is already a data URI
     if (!photoUriToUse.startsWith('data:')) {
-        // If it's a URL (e.g. placeholder), it's problematic for Genkit's media input
-        // For this demo, we'll show a message. A real app would fetch and convert.
         toast({ title: "Conversión de Foto Necesaria", description: "La foto principal es una URL. Para la generación con IA en edición, se prefiere una foto cargada directamente. Esta función puede no ser óptima.", variant: "default"});
-        // We can still try, but Genkit might fail if it's not a data URI it can process.
     }
-
 
     try {
         const input: GeneratePropertyDescriptionInput = {
-            photoDataUri: photoUriToUse, // Must be a data URI
+            photoDataUri: photoUriToUse, 
             propertyType: currentValues.propertyType,
-            location: currentValues.city, // Using city for location context
+            location: currentValues.city, 
             numberOfBedrooms: currentValues.numberOfBedrooms,
             numberOfBathrooms: currentValues.numberOfBathrooms,
-            squareFootage: sqmToSqft(currentValues.area), // Convert m² to sqft for AI
+            squareFootage: sqmToSqft(currentValues.area), 
             keyFeatures: currentValues.keyFeatures,
         };
         const result = await generatePropertyDescription(input);
@@ -172,7 +164,6 @@ export default function EditPropertyPage() {
     }
   };
 
-
   const onSubmit = async (data: EditPropertyFormValues) => {
     if (!property || !user || user.id !== property.ownerId) {
         toast({ title: "Error de autorización", description: "No puedes editar esta propiedad.", variant: "destructive" });
@@ -184,6 +175,7 @@ export default function EditPropertyPage() {
         title: data.title,
         price: data.price,
         type: data.propertyType,
+        listingType: data.listingType,
         address: data.address,
         city: data.city,
         bedrooms: data.numberOfBedrooms,
@@ -275,7 +267,7 @@ export default function EditPropertyPage() {
                 )}
               />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="price"
@@ -301,6 +293,24 @@ export default function EditPropertyPage() {
                         </FormControl>
                         <SelectContent>
                           {PROPERTY_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="listingType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tipo de Listado</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSaving || isGeneratingAIDescription}>
+                        <FormControl>
+                          <SelectTrigger><SelectValue placeholder="Selecciona Venta o Alquiler" /></SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LISTING_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <FormMessage />

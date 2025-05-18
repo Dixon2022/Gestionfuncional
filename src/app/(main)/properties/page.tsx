@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { PropertyCard } from '@/components/property/property-card';
 import { PropertySearchFilters } from '@/components/property/property-search-filters';
-import { getProperties, subscribeToProperties, sqftToSqm } from '@/lib/property-store';
-import type { Property, SearchFilters } from '@/lib/types';
+import { getProperties, subscribeToProperties } from '@/lib/property-store';
+import type { Property, SearchFilters, ListingType } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -19,6 +20,7 @@ export default function PropertiesPage() {
     return {
       location: params.get('location') || undefined,
       propertyType: params.get('propertyType') as Property['type'] || undefined,
+      listingType: params.get('listingType') as ListingType || undefined,
       minPrice: params.get('minPrice') ? parseInt(params.get('minPrice')!) : undefined,
       maxPrice: params.get('maxPrice') ? parseInt(params.get('maxPrice')!) : undefined,
       bedrooms: params.get('bedrooms') ? parseInt(params.get('bedrooms')!) : undefined,
@@ -27,37 +29,36 @@ export default function PropertiesPage() {
   });
 
   useEffect(() => {
-    // Subscribe to property changes
     const unsubscribe = subscribeToProperties((updatedProperties) => {
       setAllProperties(updatedProperties);
-      // Initial load or when properties change, refilter
       filterAndSetProperties(updatedProperties, currentFilters);
       setIsLoading(false);
     });
-
-    // Cleanup subscription on component unmount
     return () => unsubscribe();
-  }, []); // Empty dependency array to run only once on mount for subscription
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); 
 
   useEffect(() => {
-    // This effect runs when currentFilters changes or allProperties is updated
     setIsLoading(true);
     filterAndSetProperties(allProperties, currentFilters);
-    // Simulate API call delay for filtering visual feedback
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 300);
     return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilters, allProperties]);
 
 
   const filterAndSetProperties = (propertiesToFilter: Property[], filters: SearchFilters) => {
-    let properties = [...propertiesToFilter]; // Work on a copy
+    let properties = [...propertiesToFilter]; 
       if (filters.location && filters.location !== "any") {
-        properties = properties.filter(p => p.city.toLowerCase() === filters.location?.toLowerCase());
+        properties = properties.filter(p => p.city.toLowerCase().includes(filters.location!.toLowerCase()));
       }
       if (filters.propertyType && filters.propertyType !== "any" as any) {
         properties = properties.filter(p => p.type === filters.propertyType);
+      }
+      if (filters.listingType && filters.listingType !== "any" as any) {
+        properties = properties.filter(p => p.listingType === filters.listingType);
       }
       if (filters.minPrice) {
         properties = properties.filter(p => p.price >= filters.minPrice!);
@@ -74,14 +75,8 @@ export default function PropertiesPage() {
       setFilteredProperties(properties);
   }
 
-
   const handleSearch = (filters: SearchFilters) => {
     setCurrentFilters(filters);
-    // URL update can be added here if desired
-    // const params = new URLSearchParams();
-    // if (filters.location) params.set('location', filters.location);
-    // ... etc. for other filters
-    // router.push(`/properties?${params.toString()}`);
   };
   
   return (

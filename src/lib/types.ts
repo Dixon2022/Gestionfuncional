@@ -1,5 +1,6 @@
 
 export type PropertyType = "Casa" | "Apartamento" | "Condominio" | "Adosado" | "Terreno";
+export type ListingType = "Venta" | "Alquiler";
 
 export interface Agent {
   name: string;
@@ -18,6 +19,7 @@ export interface Property {
   bathrooms: number;
   area: number; // in sq m
   type: PropertyType;
+  listingType: ListingType; // Added
   description: string;
   images: string[]; // URLs, first image is primary
   isFeatured?: boolean;
@@ -33,6 +35,7 @@ export interface Property {
 export interface SearchFilters {
   location?: string;
   propertyType?: PropertyType;
+  listingType?: ListingType; // Added
   minPrice?: number;
   maxPrice?: number;
   bedrooms?: number;
@@ -40,9 +43,8 @@ export interface SearchFilters {
 }
 
 export interface User {
-  id: string;
-  email: string; // Now fully part of the user object to be updated
+  id: string; // Stable unique ID for the user
+  email: string; 
   name: string;
   phone: string;
 }
-

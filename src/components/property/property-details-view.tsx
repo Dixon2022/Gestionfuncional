@@ -3,7 +3,7 @@ import Image from 'next/image';
 import type { Property } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ContactForm } from './contact-form';
-import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCircle, Landmark } from 'lucide-react'; // Changed DollarSign to Landmark for CRC
+import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCircle, Landmark, Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -31,9 +31,20 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
                 priority
                 data-ai-hint="imagen principal propiedad"
               />
-              {property.isFeatured && (
-                <Badge variant="destructive" className="absolute top-4 left-4 text-sm px-3 py-1">Destacada</Badge>
-              )}
+               <div className="absolute top-4 left-4 flex flex-col space-y-2">
+                {property.listingType && (
+                    <Badge 
+                    variant={property.listingType === 'Venta' ? 'default' : 'secondary'}
+                    className={`text-sm px-3 py-1 ${property.listingType === 'Alquiler' ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
+                    >
+                    <Tag className="mr-1 h-4 w-4"/>
+                    {property.listingType}
+                    </Badge>
+                )}
+                {property.isFeatured && (
+                    <Badge variant="destructive" className="text-sm px-3 py-1">Destacada</Badge>
+                )}
+              </div>
             </div>
             {property.images.length > 1 && (
               <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
@@ -61,7 +72,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
             </div>
             <div className="text-3xl font-bold text-primary">
               <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" /> 
-              {property.price.toLocaleString()}
+              {property.price.toLocaleString()} {property.listingType === 'Alquiler' ? <span className="text-lg font-normal text-muted-foreground">/mes</span> : ''}
             </div>
           </div>
 
@@ -71,7 +82,8 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               { icon: BedDouble, label: 'Habitaciones', value: property.bedrooms },
               { icon: Bath, label: 'Baños', value: property.bathrooms },
               { icon: Home, label: 'Superficie (m²)', value: displayArea },
-              { icon: Building, label: 'Tipo', value: property.type },
+              { icon: Building, label: 'Tipo Prop.', value: property.type },
+              { icon: Tag, label: 'Listado', value: property.listingType },
               { icon: CalendarDays, label: 'Año Const.', value: property.yearBuilt || 'N/A' },
               { icon: Layers, label: 'Sup. Terreno (m²)', value: displayLotSize },
             ].map(detail => (
@@ -96,7 +108,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               <div className="flex flex-wrap gap-2">
                 {property.features.map((feature, index) => (
                   <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
-                    <Layers className="mr-1.5 h-3.5 w-3.5"/> {/* Changed Tag to Layers for consistency */}
+                    <Layers className="mr-1.5 h-3.5 w-3.5"/>
                     {feature}
                   </Badge>
                 ))}

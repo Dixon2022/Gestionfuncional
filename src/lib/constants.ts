@@ -1,5 +1,5 @@
 
-import type { Property, PropertyType } from './types';
+import type { Property, PropertyType, ListingType } from './types';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -9,11 +9,12 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     title: 'Moderno Apartamento Céntrico',
     address: 'Calle Principal 123, Apt 4B',
     city: 'Metrópolis',
-    price: 210000000, // Approx 350,000 USD in CRC (1 USD = 600 CRC for example)
+    price: 210000000,
     bedrooms: 2,
     bathrooms: 2,
     area: 111, 
     type: 'Apartamento',
+    listingType: 'Venta',
     description: 'Impresionante apartamento de 2 habitaciones en el corazón del centro. Cuenta con una sala de estar de concepto abierto, cocina actualizada con electrodomésticos de acero inoxidable y un balcón privado con vistas a la ciudad. Las comodidades del edificio incluyen un gimnasio y una terraza en la azotea.',
     images: [
       'https://placehold.co/800x600.png?text=Sala+Apartamento+Moderno',
@@ -36,15 +37,16 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
   },
   {
     id: '2',
-    title: 'Espaciosa Casa Familiar',
+    title: 'Espaciosa Casa Familiar en Alquiler',
     address: 'Avenida del Roble 456',
     city: 'Suburbia',
-    price: 390000000, // Approx 650,000 USD in CRC
+    price: 1200000, // Price for rent
     bedrooms: 4,
     bathrooms: 3,
     area: 232, 
     type: 'Casa',
-    description: 'Hermosa y espaciosa casa familiar de 4 habitaciones en un vecindario tranquilo y amigable. Amplio patio trasero con terraza, perfecto para el entretenimiento. Cocina moderna, pisos de madera en toda la casa y un garaje para dos autos.',
+    listingType: 'Alquiler',
+    description: 'Hermosa y espaciosa casa familiar de 4 habitaciones en un vecindario tranquilo y amigable. Amplio patio trasero con terraza, perfecto para el entretenimiento. Cocina moderna, pisos de madera en toda la casa y un garaje para dos autos. Se alquila por mes.',
     images: [
       'https://placehold.co/800x600.png?text=Exterior+Casa+Familiar',
       'https://placehold.co/600x400.png?text=Sala+Casa',
@@ -69,11 +71,12 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     title: 'Condominio Urbano Chic',
     address: 'Calle del Pino 789, Unidad 1205',
     city: 'Metrópolis',
-    price: 288000000, // Approx 480,000 USD in CRC
+    price: 288000000,
     bedrooms: 1,
     bathrooms: 1,
     area: 79, 
     type: 'Condominio',
+    listingType: 'Venta',
     description: 'Elegante condominio de 1 habitación con impresionantes vistas a la ciudad. Ventanas de piso a techo, cocina gourmet y acceso a comodidades premium del edificio que incluyen piscina, gimnasio y servicio de conserjería.',
     images: [
       'https://placehold.co/800x600.png?text=Interior+Condominio+Chic',
@@ -93,15 +96,16 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
   },
   {
     id: '4',
-    title: 'Acogedor Adosado con Jardín',
+    title: 'Acogedor Adosado con Jardín (Alquiler)',
     address: 'Camino de las Flores 101',
     city: 'Valleverde',
-    price: 252000000, // Approx 420,000 USD in CRC
+    price: 950000, // Price for rent
     bedrooms: 3,
     bathrooms: 2.5,
     area: 167, 
     type: 'Adosado',
-    description: 'Encantador adosado de 3 habitaciones con jardín privado, interiores actualizados y un parque comunitario. Ideal para familias o aquellos que buscan una mezcla de confort y conveniencia.',
+    listingType: 'Alquiler',
+    description: 'Encantador adosado de 3 habitaciones con jardín privado, interiores actualizados y un parque comunitario. Ideal para familias o aquellos que buscan una mezcla de confort y conveniencia. Disponible para alquiler mensual.',
     images: [
       'https://placehold.co/800x600.png?text=Exterior+Adosado',
       'https://placehold.co/600x400.png?text=Jardin+Adosado',
@@ -125,11 +129,12 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     title: 'Suite Penthouse de Lujo',
     address: 'Torre Cielo Alto 99, PH1',
     city: 'Metrópolis',
-    price: 750000000, // Approx 1,250,000 USD in CRC
+    price: 750000000,
     bedrooms: 3,
     bathrooms: 3.5,
     area: 297, 
     type: 'Apartamento',
+    listingType: 'Venta',
     description: 'Experimente un lujo sin igual en esta exquisita suite penthouse. Vistas panorámicas de la ciudad, amplia terraza, acabados de diseñador y comodidades exclusivas del edificio.',
     images: [
       'https://placehold.co/800x600.png?text=Sala+Penthouse',
@@ -150,5 +155,5 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
 ];
 
 export const PROPERTY_TYPES: PropertyType[] = ["Casa", "Apartamento", "Condominio", "Adosado", "Terreno"];
+export const LISTING_TYPES: ListingType[] = ["Venta", "Alquiler"];
 export const CITIES: string[] = ["Metrópolis", "Suburbia", "Valleverde", "VistaOceano", "CrestaMontana", "San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];
-

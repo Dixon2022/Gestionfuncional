@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { SearchFilters, PropertyType } from '@/lib/types';
-import { PROPERTY_TYPES, CITIES } from '@/lib/constants';
+import type { SearchFilters, PropertyType, ListingType } from '@/lib/types';
+import { PROPERTY_TYPES, CITIES, LISTING_TYPES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -22,38 +22,55 @@ interface PropertySearchFiltersProps {
   initialFilters?: SearchFilters;
 }
 
-const MAX_PRICE_CRC = 500000000; // Max price in CRC for slider
+const MAX_PRICE_CRC_SALE = 500000000; 
+const MAX_PRICE_CRC_RENT = 5000000; 
 
 const defaultFilters: SearchFilters = {
   location: '',
   propertyType: undefined,
+  listingType: undefined,
   minPrice: 0,
-  maxPrice: MAX_PRICE_CRC, 
+  maxPrice: MAX_PRICE_CRC_SALE, 
   bedrooms: 0, 
   bathrooms: 0, 
 };
 
 export function PropertySearchFilters({ onSearch, initialFilters }: PropertySearchFiltersProps) {
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || defaultFilters);
+  
+  const getMaxPriceForType = (listingType?: ListingType) => {
+    return listingType === 'Alquiler' ? MAX_PRICE_CRC_RENT : MAX_PRICE_CRC_SALE;
+  };
+
   const [priceRange, setPriceRange] = useState<[number, number]>([
     initialFilters?.minPrice || defaultFilters.minPrice || 0, 
-    initialFilters?.maxPrice || defaultFilters.maxPrice || MAX_PRICE_CRC
+    initialFilters?.maxPrice || getMaxPriceForType(initialFilters?.listingType)
   ]);
 
-  // Sync priceRange with filters if initialFilters change
   useEffect(() => {
     if (initialFilters) {
         setFilters(initialFilters);
         setPriceRange([
-            initialFilters.minPrice || defaultFilters.minPrice || 0,
-            initialFilters.maxPrice || defaultFilters.maxPrice || MAX_PRICE_CRC
+            initialFilters.minPrice || 0,
+            initialFilters.maxPrice || getMaxPriceForType(initialFilters.listingType)
         ]);
     }
   }, [initialFilters]);
 
+  useEffect(() => {
+    // Adjust max price for slider if listing type changes
+    const newMaxPrice = getMaxPriceForType(filters.listingType);
+    setPriceRange(prevRange => [
+        Math.min(prevRange[0], newMaxPrice), // Ensure min is not greater than new max
+        Math.min(prevRange[1], newMaxPrice)  // Ensure current max is not greater than new overall max
+    ]);
+    setFilters(prev => ({...prev, maxPrice: Math.min(prev.maxPrice || newMaxPrice, newMaxPrice)}));
+  }, [filters.listingType]);
+
 
   const handleSelectChange = (name: keyof SearchFilters) => (value: string) => {
-    setFilters((prev) => ({ ...prev, [name]: value === 'any' ? undefined : value }));
+    const val = value === 'any' ? undefined : value;
+    setFilters((prev) => ({ ...prev, [name]: val as any }));
   };
 
   const handleSliderChange = (name: keyof SearchFilters) => (value: number[]) => {
@@ -67,13 +84,19 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(filters);
+    // Ensure minPrice is not greater than maxPrice before submitting
+    const finalFilters = { ...filters };
+    if (finalFilters.minPrice && finalFilters.maxPrice && finalFilters.minPrice > finalFilters.maxPrice) {
+        finalFilters.minPrice = finalFilters.maxPrice; // Or some other logic, like swapping them
+    }
+    onSearch(finalFilters);
   };
 
   const handleReset = () => {
-    setFilters(defaultFilters);
-    setPriceRange([defaultFilters.minPrice || 0, defaultFilters.maxPrice || MAX_PRICE_CRC]);
-    onSearch(defaultFilters);
+    const defaultMax = getMaxPriceForType(undefined); // Reset to sale max price
+    setFilters({...defaultFilters, maxPrice: defaultMax });
+    setPriceRange([0, defaultMax]);
+    onSearch({...defaultFilters, maxPrice: defaultMax });
   };
 
   return (
@@ -85,7 +108,7 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
           <div className="space-y-2">
             <Label htmlFor="location">Ubicación</Label>
             <Select value={filters.location || 'any'} onValueChange={handleSelectChange('location')}>
@@ -111,14 +134,27 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="listingType">Tipo de Listado</Label>
+            <Select value={filters.listingType || 'any'} onValueChange={handleSelectChange('listingType')}>
+              <SelectTrigger id="listingType">
+                <SelectValue placeholder="Venta o Alquiler" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="any">Venta o Alquiler</SelectItem>
+                {LISTING_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           
-          <div className="space-y-2 md:col-span-2 lg:col-span-1">
-            <Label htmlFor="priceRange">Rango de Precio: ₡{priceRange[0].toLocaleString()} - ₡{priceRange[1].toLocaleString()}</Label>
+          <div className="space-y-2 md:col-span-2 lg:col-span-3">
+            <Label htmlFor="priceRange">Rango de Precio: ₡{priceRange[0].toLocaleString()} - ₡{priceRange[1].toLocaleString()} {filters.listingType === 'Alquiler' ? '/mes' : ''}</Label>
             <Slider
               id="priceRange"
               min={0}
-              max={MAX_PRICE_CRC}
-              step={1000000} // Step in CRC
+              max={getMaxPriceForType(filters.listingType)}
+              step={filters.listingType === 'Alquiler' ? 50000 : 1000000} 
               value={priceRange}
               onValueChange={(value) => handlePriceRangeChange(value as [number,number])}
               className="py-2"
@@ -144,18 +180,18 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
               id="bathrooms"
               min={0}
               max={5}
-              step={1} // Can be 0.5 if needed, but for min filter, 1 is fine
+              step={1} 
               value={[filters.bathrooms || 0]}
               onValueChange={handleSliderChange('bathrooms')}
                className="py-2"
             />
           </div>
 
-          <div className="flex items-end space-x-3 md:col-span-2 lg:col-span-3 lg:justify-end">
-            <Button type="button" variant="outline" onClick={handleReset} className="w-full lg:w-auto">
+          <div className="flex items-end space-x-3 md:col-span-full lg:col-start-3 lg:justify-end pt-2">
+            <Button type="button" variant="outline" onClick={handleReset} className="w-full sm:w-auto">
               <X className="mr-2 h-4 w-4" /> Reiniciar
             </Button>
-            <Button type="submit" className="w-full lg:w-auto bg-primary hover:bg-primary/90">
+            <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90">
               <Search className="mr-2 h-4 w-4" /> Buscar
             </Button>
           </div>

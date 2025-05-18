@@ -21,11 +21,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { Sparkles, Loader2, Save } from 'lucide-react';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
-import { PROPERTY_TYPES } from '@/lib/constants';
+import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { addProperty, sqmToSqft } from '@/lib/property-store';
-import type { Property, PropertyType as PropertyTypeType } from '@/lib/types'; // Renamed to avoid conflict
+import type { Property, PropertyType as PropertyTypeType, ListingType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -41,6 +41,7 @@ const generateDescriptionSchema = z.object({
       'Se aceptan archivos .jpg, .jpeg, .png y .webp.'
     ),
   propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }) as z.ZodType<PropertyTypeType>,
+  listingType: z.string().min(1, {message: 'El tipo de listado es requerido.'}) as z.ZodType<ListingType>,
   location: z.string().min(2, { message: 'La ubicación debe tener al menos 2 caracteres.' }),
   title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}),
   price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}),
@@ -68,6 +69,7 @@ export function GenerateDescriptionForm() {
     resolver: zodResolver(generateDescriptionSchema),
     defaultValues: {
       propertyType: 'Casa',
+      listingType: 'Venta',
       location: '',
       title: '',
       price: 50000000, 
@@ -149,7 +151,7 @@ export function GenerateDescriptionForm() {
 
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const newPropertyId = Date.now().toString();
+    const newPropertyId = Date.now().toString(); // Using timestamp for simplicity as ID
     const newProperty: Property = {
       id: newPropertyId,
       title: formDataForSave.title, 
@@ -160,9 +162,10 @@ export function GenerateDescriptionForm() {
       bathrooms: formDataForSave.numberOfBathrooms,
       area: formDataForSave.squareFootage, 
       type: formDataForSave.propertyType,
+      listingType: formDataForSave.listingType,
       description: generatedDescription,
       images: [photoDataUriForSave, 'https://placehold.co/600x400.png?text=Interior+Propiedad', 'https://placehold.co/600x400.png?text=Detalle+Propiedad'],
-      isFeatured: Math.random() < 0.2, // ~20% chance of being featured for mock data
+      isFeatured: Math.random() < 0.2, 
       agent: { 
         name: user.name,
         email: user.email,
@@ -263,20 +266,43 @@ export function GenerateDescriptionForm() {
                 </FormItem>
                 )}
             />
-             <FormField
+            <FormField
                 control={form.control}
-                name="price"
+                name="listingType"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Precio (CRC)</FormLabel>
+                    <FormLabel>Tipo de Listado</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading || isSaving}>
                     <FormControl>
-                    <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isLoading || isSaving} />
+                        <SelectTrigger>
+                        <SelectValue placeholder="Selecciona el listado" />
+                        </SelectTrigger>
                     </FormControl>
+                    <SelectContent>
+                        {LISTING_TYPES.map(type => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                        ))}
+                    </SelectContent>
+                    </Select>
                     <FormMessage />
                 </FormItem>
                 )}
             />
           </div>
+          
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+            <FormItem>
+                <FormLabel>Precio (CRC)</FormLabel>
+                <FormControl>
+                <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isLoading || isSaving} />
+                </FormControl>
+                <FormMessage />
+            </FormItem>
+            )}
+        />
 
 
           <FormField

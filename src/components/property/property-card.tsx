@@ -7,7 +7,7 @@ import type { Property } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Trash2, Pencil, Loader2 } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Trash2, Pencil, Loader2, Tag } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { deleteProperty } from '@/lib/property-store';
 import { useToast } from '@/hooks/use-toast';
@@ -40,16 +40,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const isOwner = user && user.id === property.ownerId;
 
   const handleDelete = async () => {
-    if (!isOwner) return; // Double check ownership
+    if (!isOwner || !user) return; 
     setIsDeleting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500)); 
-      const success = deleteProperty(property.id, user!.id); // user is checked by isOwner
+      const success = deleteProperty(property.id, user.id); 
       if (success) {
         toast({
           title: "Propiedad Eliminada",
           description: `La propiedad "${property.title}" ha sido eliminada.`,
         });
+        // Note: The list will auto-update due to subscription in PropertiesPage
       } else {
         toast({
           title: "Error al Eliminar",
@@ -83,6 +84,15 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 data-ai-hint="exterior casa"
               />
               <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
+                {property.listingType && (
+                  <Badge 
+                    variant={property.listingType === 'Venta' ? 'default' : 'secondary'}
+                    className={property.listingType === 'Alquiler' ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}
+                  >
+                    <Tag className="mr-1 h-3 w-3"/>
+                    {property.listingType}
+                  </Badge>
+                )}
                 {property.isFeatured && (
                   <Badge variant="destructive">Destacada</Badge>
                 )}
@@ -106,7 +116,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
               {property.address}, {property.city}
             </div>
             <p className="text-xl font-bold text-primary mb-2">
-              ₡{property.price.toLocaleString()}
+              ₡{property.price.toLocaleString()} {property.listingType === 'Alquiler' ? <span className="text-sm font-normal text-muted-foreground">/mes</span> : ''}
             </p>
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <span className="flex items-center"><BedDouble className="mr-1 h-4 w-4" /> {property.bedrooms} Hab</span>
