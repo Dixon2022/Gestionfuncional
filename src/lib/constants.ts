@@ -1,5 +1,7 @@
 import type { Property, PropertyType } from './types';
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 export const MOCK_PROPERTIES_INITIAL: Property[] = [
   {
     id: '1',
@@ -27,7 +29,8 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     },
     features: ['Concepto Abierto', 'Cocina Actualizada', 'Balcón Privado', 'Gimnasio', 'Terraza en Azotea'],
     yearBuilt: 2018,
-    lotSize: 0, 
+    lotSize: 0,
+    createdAt: Date.now() - (ONE_DAY_MS * 5), // 5 days ago
   },
   {
     id: '2',
@@ -56,6 +59,7 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     features: ['Amplio Patio Trasero', 'Terraza', 'Cocina Moderna', 'Pisos de Madera', 'Garaje para Dos Autos'],
     yearBuilt: 2005,
     lotSize: 697, // 7500 sqft
+    createdAt: Date.now() - (ONE_DAY_MS * 10), // 10 days ago
   },
   {
     id: '3',
@@ -77,9 +81,11 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
       name: 'Carolina Danvers',
       phone: '555-111-2222',
       email: 'carolina.d@example.com',
+      avatarUrl: 'https://placehold.co/100x100.png?text=Agente+C'
     },
     features: ['Vistas a la Ciudad', 'Ventanas de Piso a Techo', 'Cocina Gourmet', 'Piscina', 'Gimnasio', 'Conserjería'],
     yearBuilt: 2020,
+    createdAt: Date.now() - (ONE_DAY_MS * 2), // 2 days ago
   },
   {
     id: '4',
@@ -107,6 +113,7 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     features: ['Jardín Privado', 'Interiores Actualizados', 'Parque Comunitario', 'Chimenea'],
     yearBuilt: 1998,
     lotSize: 204, // 2200 sqft
+    createdAt: Date.now() - (ONE_DAY_MS * 7), // 7 days ago
   },
   {
     id: '5',
@@ -128,9 +135,11 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
       name: 'Eva Monedita',
       phone: '555-555-0070',
       email: 'eva.m@example.com',
+      avatarUrl: 'https://placehold.co/100x100.png?text=Agente+E'
     },
     features: ['Vistas Panorámicas', 'Amplia Terraza', 'Acabados de Diseñador', 'Ascensor Privado', 'Hogar Inteligente'],
     yearBuilt: 2022,
+    createdAt: Date.now() - (ONE_DAY_MS * 1), // 1 day ago
   },
 ];
 

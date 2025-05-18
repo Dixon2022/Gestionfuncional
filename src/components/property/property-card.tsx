@@ -4,16 +4,18 @@ import type { Property } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, BedDouble, Bath, Home, ArrowRight } from 'lucide-react';
-import { sqftToSqm } from '@/lib/property-store';
-
+import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon } from 'lucide-react';
 
 interface PropertyCardProps {
   property: Property;
 }
 
+const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
 export function PropertyCard({ property }: PropertyCardProps) {
   const displayArea = `${property.area.toLocaleString()} m²`; // Area is now in sqm
+
+  const isNew = property.createdAt && (Date.now() - property.createdAt) < TWENTY_FOUR_HOURS_MS;
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg transition-all hover:shadow-xl h-full">
@@ -21,16 +23,24 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <CardHeader className="p-0">
           <div className="relative h-48 w-full overflow-hidden">
             <Image
-              src={property.photoDataUri || property.images[0]} // Use photoDataUri if available (for new props)
+              src={property.photoDataUri || property.images[0]}
               alt={property.title}
               layout="fill"
               objectFit="cover"
               className="transition-transform duration-300 group-hover:scale-105"
               data-ai-hint="exterior casa"
             />
-            {property.isFeatured && (
-              <Badge variant="destructive" className="absolute top-2 right-2">Destacada</Badge>
-            )}
+            <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
+              {property.isFeatured && (
+                <Badge variant="destructive">Destacada</Badge>
+              )}
+              {isNew && (
+                <Badge className="bg-green-500 hover:bg-green-600 text-white">
+                  <SparklesIcon className="mr-1 h-3 w-3" />
+                  Nueva
+                </Badge>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-4 flex-grow">

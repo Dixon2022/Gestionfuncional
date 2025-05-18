@@ -8,6 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, name?: string) => void;
   logout: () => void;
+  updateUser: (updatedInfo: Partial<User>) => void;
   loading: boolean;
 }
 
@@ -37,8 +38,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('propverse-user');
   };
 
+  const updateUser = (updatedInfo: Partial<User>) => {
+    if (user) {
+      const newUserData = { ...user, ...updatedInfo };
+      setUser(newUserData);
+      localStorage.setItem('propverse-user', JSON.stringify(newUserData));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, updateUser, loading }}>
       {children}
     </AuthContext.Provider>
   );

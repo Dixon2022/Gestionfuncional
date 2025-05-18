@@ -2,22 +2,15 @@
 
 import { useAuth } from '@/contexts/auth-context';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserCircle, Mail, Edit3, LogOut } from 'lucide-react';
-import type { Metadata } from 'next';
 import { getProperties } from '@/lib/property-store';
 import type { Property } from '@/lib/types';
 import { PropertyCard } from '@/components/property/property-card';
-
-// Cannot define metadata in client component, so we define it statically or handle dynamically if needed.
-// export const metadata: Metadata = {
-//   title: 'Mi Perfil - PropVerse',
-//   description: 'Administra tu información y propiedades en PropVerse.',
-// };
-
 
 export default function ProfilePage() {
   const { user, logout, loading } = useAuth();
@@ -27,17 +20,20 @@ export default function ProfilePage() {
 
   useEffect(() => {
     setIsClient(true);
-    if (!loading && !user) {
-      router.push('/login');
+  }, []);
+  
+  useEffect(() => {
+    if (isClient && !loading && !user) {
+      router.push('/login?redirect=/profile');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isClient]);
 
   useEffect(() => {
-    if (user) {
+    if (user && isClient) {
       const allProps = getProperties();
       setMyProperties(allProps.filter(p => p.ownerId === user.id));
     }
-  }, [user]);
+  }, [user, isClient]);
 
 
   if (loading || !isClient) {
@@ -50,23 +46,23 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-     // This should ideally be caught by the useEffect redirect, but as a fallback
+    // This should ideally be caught by the useEffect redirect, but as a fallback
     return (
         <div className="container py-8 text-center">
             <p>Debes iniciar sesión para ver esta página.</p>
-            <Button onClick={() => router.push('/login')} className="mt-4">Iniciar Sesión</Button>
+            <Button onClick={() => router.push('/login?redirect=/profile')} className="mt-4">Iniciar Sesión</Button>
         </div>
     );
   }
 
   return (
     <div className="container py-8 md:py-12">
-      <Card className="max-w-3xl mx-auto">
+      <Card className="max-w-3xl mx-auto shadow-xl">
         <CardHeader className="text-center">
-          <Avatar className="mx-auto h-24 w-24 mb-4">
-            {/* Placeholder for user avatar if available */}
-            <AvatarFallback className="text-3xl">
-              <UserCircle className="h-16 w-16" />
+          <Avatar className="mx-auto h-24 w-24 mb-4 border-2 border-primary">
+             <AvatarImage src={user.name ? `https://placehold.co/100x100.png?text=${user.name.substring(0,1)}` : undefined} alt={user.name || 'Usuario'} data-ai-hint="avatar persona" />
+            <AvatarFallback className="text-3xl bg-secondary">
+              {user.name ? user.name.substring(0, 2).toUpperCase() : <UserCircle className="h-16 w-16" />}
             </AvatarFallback>
           </Avatar>
           <CardTitle className="text-3xl">{user.name || 'Usuario'}</CardTitle>
@@ -76,8 +72,10 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex justify-center space-x-4">
-            <Button variant="outline">
-              <Edit3 className="mr-2 h-4 w-4" /> Editar Perfil
+            <Button variant="outline" asChild>
+              <Link href="/profile/edit">
+                <Edit3 className="mr-2 h-4 w-4" /> Editar Perfil
+              </Link>
             </Button>
             <Button variant="destructive" onClick={() => { logout(); router.push('/'); }}>
               <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
@@ -85,7 +83,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-8">
-            <h2 className="text-2xl font-semibold mb-4">Mis Propiedades Publicadas</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-center">Mis Propiedades Publicadas</h2>
             {myProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {myProperties.map((property) => (
@@ -93,8 +91,8 @@ export default function ProfilePage() {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-center py-6">
-                Aún no has publicado ninguna propiedad.
+              <p className="text-muted-foreground text-center py-6 bg-secondary/30 rounded-md">
+                Aún no has publicado ninguna propiedad. ¿Por qué no generas una ahora?
               </p>
             )}
           </div>
@@ -103,4 +101,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

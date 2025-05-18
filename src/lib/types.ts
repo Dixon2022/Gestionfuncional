@@ -26,6 +26,7 @@ export interface Property {
   lotSize?: number; // in sq ft
   photoDataUri?: string; // Used for newly created properties before image upload
   ownerId?: string; // ID of the user who created this property
+  createdAt?: number; // Timestamp of creation
 }
 
 export interface SearchFilters {
