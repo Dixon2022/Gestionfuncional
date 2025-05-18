@@ -1,4 +1,4 @@
-export type PropertyType = "House" | "Apartment" | "Condo" | "Townhouse" | "Land";
+export type PropertyType = "Casa" | "Apartamento" | "Condominio" | "Adosado" | "Terreno";
 
 export interface Agent {
   name: string;
@@ -24,6 +24,8 @@ export interface Property {
   features?: string[];
   yearBuilt?: number;
   lotSize?: number; // in sq ft
+  photoDataUri?: string; // Used for newly created properties before image upload
+  ownerId?: string; // ID of the user who created this property
 }
 
 export interface SearchFilters {
@@ -33,4 +35,10 @@ export interface SearchFilters {
   maxPrice?: number;
   bedrooms?: number;
   bathrooms?: number;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
 }

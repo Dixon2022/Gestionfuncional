@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import type { SearchFilters, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES, CITIES } from '@/lib/constants';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -35,11 +34,6 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || defaultFilters);
   const [priceRange, setPriceRange] = useState<[number, number]>([filters.minPrice || 0, filters.maxPrice || 2000000]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSelectChange = (name: keyof SearchFilters) => (value: string) => {
     setFilters((prev) => ({ ...prev, [name]: value === 'any' ? undefined : value }));
   };
@@ -69,39 +63,39 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
       <CardHeader>
         <CardTitle className="text-2xl flex items-center">
           <Search className="mr-2 h-6 w-6 text-primary" />
-          Filter Properties
+          Filtrar Propiedades
         </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">Ubicación</Label>
             <Select value={filters.location} onValueChange={handleSelectChange('location')}>
               <SelectTrigger id="location">
-                <SelectValue placeholder="Any Location" />
+                <SelectValue placeholder="Cualquier Ubicación" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any Location</SelectItem>
+                <SelectItem value="any">Cualquier Ubicación</SelectItem>
                 {CITIES.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="propertyType">Property Type</Label>
+            <Label htmlFor="propertyType">Tipo de Propiedad</Label>
             <Select value={filters.propertyType} onValueChange={handleSelectChange('propertyType')}>
               <SelectTrigger id="propertyType">
-                <SelectValue placeholder="Any Type" />
+                <SelectValue placeholder="Cualquier Tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="any">Any Type</SelectItem>
+                <SelectItem value="any">Cualquier Tipo</SelectItem>
                 {PROPERTY_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           
           <div className="space-y-2 md:col-span-2 lg:col-span-1">
-            <Label htmlFor="priceRange">Price Range: ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}</Label>
+            <Label htmlFor="priceRange">Rango de Precio: ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}</Label>
             <Slider
               id="priceRange"
               min={0}
@@ -114,7 +108,7 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bedrooms">Min. Bedrooms: {filters.bedrooms || 'Any'}</Label>
+            <Label htmlFor="bedrooms">Mín. Habitaciones: {filters.bedrooms || 'Cualquiera'}</Label>
             <Slider
               id="bedrooms"
               min={0}
@@ -127,7 +121,7 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bathrooms">Min. Bathrooms: {filters.bathrooms || 'Any'}</Label>
+            <Label htmlFor="bathrooms">Mín. Baños: {filters.bathrooms || 'Cualquiera'}</Label>
             <Slider
               id="bathrooms"
               min={0}
@@ -141,10 +135,10 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
 
           <div className="flex items-end space-x-3 md:col-span-2 lg:col-span-3 lg:justify-end">
             <Button type="button" variant="outline" onClick={handleReset} className="w-full lg:w-auto">
-              <X className="mr-2 h-4 w-4" /> Reset
+              <X className="mr-2 h-4 w-4" /> Reiniciar
             </Button>
             <Button type="submit" className="w-full lg:w-auto bg-primary hover:bg-primary/90">
-              <Search className="mr-2 h-4 w-4" /> Search
+              <Search className="mr-2 h-4 w-4" /> Buscar
             </Button>
           </div>
         </form>

@@ -19,16 +19,16 @@ export default function Error({
   return (
     <div className="container py-12 text-center">
       <AlertTriangle className="mx-auto h-16 w-16 text-destructive mb-4" />
-      <h2 className="text-2xl font-semibold mb-4">Oops! Something went wrong.</h2>
+      <h2 className="text-2xl font-semibold mb-4">¡Ups! Algo salió mal.</h2>
       <p className="text-muted-foreground mb-6">
-        We encountered an error while trying to load this property. Please try again later.
+        Encontramos un error al intentar cargar esta propiedad. Por favor, inténtalo de nuevo más tarde.
       </p>
       <div className="space-x-4">
         <Button onClick={() => reset()} variant="outline">
-          Try again
+          Intentar de nuevo
         </Button>
         <Button asChild>
-          <Link href="/properties">Back to Properties</Link>
+          <Link href="/properties">Volver a Propiedades</Link>
         </Button>
       </div>
     </div>

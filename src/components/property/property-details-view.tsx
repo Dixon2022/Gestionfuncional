@@ -5,12 +5,16 @@ import { ContactForm } from './contact-form';
 import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, DollarSign, Tag, Layers, UserCircle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { sqftToSqm } from '@/lib/property-store';
 
 interface PropertyDetailsViewProps {
   property: Property;
 }
 
 export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
+  const displayArea = `${property.area.toLocaleString()} m²`; // Area is in sqm
+  const displayLotSize = property.lotSize ? `${property.lotSize.toLocaleString()} m²` : 'N/A';
+
   return (
     <div className="container py-8 md:py-12">
       <div className="grid md:grid-cols-3 gap-8">
@@ -20,15 +24,15 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           <div className="mb-6">
             <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden shadow-lg">
               <Image
-                src={property.images[0]}
+                src={property.photoDataUri || property.images[0]}
                 alt={property.title}
                 layout="fill"
                 objectFit="cover"
                 priority
-                data-ai-hint="property main image"
+                data-ai-hint="imagen principal propiedad"
               />
               {property.isFeatured && (
-                <Badge variant="destructive" className="absolute top-4 left-4 text-sm px-3 py-1">Featured</Badge>
+                <Badge variant="destructive" className="absolute top-4 left-4 text-sm px-3 py-1">Destacada</Badge>
               )}
             </div>
             {property.images.length > 1 && (
@@ -37,10 +41,10 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
                   <div key={index} className="relative h-24 w-full rounded-md overflow-hidden shadow-md">
                     <Image
                       src={img}
-                      alt={`${property.title} - image ${index + 2}`}
+                      alt={`${property.title} - imagen ${index + 2}`}
                       layout="fill"
                       objectFit="cover"
-                       data-ai-hint="property thumbnail"
+                       data-ai-hint="miniatura propiedad"
                     />
                   </div>
                 ))}
@@ -64,12 +68,12 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           {/* Key Details Section */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-center">
             {[
-              { icon: BedDouble, label: 'Bedrooms', value: property.bedrooms },
-              { icon: Bath, label: 'Bathrooms', value: property.bathrooms },
-              { icon: Home, label: 'Area (sqft)', value: property.area.toLocaleString() },
-              { icon: Building, label: 'Type', value: property.type },
-              { icon: CalendarDays, label: 'Year Built', value: property.yearBuilt || 'N/A' },
-              { icon: Layers, label: 'Lot Size (sqft)', value: property.lotSize ? property.lotSize.toLocaleString() : 'N/A' },
+              { icon: BedDouble, label: 'Habitaciones', value: property.bedrooms },
+              { icon: Bath, label: 'Baños', value: property.bathrooms },
+              { icon: Home, label: 'Superficie (m²)', value: displayArea },
+              { icon: Building, label: 'Tipo', value: property.type },
+              { icon: CalendarDays, label: 'Año Const.', value: property.yearBuilt || 'N/A' },
+              { icon: Layers, label: 'Sup. Terreno (m²)', value: displayLotSize },
             ].map(detail => (
               <div key={detail.label} className="p-4 bg-secondary/50 rounded-lg shadow-sm">
                 <detail.icon className="h-7 w-7 text-primary mx-auto mb-2" />
@@ -81,14 +85,14 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           
           {/* Description */}
           <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-3">Property Description</h2>
+            <h2 className="text-2xl font-semibold mb-3">Descripción de la Propiedad</h2>
             <p className="text-foreground/80 leading-relaxed whitespace-pre-line">{property.description}</p>
           </div>
 
           {/* Features */}
           {property.features && property.features.length > 0 && (
             <div className="mb-8">
-              <h2 className="text-2xl font-semibold mb-3">Features</h2>
+              <h2 className="text-2xl font-semibold mb-3">Características</h2>
               <div className="flex flex-wrap gap-2">
                 {property.features.map((feature, index) => (
                   <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
@@ -107,22 +111,22 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           <div className="p-6 border rounded-lg shadow-lg bg-card">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
                 <UserCircle className="mr-2 h-5 w-5 text-primary" />
-                Listing Agent
+                Agente Inmobiliario
             </h3>
             <div className="flex items-center space-x-4 mb-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={property.agent.avatarUrl} alt={property.agent.name} data-ai-hint="person portrait"/>
+                <AvatarImage src={property.agent.avatarUrl} alt={property.agent.name} data-ai-hint="retrato persona"/>
                 <AvatarFallback>{property.agent.name.substring(0,2).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
                 <p className="font-semibold text-lg">{property.agent.name}</p>
-                <p className="text-sm text-muted-foreground">Real Estate Agent</p>
+                <p className="text-sm text-muted-foreground">Agente Inmobiliario</p>
               </div>
             </div>
             <Separator className="my-4"/>
             <div className="space-y-2 text-sm">
                 <p><strong>Email:</strong> <a href={`mailto:${property.agent.email}`} className="text-primary hover:underline">{property.agent.email}</a></p>
-                <p><strong>Phone:</strong> <a href={`tel:${property.agent.phone}`} className="text-primary hover:underline">{property.agent.phone}</a></p>
+                <p><strong>Teléfono:</strong> <a href={`tel:${property.agent.phone}`} className="text-primary hover:underline">{property.agent.phone}</a></p>
             </div>
           </div>
 

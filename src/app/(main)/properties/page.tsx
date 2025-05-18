@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { PropertyCard } from '@/components/property/property-card';
 import { PropertySearchFilters } from '@/components/property/property-search-filters';
-import { MOCK_PROPERTIES } from '@/lib/constants';
+import { getProperties, subscribeToProperties, sqftToSqm } from '@/lib/property-store';
 import type { Property, SearchFilters } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PropertiesPage() {
+  const [allProperties, setAllProperties] = useState<Property[]>([]);
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -26,43 +27,66 @@ export default function PropertiesPage() {
   });
 
   useEffect(() => {
+    // Subscribe to property changes
+    const unsubscribe = subscribeToProperties((updatedProperties) => {
+      setAllProperties(updatedProperties);
+      // Initial load or when properties change, refilter
+      filterAndSetProperties(updatedProperties, currentFilters);
+      setIsLoading(false);
+    });
+
+    // Cleanup subscription on component unmount
+    return () => unsubscribe();
+  }, []); // Empty dependency array to run only once on mount for subscription
+
+  useEffect(() => {
+    // This effect runs when currentFilters changes or allProperties is updated
     setIsLoading(true);
-    // Simulate API call delay
+    filterAndSetProperties(allProperties, currentFilters);
+    // Simulate API call delay for filtering visual feedback
     const timer = setTimeout(() => {
-      let properties = MOCK_PROPERTIES;
-      if (currentFilters.location && currentFilters.location !== "any") {
-        properties = properties.filter(p => p.city.toLowerCase() === currentFilters.location?.toLowerCase());
+      setIsLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [currentFilters, allProperties]);
+
+
+  const filterAndSetProperties = (propertiesToFilter: Property[], filters: SearchFilters) => {
+    let properties = [...propertiesToFilter]; // Work on a copy
+      if (filters.location && filters.location !== "any") {
+        properties = properties.filter(p => p.city.toLowerCase() === filters.location?.toLowerCase());
       }
-      if (currentFilters.propertyType && currentFilters.propertyType !== "any" as any) {
-        properties = properties.filter(p => p.type === currentFilters.propertyType);
+      if (filters.propertyType && filters.propertyType !== "any" as any) {
+        properties = properties.filter(p => p.type === filters.propertyType);
       }
-      if (currentFilters.minPrice) {
-        properties = properties.filter(p => p.price >= currentFilters.minPrice!);
+      if (filters.minPrice) {
+        properties = properties.filter(p => p.price >= filters.minPrice!);
       }
-      if (currentFilters.maxPrice) {
-        properties = properties.filter(p => p.price <= currentFilters.maxPrice!);
+      if (filters.maxPrice) {
+        properties = properties.filter(p => p.price <= filters.maxPrice!);
       }
-      if (currentFilters.bedrooms && currentFilters.bedrooms > 0) {
-        properties = properties.filter(p => p.bedrooms >= currentFilters.bedrooms!);
+      if (filters.bedrooms && filters.bedrooms > 0) {
+        properties = properties.filter(p => p.bedrooms >= filters.bedrooms!);
       }
-      if (currentFilters.bathrooms && currentFilters.bathrooms > 0) {
-        properties = properties.filter(p => p.bathrooms >= currentFilters.bathrooms!);
+      if (filters.bathrooms && filters.bathrooms > 0) {
+        properties = properties.filter(p => p.bathrooms >= filters.bathrooms!);
       }
       setFilteredProperties(properties);
-      setIsLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [currentFilters]);
+  }
+
 
   const handleSearch = (filters: SearchFilters) => {
     setCurrentFilters(filters);
-    // Update URL query params without navigation for better UX if desired,
-    // or navigate to reflect filters in URL. For now, just local state.
+    // URL update can be added here if desired
+    // const params = new URLSearchParams();
+    // if (filters.location) params.set('location', filters.location);
+    // ... etc. for other filters
+    // router.push(`/properties?${params.toString()}`);
   };
   
   return (
     <div className="container py-8">
-      <h1 className="text-4xl font-bold mb-8 text-center">Find Your Next Property</h1>
+      <h1 className="text-4xl font-bold mb-8 text-center">Encuentra Tu Próxima Propiedad</h1>
       <PropertySearchFilters onSearch={handleSearch} initialFilters={currentFilters} />
       
       {isLoading ? (
@@ -86,7 +110,7 @@ export default function PropertiesPage() {
         </div>
       ) : (
         <p className="text-center text-muted-foreground text-lg py-10">
-          No properties match your current filters. Try adjusting your search!
+          Ninguna propiedad coincide con tus filtros actuales. ¡Intenta ajustar tu búsqueda!
         </p>
       )}
     </div>

@@ -3,16 +3,21 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Building2, Sparkles, Search } from 'lucide-react';
-
-const navItems = [
-  { href: '/', label: 'Home', icon: Home },
-  { href: '/properties', label: 'Properties', icon: Search },
-  { href: '/generate-description', label: 'AI Description', icon: Sparkles },
-];
+import { Home, Search, Sparkles, UserCircle } from 'lucide-react'; // UserCircle for Profile
+import { useAuth } from '@/contexts/auth-context';
 
 export function MainNav() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  const navItems = [
+    { href: '/', label: 'Inicio', icon: Home },
+    { href: '/properties', label: 'Propiedades', icon: Search },
+    { href: '/generate-description', label: 'Descripción IA', icon: Sparkles },
+    // Add profile link if user is logged in
+    ...(user ? [{ href: '/profile', label: 'Mi Perfil', icon: UserCircle }] : []),
+  ];
+
 
   return (
     <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">

@@ -18,10 +18,10 @@ import { useToast } from '@/hooks/use-toast';
 import { Mail, Send } from 'lucide-react';
 
 const contactFormSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email address.' }),
+  name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
+  email: z.string().email({ message: 'Por favor ingresa una dirección de email válida.' }),
   phone: z.string().optional(),
-  message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
+  message: z.string().min(10, { message: 'El mensaje debe tener al menos 10 caracteres.' }),
   propertyId: z.string(),
   agentEmail: z.string().email(),
 });
@@ -49,12 +49,12 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
   });
 
   async function onSubmit(data: ContactFormValues) {
-    // Here you would typically send the data to your backend or a service like Formspree
-    // For demonstration, we'll just show a toast message.
-    console.log('Contact form submitted:', data);
+    // Aquí normalmente enviarías los datos a tu backend o a un servicio como Formspree
+    // Para demostración, solo mostraremos un mensaje toast.
+    console.log('Formulario de contacto enviado:', data);
     toast({
-      title: 'Inquiry Sent!',
-      description: `Your message regarding property ID ${data.propertyId} has been sent to ${agentName}.`,
+      title: '¡Consulta Enviada!',
+      description: `Tu mensaje sobre la propiedad ID ${data.propertyId} ha sido enviado a ${agentName}.`,
     });
     form.reset();
   }
@@ -63,7 +63,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
     <div className="p-6 border rounded-lg shadow-lg bg-card">
       <h3 className="text-xl font-semibold mb-4 flex items-center">
         <Mail className="mr-2 h-5 w-5 text-primary" />
-        Contact Agent
+        Contactar al Agente
       </h3>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -72,9 +72,9 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
             name="name"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Full Name</FormLabel>
+                <FormLabel>Nombre Completo</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder="Juan Pérez" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -85,9 +85,9 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Email Address</FormLabel>
+                <FormLabel>Dirección de Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="you@example.com" {...field} />
+                  <Input type="email" placeholder="tu@ejemplo.com" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -98,7 +98,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
             name="phone"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Phone Number (Optional)</FormLabel>
+                <FormLabel>Número de Teléfono (Opcional)</FormLabel>
                 <FormControl>
                   <Input type="tel" placeholder="555-123-4567" {...field} />
                 </FormControl>
@@ -111,10 +111,10 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
             name="message"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Message</FormLabel>
+                <FormLabel>Mensaje</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={`I'm interested in property ID ${propertyId}...`}
+                    placeholder={`Estoy interesado/a en la propiedad ID ${propertyId}...`}
                     className="min-h-[100px]"
                     {...field}
                   />
@@ -124,7 +124,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
             )}
           />
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Sending...' : <> <Send className="mr-2 h-4 w-4" /> Send Inquiry </>}
+            {form.formState.isSubmitting ? 'Enviando...' : <> <Send className="mr-2 h-4 w-4" /> Enviar Consulta </>}
           </Button>
         </form>
       </Form>
