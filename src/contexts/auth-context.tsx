@@ -6,9 +6,9 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, name?: string) => void;
+  login: (email: string, name: string, phone: string) => void;
   logout: () => void;
-  updateUser: (updatedInfo: Partial<User>) => void;
+  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'phone'>>) => void;
   loading: boolean;
 }
 
@@ -22,13 +22,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Simulate checking for a stored session
     const storedUser = localStorage.getItem('propverse-user');
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser) as User;
+        // Ensure existing users in localStorage have a phone, add placeholder if not
+        if (!parsedUser.phone) {
+          parsedUser.phone = '000-000-0000'; // Placeholder for users from older sessions
+        }
+        setUser(parsedUser);
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+        localStorage.removeItem('propverse-user'); // Clear corrupted data
+      }
     }
     setLoading(false);
   }, []);
 
-  const login = (email: string, name: string = 'Usuario') => {
-    const newUser: User = { id: Date.now().toString(), email, name };
+  const login = (email: string, name: string, phone: string) => {
+    const newUser: User = { id: Date.now().toString(), email, name, phone };
     setUser(newUser);
     localStorage.setItem('propverse-user', JSON.stringify(newUser));
   };
@@ -38,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem('propverse-user');
   };
 
-  const updateUser = (updatedInfo: Partial<User>) => {
+  const updateUser = (updatedInfo: Partial<Pick<User, 'name' | 'phone'>>) => {
     if (user) {
       const newUserData = { ...user, ...updatedInfo };
       setUser(newUserData);

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,11 +12,12 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, UserCircle2 } from 'lucide-react';
+import { Loader2, Save, UserCircle2, Phone } from 'lucide-react';
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
+  email: z.string().email({ message: 'Por favor ingresa un email válido.' }), // Email remains for display, not edit
+  phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.' }),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -36,6 +38,7 @@ export default function EditProfilePage() {
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
     },
   });
 
@@ -46,17 +49,18 @@ export default function EditProfilePage() {
     if (user) {
       form.reset({
         name: user.name || '',
-        email: user.email || '',
+        email: user.email || '', // Keep email in form for display, but it's read-only
+        phone: user.phone || '',
       });
     }
   }, [user, authLoading, router, form, isClient]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    updateUser({ name: data.name, email: data.email });
+    // Only update name and phone. Email is not updated from here in this mock.
+    updateUser({ name: data.name, phone: data.phone }); 
     
     toast({
       title: '¡Perfil Actualizado!',
@@ -109,21 +113,31 @@ export default function EditProfilePage() {
               )}
             </div>
             <div className="space-y-1">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email (No editable)</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="tu@ejemplo.com"
                 {...form.register('email')}
-                disabled={isLoading} 
-                // Consider making email read-only if it's tied to login identity and not changeable
-                // For this mock, we allow editing, but it won't change the "login" email.
+                disabled={true} // Email is not editable from this form
               />
               {form.formState.errors.email && (
                 <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
               )}
             </div>
-            {/* Add password change fields here if needed in the future */}
+            <div className="space-y-1">
+              <Label htmlFor="phone">Número de Teléfono</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="Ej: 88887777"
+                {...form.register('phone')}
+                disabled={isLoading}
+              />
+              {form.formState.errors.phone && (
+                <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>
+              )}
+            </div>
             <div className="flex justify-end space-x-3">
                 <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
                     Cancelar

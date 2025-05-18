@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -15,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 
 const loginSchema = z.object({
   email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
-  password: z.string().min(1, { message: 'La contraseña es requerida.' }), // Simplified for mock
+  password: z.string().min(1, { message: 'La contraseña es requerida.' }), 
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -36,17 +37,16 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // For mock: just log in with email, name derived from email if needed.
-    // In a real app, you'd verify credentials against a backend.
     const name = data.email.split('@')[0]; 
-    login(data.email, name);
+    const mockPhone = '000-000-0000'; // Placeholder phone for mock login
+    login(data.email, name, mockPhone);
     
     toast({
       title: '¡Bienvenido de nuevo!',
-      description: 'Has iniciado sesión correctamente.',
+      description: 'Has iniciado sesión correctamente. Por favor, considera actualizar tu número de teléfono en tu perfil si este es un placeholder.',
+      duration: 7000, // Longer duration for this specific toast
     });
     router.push('/');
     setIsLoading(false);

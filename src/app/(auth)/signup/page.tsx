@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -10,12 +11,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/auth-context';
-import { Building2, UserPlus } from 'lucide-react';
+import { Building2, UserPlus, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
   email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
+  phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.'}),
   password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
 });
 
@@ -23,7 +25,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth(); // Using login for signup in mock
+  const { login } = useAuth(); 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -32,17 +34,16 @@ export default function SignupPage() {
     defaultValues: {
       name: '',
       email: '',
+      phone: '',
       password: '',
     },
   });
 
   const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    // Simulate API call for registration
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    // For mock: just log in the user after "signup"
-    login(data.email, data.name);
+    login(data.email, data.name, data.phone);
     
     toast({
       title: '¡Cuenta Creada!',
@@ -88,6 +89,19 @@ export default function SignupPage() {
           />
           {form.formState.errors.email && (
             <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="phone">Número de Teléfono</Label>
+          <Input
+            id="phone"
+            type="tel"
+            placeholder="Ej: 88887777"
+            {...form.register('phone')}
+            disabled={isLoading}
+          />
+          {form.formState.errors.phone && (
+            <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>
           )}
         </div>
         <div className="space-y-1">

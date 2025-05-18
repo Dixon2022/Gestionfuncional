@@ -8,8 +8,8 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, UserCircle, Mail, Edit3, LogOut, PlusCircle } from 'lucide-react';
-import { getProperties } from '@/lib/property-store';
+import { Loader2, UserCircle, Mail, Edit3, LogOut, PlusCircle, Phone } from 'lucide-react';
+import { getProperties, subscribeToProperties } from '@/lib/property-store';
 import type { Property } from '@/lib/types';
 import { PropertyCard } from '@/components/property/property-card';
 
@@ -31,16 +31,15 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user && isClient) {
-      // Subscribe to property changes to keep "My Properties" up to date
-      // This could be moved to a custom hook or managed differently in a larger app
+      const unsubscribe = subscribeToProperties((updatedProperties) => {
+        setMyProperties(updatedProperties.filter(p => p.ownerId === user.id));
+      });
+      // Initial fetch
       const allProps = getProperties();
       setMyProperties(allProps.filter(p => p.ownerId === user.id));
-      
-      // A more robust solution would use subscribeToProperties from property-store
-      // and update myProperties when the global list changes.
-      // For now, this effect re-filters on user change.
+      return () => unsubscribe();
     }
-  }, [user, isClient]); // Re-run if user changes. Consider adding dependency on a global property update trigger if available.
+  }, [user, isClient]);
 
 
   if (loading || !isClient) {
@@ -72,8 +71,9 @@ export default function ProfilePage() {
             </AvatarFallback>
           </Avatar>
           <CardTitle className="text-3xl">{user.name || 'Usuario'}</CardTitle>
-          <CardDescription className="flex items-center justify-center text-md">
-            <Mail className="mr-2 h-4 w-4" /> {user.email}
+          <CardDescription className="flex flex-col items-center justify-center text-md space-y-1">
+            <span className="flex items-center"><Mail className="mr-2 h-4 w-4" /> {user.email}</span>
+            <span className="flex items-center"><Phone className="mr-2 h-4 w-4" /> {user.phone}</span>
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

@@ -25,7 +25,7 @@ import { PROPERTY_TYPES } from '@/lib/constants';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { addProperty, sqmToSqft } from '@/lib/property-store';
-import type { Property } from '@/lib/types';
+import type { Property, PropertyType as PropertyTypeType } from '@/lib/types'; // Renamed to avoid conflict
 import { useRouter } from 'next/navigation';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -40,7 +40,7 @@ const generateDescriptionSchema = z.object({
       (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
       'Se aceptan archivos .jpg, .jpeg, .png y .webp.'
     ),
-  propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }),
+  propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }) as z.ZodType<PropertyTypeType>,
   location: z.string().min(2, { message: 'La ubicación debe tener al menos 2 caracteres.' }),
   title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}),
   price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}),
@@ -67,10 +67,10 @@ export function GenerateDescriptionForm() {
   const form = useForm<GenerateDescriptionFormValues>({
     resolver: zodResolver(generateDescriptionSchema),
     defaultValues: {
-      propertyType: '',
+      propertyType: 'Casa',
       location: '',
       title: '',
-      price: 50000000, // Default price in CRC
+      price: 50000000, 
       numberOfBedrooms: 2,
       numberOfBathrooms: 1,
       squareFootage: 100, 
@@ -159,18 +159,18 @@ export function GenerateDescriptionForm() {
       bedrooms: formDataForSave.numberOfBedrooms,
       bathrooms: formDataForSave.numberOfBathrooms,
       area: formDataForSave.squareFootage, 
-      type: formDataForSave.propertyType as Property['type'],
+      type: formDataForSave.propertyType,
       description: generatedDescription,
       images: [photoDataUriForSave, 'https://placehold.co/600x400.png?text=Interior+Propiedad', 'https://placehold.co/600x400.png?text=Detalle+Propiedad'],
-      isFeatured: false, 
+      isFeatured: Math.random() < 0.2, // ~20% chance of being featured for mock data
       agent: { 
-        name: user.name || user.email.split('@')[0],
+        name: user.name,
         email: user.email,
-        phone: 'N/A', 
+        phone: user.phone, 
         avatarUrl: `https://placehold.co/100x100.png?text=${user.name ? user.name.substring(0,1) : 'U'}`
       },
-      features: formDataForSave.keyFeatures.split(',').map(f => f.trim()),
-      yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 10), 
+      features: formDataForSave.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
+      yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
       lotSize: formDataForSave.squareFootage + Math.floor(Math.random() * 50), 
       ownerId: user.id,
       photoDataUri: photoDataUriForSave,
