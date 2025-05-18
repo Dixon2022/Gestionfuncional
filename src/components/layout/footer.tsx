@@ -6,7 +6,7 @@ export function Footer() {
           &copy; {new Date().getFullYear()} PropVerse. Todos los derechos reservados.
         </p>
         <p className="text-balance text-center text-sm leading-loose text-muted-foreground md:text-right">
-          Construido con Next.js y Genkit.
+          Proyecto de Gestión
         </p>
       </div>
     </footer>
