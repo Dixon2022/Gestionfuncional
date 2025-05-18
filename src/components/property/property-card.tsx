@@ -7,7 +7,7 @@ import type { Property } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Trash2 } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Trash2, Pencil, Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { deleteProperty } from '@/lib/property-store';
 import { useToast } from '@/hooks/use-toast';
@@ -40,11 +40,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const isOwner = user && user.id === property.ownerId;
 
   const handleDelete = async () => {
-    if (!user) return;
+    if (!isOwner) return; // Double check ownership
     setIsDeleting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API call
-      const success = deleteProperty(property.id, user.id);
+      await new Promise(resolve => setTimeout(resolve, 500)); 
+      const success = deleteProperty(property.id, user!.id); // user is checked by isOwner
       if (success) {
         toast({
           title: "Propiedad Eliminada",
@@ -123,28 +123,35 @@ export function PropertyCard({ property }: PropertyCardProps) {
               </Link>
             </Button>
             {isOwner && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="icon" disabled={isDeleting} aria-label="Eliminar propiedad">
-                    {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta acción no se puede deshacer. Esto eliminará permanentemente la propiedad
-                      "{property.title}".
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
-                      {isDeleting ? "Eliminando..." : "Sí, eliminar"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <>
+                <Button variant="outline" size="icon" asChild aria-label="Editar propiedad">
+                  <Link href={`/properties/${property.id}/edit`}>
+                    <Pencil />
+                  </Link>
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="icon" disabled={isDeleting} aria-label="Eliminar propiedad">
+                      {isDeleting ? <Loader2 className="animate-spin" /> : <Trash2 />}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente la propiedad
+                        "{property.title}".
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                        {isDeleting ? "Eliminando..." : "Sí, eliminar"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
         </CardFooter>
