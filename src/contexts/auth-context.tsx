@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, name: string, phone: string) => void;
   logout: () => void;
-  updateUser: (updatedInfo: Partial<User>) => void;
+  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => void;
   loading: boolean;
 }
 
@@ -23,18 +23,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate checking for a stored session
     const currentUserEmail = localStorage.getItem(CURRENT_USER_EMAIL_KEY);
     if (currentUserEmail) {
       const storedUserData = localStorage.getItem(`${USER_DATA_PREFIX}${currentUserEmail}`);
       if (storedUserData) {
         try {
           const parsedUser = JSON.parse(storedUserData) as User;
-          // Ensure existing users have all required fields, add placeholders if not
           setUser({
             ...parsedUser,
             name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
-            phone: parsedUser.phone || '000-000-0000',
+            phone: parsedUser.phone || '000-000-0000', 
           });
         } catch (e) {
           console.error("Error parsing user from localStorage", e);
@@ -42,7 +40,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem(`${USER_DATA_PREFIX}${currentUserEmail}`);
         }
       } else {
-        // If current user email exists but no data, clear it
          localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
       }
     }
@@ -50,27 +47,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = (email: string, name: string, phone: string) => {
-    let existingUserData = localStorage.getItem(`${USER_DATA_PREFIX}${email}`);
+    const storageKey = `${USER_DATA_PREFIX}${email}`;
+    let existingUserData = localStorage.getItem(storageKey);
     let userToLogin: User;
 
     if (existingUserData) {
-      // User exists, load their data
+      // User exists, load their stored data.
+      // The `name` and `phone` parameters from the login form are placeholders
+      // and should not overwrite actual stored data for an existing user.
       userToLogin = JSON.parse(existingUserData) as User;
-      // Update name and phone if they were provided (e.g. from signup form on a re-login attempt)
-      // Or if the login form itself collected more details
-      userToLogin.name = name || userToLogin.name;
-      userToLogin.phone = phone || userToLogin.phone;
+      // Ensure essential fields are present if old stored data was somehow incomplete
+      userToLogin.name = userToLogin.name || email.split('@')[0] || 'Usuario';
+      userToLogin.phone = userToLogin.phone || '000-000-0000';
     } else {
-      // New user (for this email)
+      // New user (this path is taken by signup if email is new, or first login to an unknown email)
+      // Here, the `name` and `phone` parameters are the actual values from signup or derived/mock from login.
       userToLogin = { 
-        id: Date.now().toString(), // Generate a stable ID
+        id: Date.now().toString(), 
         email, 
         name, 
         phone 
       };
     }
     
-    localStorage.setItem(`${USER_DATA_PREFIX}${email}`, JSON.stringify(userToLogin));
+    localStorage.setItem(storageKey, JSON.stringify(userToLogin));
     localStorage.setItem(CURRENT_USER_EMAIL_KEY, email);
     setUser(userToLogin);
   };
@@ -78,23 +78,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = () => {
     setUser(null);
     localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
-    // We don't remove USER_DATA_PREFIX item, so user's data "persists" for next login
   };
 
-  const updateUser = (updatedInfo: Partial<User>) => {
+  const updateUser = (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => {
     if (user) {
-      const oldUser = { ...user }; // Store a copy of the old user data for comparison
-      const newUserData = { ...user, ...updatedInfo };
+      const oldUser = { ...user }; 
+      const newUserData: User = { 
+        ...user, 
+        name: updatedInfo.name ?? user.name,
+        email: updatedInfo.email ?? user.email,
+        phone: updatedInfo.phone ?? user.phone,
+      };
 
-      // If email is being changed
-      if (updatedInfo.email && updatedInfo.email !== oldUser.email) {
-        localStorage.removeItem(`${USER_DATA_PREFIX}${oldUser.email}`); // Remove old email-keyed data
-        localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(newUserData));
+      // If email is being changed, update storage keys
+      if (newUserData.email !== oldUser.email) {
+        localStorage.removeItem(`${USER_DATA_PREFIX}${oldUser.email}`); 
         localStorage.setItem(CURRENT_USER_EMAIL_KEY, newUserData.email);
-      } else {
-        // If email is not changed, just update the data for the current email
-        localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(newUserData));
       }
+      localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(newUserData));
       setUser(newUserData);
 
       // Propagate changes to user's properties
@@ -137,3 +138,4 @@ export const useAuth = () => {
   }
   return context;
 };
+
