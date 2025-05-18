@@ -12,9 +12,17 @@ const initializeProperties = () => {
     const storedProperties = localStorage.getItem(PROPERTIES_STORAGE_KEY);
     if (storedProperties) {
       try {
-        properties = JSON.parse(storedProperties);
+        const parsedProperties = JSON.parse(storedProperties);
+        if (Array.isArray(parsedProperties)) {
+          properties = parsedProperties;
+        } else {
+          // Data is not an array, reset to default
+          console.warn("Properties in localStorage were not an array. Resetting to default.");
+          properties = [...MOCK_PROPERTIES_INITIAL];
+          localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
+        }
       } catch (e) {
-        console.error("Error parsing properties from localStorage", e);
+        console.error("Error parsing properties from localStorage. Resetting to default.", e);
         properties = [...MOCK_PROPERTIES_INITIAL];
         localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
       }
@@ -23,6 +31,7 @@ const initializeProperties = () => {
       localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
     }
   } else {
+    // Fallback for non-browser environments, though primarily client-side logic
     properties = [...MOCK_PROPERTIES_INITIAL];
   }
 };
@@ -39,6 +48,7 @@ const notifyListeners = () => {
 };
 
 export const getProperties = (): Property[] => {
+  // Ensure properties are initialized if accessed early on client-side
   if (typeof window !== 'undefined' && properties.length === 0 && localStorage.getItem(PROPERTIES_STORAGE_KEY)) {
     initializeProperties();
   }
@@ -105,7 +115,8 @@ export const deleteProperty = (propertyId: string, userId: string): boolean => {
 
 export const subscribeToProperties = (listener: PropertyChangeListener): (() => void) => {
   listeners.push(listener);
-  listener(getProperties());
+  // Call listener immediately with current properties
+  listener(getProperties()); 
   
   return () => {
     const index = listeners.indexOf(listener);
@@ -115,10 +126,12 @@ export const subscribeToProperties = (listener: PropertyChangeListener): (() => 
   };
 };
 
+// Helper function to convert square feet to square meters
 export const sqftToSqm = (sqft: number): number => {
-  return parseFloat((sqft * 0.092903).toFixed(1));
+  return parseFloat((sqft * 0.092903).toFixed(1)); // Keep one decimal place for sqm
 };
 
+// Helper function to convert square meters to square feet
 export const sqmToSqft = (sqm: number): number => {
-  return parseFloat((sqm / 0.092903).toFixed(0));
+  return parseFloat((sqm / 0.092903).toFixed(0)); // Round to nearest whole number for sqft
 };
