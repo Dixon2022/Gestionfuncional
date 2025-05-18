@@ -72,7 +72,9 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
             </div>
             <div className="text-3xl font-bold text-primary">
               <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" /> 
-              {property.price.toLocaleString()} {property.listingType === 'Alquiler' ? <span className="text-lg font-normal text-muted-foreground">/mes</span> : ''}
+              ₡{property.price.toLocaleString()} 
+              <span className="text-xl font-medium text-foreground/80 ml-2">({property.listingType})</span>
+              {property.listingType === 'Alquiler' ? <span className="text-lg font-normal text-muted-foreground"> /mes</span> : ''}
             </div>
           </div>
 
@@ -145,6 +147,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           {/* Contact Form */}
           <ContactForm 
             propertyId={property.id} 
+            propertyName={property.title}
             agentEmail={property.agent.email} 
             agentName={property.agent.name} 
           />

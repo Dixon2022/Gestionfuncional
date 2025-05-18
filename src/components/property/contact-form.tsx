@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,6 +24,7 @@ const contactFormSchema = z.object({
   phone: z.string().optional(),
   message: z.string().min(10, { message: 'El mensaje debe tener al menos 10 caracteres.' }),
   propertyId: z.string(),
+  propertyName: z.string(), // Added propertyName
   agentEmail: z.string().email(),
 });
 
@@ -30,11 +32,12 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 interface ContactFormProps {
   propertyId: string;
+  propertyName: string; // Added propertyName
   agentEmail: string;
   agentName: string;
 }
 
-export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormProps) {
+export function ContactForm({ propertyId, propertyName, agentEmail, agentName }: ContactFormProps) {
   const { toast } = useToast();
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -44,6 +47,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
       phone: '',
       message: '',
       propertyId,
+      propertyName, // Initialize propertyName
       agentEmail,
     },
   });
@@ -54,7 +58,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
     console.log('Formulario de contacto enviado:', data);
     toast({
       title: '¡Consulta Enviada!',
-      description: `Tu mensaje sobre la propiedad ID ${data.propertyId} ha sido enviado a ${agentName}.`,
+      description: `Tu mensaje sobre la propiedad "${data.propertyName}" ha sido enviado a ${agentName}.`,
     });
     form.reset();
   }
@@ -114,7 +118,7 @@ export function ContactForm({ propertyId, agentEmail, agentName }: ContactFormPr
                 <FormLabel>Mensaje</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={`Estoy interesado/a en la propiedad ID ${propertyId}...`}
+                    placeholder={`Estoy interesado/a en la propiedad "${propertyName}"...`}
                     className="min-h-[100px]"
                     {...field}
                   />
