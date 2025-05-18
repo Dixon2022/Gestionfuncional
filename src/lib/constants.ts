@@ -1,3 +1,4 @@
+
 import type { Property, PropertyType } from './types';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
@@ -8,10 +9,10 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     title: 'Moderno Apartamento Céntrico',
     address: 'Calle Principal 123, Apt 4B',
     city: 'Metrópolis',
-    price: 350000,
+    price: 210000000, // Approx 350,000 USD in CRC (1 USD = 600 CRC for example)
     bedrooms: 2,
     bathrooms: 2,
-    area: 111, // 1200 sqft
+    area: 111, 
     type: 'Apartamento',
     description: 'Impresionante apartamento de 2 habitaciones en el corazón del centro. Cuenta con una sala de estar de concepto abierto, cocina actualizada con electrodomésticos de acero inoxidable y un balcón privado con vistas a la ciudad. Las comodidades del edificio incluyen un gimnasio y una terraza en la azotea.',
     images: [
@@ -30,17 +31,18 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     features: ['Concepto Abierto', 'Cocina Actualizada', 'Balcón Privado', 'Gimnasio', 'Terraza en Azotea'],
     yearBuilt: 2018,
     lotSize: 0,
-    createdAt: Date.now() - (ONE_DAY_MS * 5), // 5 days ago
+    createdAt: Date.now() - (ONE_DAY_MS * 5), 
+    ownerId: 'system-agent-1',
   },
   {
     id: '2',
     title: 'Espaciosa Casa Familiar',
     address: 'Avenida del Roble 456',
     city: 'Suburbia',
-    price: 650000,
+    price: 390000000, // Approx 650,000 USD in CRC
     bedrooms: 4,
     bathrooms: 3,
-    area: 232, // 2500 sqft
+    area: 232, 
     type: 'Casa',
     description: 'Hermosa y espaciosa casa familiar de 4 habitaciones en un vecindario tranquilo y amigable. Amplio patio trasero con terraza, perfecto para el entretenimiento. Cocina moderna, pisos de madera en toda la casa y un garaje para dos autos.',
     images: [
@@ -58,18 +60,19 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     },
     features: ['Amplio Patio Trasero', 'Terraza', 'Cocina Moderna', 'Pisos de Madera', 'Garaje para Dos Autos'],
     yearBuilt: 2005,
-    lotSize: 697, // 7500 sqft
-    createdAt: Date.now() - (ONE_DAY_MS * 10), // 10 days ago
+    lotSize: 697, 
+    createdAt: Date.now() - (ONE_DAY_MS * 10), 
+    ownerId: 'system-agent-2',
   },
   {
     id: '3',
     title: 'Condominio Urbano Chic',
     address: 'Calle del Pino 789, Unidad 1205',
     city: 'Metrópolis',
-    price: 480000,
+    price: 288000000, // Approx 480,000 USD in CRC
     bedrooms: 1,
     bathrooms: 1,
-    area: 79, // 850 sqft
+    area: 79, 
     type: 'Condominio',
     description: 'Elegante condominio de 1 habitación con impresionantes vistas a la ciudad. Ventanas de piso a techo, cocina gourmet y acceso a comodidades premium del edificio que incluyen piscina, gimnasio y servicio de conserjería.',
     images: [
@@ -85,17 +88,18 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     },
     features: ['Vistas a la Ciudad', 'Ventanas de Piso a Techo', 'Cocina Gourmet', 'Piscina', 'Gimnasio', 'Conserjería'],
     yearBuilt: 2020,
-    createdAt: Date.now() - (ONE_DAY_MS * 2), // 2 days ago
+    createdAt: Date.now() - (ONE_DAY_MS * 2), 
+    ownerId: 'system-agent-3',
   },
   {
     id: '4',
     title: 'Acogedor Adosado con Jardín',
     address: 'Camino de las Flores 101',
     city: 'Valleverde',
-    price: 420000,
+    price: 252000000, // Approx 420,000 USD in CRC
     bedrooms: 3,
     bathrooms: 2.5,
-    area: 167, // 1800 sqft
+    area: 167, 
     type: 'Adosado',
     description: 'Encantador adosado de 3 habitaciones con jardín privado, interiores actualizados y un parque comunitario. Ideal para familias o aquellos que buscan una mezcla de confort y conveniencia.',
     images: [
@@ -112,18 +116,19 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     },
     features: ['Jardín Privado', 'Interiores Actualizados', 'Parque Comunitario', 'Chimenea'],
     yearBuilt: 1998,
-    lotSize: 204, // 2200 sqft
-    createdAt: Date.now() - (ONE_DAY_MS * 7), // 7 days ago
+    lotSize: 204, 
+    createdAt: Date.now() - (ONE_DAY_MS * 7),
+    ownerId: 'system-agent-4',
   },
   {
     id: '5',
     title: 'Suite Penthouse de Lujo',
     address: 'Torre Cielo Alto 99, PH1',
     city: 'Metrópolis',
-    price: 1250000,
+    price: 750000000, // Approx 1,250,000 USD in CRC
     bedrooms: 3,
     bathrooms: 3.5,
-    area: 297, // 3200 sqft
+    area: 297, 
     type: 'Apartamento',
     description: 'Experimente un lujo sin igual en esta exquisita suite penthouse. Vistas panorámicas de la ciudad, amplia terraza, acabados de diseñador y comodidades exclusivas del edificio.',
     images: [
@@ -139,9 +144,11 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     },
     features: ['Vistas Panorámicas', 'Amplia Terraza', 'Acabados de Diseñador', 'Ascensor Privado', 'Hogar Inteligente'],
     yearBuilt: 2022,
-    createdAt: Date.now() - (ONE_DAY_MS * 1), // 1 day ago
+    createdAt: Date.now() - (ONE_DAY_MS * 1), 
+    ownerId: 'system-agent-5',
   },
 ];
 
 export const PROPERTY_TYPES: PropertyType[] = ["Casa", "Apartamento", "Condominio", "Adosado", "Terreno"];
-export const CITIES: string[] = ["Metrópolis", "Suburbia", "Valleverde", "VistaOceano", "CrestaMontana"];
+export const CITIES: string[] = ["Metrópolis", "Suburbia", "Valleverde", "VistaOceano", "CrestaMontana", "San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];
+

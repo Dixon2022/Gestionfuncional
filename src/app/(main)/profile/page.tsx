@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/contexts/auth-context';
@@ -7,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Loader2, UserCircle, Mail, Edit3, LogOut } from 'lucide-react';
+import { Loader2, UserCircle, Mail, Edit3, LogOut, PlusCircle } from 'lucide-react';
 import { getProperties } from '@/lib/property-store';
 import type { Property } from '@/lib/types';
 import { PropertyCard } from '@/components/property/property-card';
@@ -30,10 +31,16 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user && isClient) {
+      // Subscribe to property changes to keep "My Properties" up to date
+      // This could be moved to a custom hook or managed differently in a larger app
       const allProps = getProperties();
       setMyProperties(allProps.filter(p => p.ownerId === user.id));
+      
+      // A more robust solution would use subscribeToProperties from property-store
+      // and update myProperties when the global list changes.
+      // For now, this effect re-filters on user change.
     }
-  }, [user, isClient]);
+  }, [user, isClient]); // Re-run if user changes. Consider adding dependency on a global property update trigger if available.
 
 
   if (loading || !isClient) {
@@ -46,7 +53,6 @@ export default function ProfilePage() {
   }
 
   if (!user) {
-    // This should ideally be caught by the useEffect redirect, but as a fallback
     return (
         <div className="container py-8 text-center">
             <p>Debes iniciar sesión para ver esta página.</p>
@@ -60,7 +66,7 @@ export default function ProfilePage() {
       <Card className="max-w-3xl mx-auto shadow-xl">
         <CardHeader className="text-center">
           <Avatar className="mx-auto h-24 w-24 mb-4 border-2 border-primary">
-             <AvatarImage src={user.name ? `https://placehold.co/100x100.png?text=${user.name.substring(0,1)}` : undefined} alt={user.name || 'Usuario'} data-ai-hint="avatar persona" />
+             <AvatarImage src={user.name ? `https://placehold.co/100x100.png?text=${user.name.substring(0,1)}` : undefined} alt={user.name || 'Usuario'} data-ai-hint="avatar persona"/>
             <AvatarFallback className="text-3xl bg-secondary">
               {user.name ? user.name.substring(0, 2).toUpperCase() : <UserCircle className="h-16 w-16" />}
             </AvatarFallback>
@@ -71,13 +77,18 @@ export default function ProfilePage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex justify-center space-x-4">
-            <Button variant="outline" asChild>
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+            <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/profile/edit">
                 <Edit3 className="mr-2 h-4 w-4" /> Editar Perfil
               </Link>
             </Button>
-            <Button variant="destructive" onClick={() => { logout(); router.push('/'); }}>
+            <Button variant="default" asChild className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
+              <Link href="/generate-description">
+                <PlusCircle className="mr-2 h-4 w-4" /> Agregar Propiedad
+              </Link>
+            </Button>
+            <Button variant="destructive" onClick={() => { logout(); router.push('/'); }} className="w-full sm:w-auto">
               <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
             </Button>
           </div>

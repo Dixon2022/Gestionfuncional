@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, Loader2, Save } from 'lucide-react'; // Removed CheckCircle as it's not used
+import { Sparkles, Loader2, Save } from 'lucide-react';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
 import { PROPERTY_TYPES } from '@/lib/constants';
 import Image from 'next/image';
@@ -41,11 +42,11 @@ const generateDescriptionSchema = z.object({
     ),
   propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }),
   location: z.string().min(2, { message: 'La ubicación debe tener al menos 2 caracteres.' }),
-  title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}), // Added title field
-  price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}), // Added price field
+  title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}),
+  price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}),
   numberOfBedrooms: z.coerce.number().min(0, { message: 'El número de habitaciones no puede ser negativo.' }),
   numberOfBathrooms: z.coerce.number().min(0, { message: 'El número de baños no puede ser negativo.' }),
-  squareFootage: z.coerce.number().min(1, { message: 'Los metros cuadrados deben ser mayores que 0.' }), // Assuming input is in sqm now
+  squareFootage: z.coerce.number().min(1, { message: 'Los metros cuadrados deben ser mayores que 0.' }),
   keyFeatures: z.string().min(5, { message: 'Por favor, lista al menos una característica clave.' }),
 });
 
@@ -69,10 +70,10 @@ export function GenerateDescriptionForm() {
       propertyType: '',
       location: '',
       title: '',
-      price: 100000,
+      price: 50000000, // Default price in CRC
       numberOfBedrooms: 2,
       numberOfBathrooms: 1,
-      squareFootage: 100, // Default to 100 sqm
+      squareFootage: 100, 
       keyFeatures: '',
     },
   });
@@ -85,7 +86,7 @@ export function GenerateDescriptionForm() {
       reader.onloadend = () => {
         const result = reader.result as string;
         setPreviewImage(result);
-        setPhotoDataUriForSave(result); // Store for saving property
+        setPhotoDataUriForSave(result); 
       };
       reader.readAsDataURL(file);
     } else {
@@ -146,7 +147,6 @@ export function GenerateDescriptionForm() {
     }
     setIsSaving(true);
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const newPropertyId = Date.now().toString();
@@ -162,7 +162,7 @@ export function GenerateDescriptionForm() {
       type: formDataForSave.propertyType as Property['type'],
       description: generatedDescription,
       images: [photoDataUriForSave, 'https://placehold.co/600x400.png?text=Interior+Propiedad', 'https://placehold.co/600x400.png?text=Detalle+Propiedad'],
-      isFeatured: false, // New properties are not featured by default
+      isFeatured: false, 
       agent: { 
         name: user.name || user.email.split('@')[0],
         email: user.email,
@@ -174,7 +174,7 @@ export function GenerateDescriptionForm() {
       lotSize: formDataForSave.squareFootage + Math.floor(Math.random() * 50), 
       ownerId: user.id,
       photoDataUri: photoDataUriForSave,
-      createdAt: Date.now(), // Add creation timestamp
+      createdAt: Date.now(),
     };
 
     addProperty(newProperty);
@@ -268,9 +268,9 @@ export function GenerateDescriptionForm() {
                 name="price"
                 render={({ field }) => (
                 <FormItem>
-                    <FormLabel>Precio (USD)</FormLabel>
+                    <FormLabel>Precio (CRC)</FormLabel>
                     <FormControl>
-                    <Input type="number" min="1" placeholder="Ej: 250000" {...field} disabled={isLoading || isSaving} />
+                    <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isLoading || isSaving} />
                     </FormControl>
                     <FormMessage />
                 </FormItem>
@@ -286,7 +286,7 @@ export function GenerateDescriptionForm() {
               <FormItem>
                 <FormLabel>Ubicación (Ciudad, Barrio)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: Madrid, Salamanca" {...field} disabled={isLoading || isSaving} />
+                  <Input placeholder="Ej: San José, Escazú" {...field} disabled={isLoading || isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

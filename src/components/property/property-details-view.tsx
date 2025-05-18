@@ -1,18 +1,18 @@
+
 import Image from 'next/image';
 import type { Property } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { ContactForm } from './contact-form';
-import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, DollarSign, Tag, Layers, UserCircle } from 'lucide-react';
+import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCircle, Landmark } from 'lucide-react'; // Changed DollarSign to Landmark for CRC
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { sqftToSqm } from '@/lib/property-store';
 
 interface PropertyDetailsViewProps {
   property: Property;
 }
 
 export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
-  const displayArea = `${property.area.toLocaleString()} m²`; // Area is in sqm
+  const displayArea = `${property.area.toLocaleString()} m²`; 
   const displayLotSize = property.lotSize ? `${property.lotSize.toLocaleString()} m²` : 'N/A';
 
   return (
@@ -60,7 +60,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               <span>{property.address}, {property.city}</span>
             </div>
             <div className="text-3xl font-bold text-primary">
-              <DollarSign className="inline-block mr-1 h-7 w-7 relative -top-0.5" />
+              <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" /> 
               {property.price.toLocaleString()}
             </div>
           </div>
@@ -96,7 +96,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               <div className="flex flex-wrap gap-2">
                 {property.features.map((feature, index) => (
                   <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
-                    <Tag className="mr-1.5 h-3.5 w-3.5"/>
+                    <Layers className="mr-1.5 h-3.5 w-3.5"/> {/* Changed Tag to Layers for consistency */}
                     {feature}
                   </Badge>
                 ))}

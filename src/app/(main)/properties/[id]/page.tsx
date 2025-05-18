@@ -1,65 +1,75 @@
+
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import { PropertyDetailsView } from '@/components/property/property-details-view';
-import { MOCK_PROPERTIES_INITIAL } from '@/lib/constants';
 import { getPropertyById } from '@/lib/property-store';
-import { notFound } from 'next/navigation';
-import type { Metadata, ResolvingMetadata } from 'next';
 import type { Property } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-interface PropertyPageProps {
-  params: { id: string };
-}
-
-// This function can be used to pre-render static pages at build time for initial mock properties
-export async function generateStaticParams() {
-  return MOCK_PROPERTIES_INITIAL.map((property) => ({
-    id: property.id,
-  }));
-}
-
-async function getProperty(id: string): Promise<Property | undefined> {
-  // Attempt to get property from the dynamic store first (for client-side additions)
-  // This will run server-side during ISR or SSR for new IDs not in generateStaticParams
-  let property = getPropertyById(id);
+export default function PropertyPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = typeof params.id === 'string' ? params.id : undefined;
   
-  // Fallback for properties that might only exist in the initial static list
-  // (though getPropertyById should cover this if the store is initialized correctly)
-  if (!property) {
-    property = MOCK_PROPERTIES_INITIAL.find((p) => p.id === id);
-  }
-  return property;
-}
+  const [property, setProperty] = useState<Property | null | undefined>(undefined); // undefined initially, null if not found
+  const [isLoading, setIsLoading] = useState(true);
 
-export async function generateMetadata(
-  { params }: PropertyPageProps,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-  const property = await getProperty(params.id);
-
-  if (!property) {
-    return {
-      title: 'Propiedad No Encontrada - PropVerse',
+  useEffect(() => {
+    if (id) {
+      const fetchedProperty = getPropertyById(id);
+      setProperty(fetchedProperty || null); // Set to null if not found after fetch
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
+      setProperty(null); // No ID, so not found
     }
+  }, [id]);
+
+  useEffect(() => {
+    if (property && property.title) {
+      document.title = `${property.title} - PropVerse`;
+    } else if (property === null && !isLoading) {
+      document.title = 'Propiedad No Encontrada - PropVerse';
+    }
+  }, [property, isLoading]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[calc(100vh-theme(spacing.16))] flex-1 items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <span className="sr-only">Cargando propiedad...</span>
+      </div>
+    );
   }
 
-  const descriptionSubstring = property.description ? property.description.substring(0, 160) : 'Ver detalles de la propiedad.';
-
-  return {
-    title: `${property.title} - PropVerse`,
-    description: descriptionSubstring,
-    openGraph: {
-      title: property.title,
-      description: descriptionSubstring,
-      images: property.images.length > 0 ? [property.images[0]] : ['https://placehold.co/800x600.png?text=Propiedad'],
-    },
+  if (property === null) {
+    // Programmatic notFound() is not available in client components in the same way.
+    // Instead, we render a not found UI or redirect.
+    // For consistency with the original not-found.tsx, we can redirect or show a similar UI.
+    // router.replace('/404') or render a dedicated component.
+    // For now, let's use the error.tsx as a template for a simple not-found message.
+     return (
+      <div className="container py-12 text-center">
+        <h2 className="text-2xl font-semibold mb-4">Propiedad no encontrada</h2>
+        <p className="text-muted-foreground mb-6">
+          La propiedad que buscas no existe o no está disponible.
+        </p>
+        <Button onClick={() => router.push('/properties')}>Volver a Propiedades</Button>
+      </div>
+    );
   }
-}
-
-
-export default async function PropertyPage({ params }: PropertyPageProps) {
-  const property = await getProperty(params.id);
-
+  
   if (!property) {
-    notFound();
+    // This case should ideally be covered by isLoading or property === null
+    // It's a fallback, could also render a generic error or redirect.
+    return (
+         <div className="container py-12 text-center">
+            <p>Cargando datos de la propiedad...</p>
+         </div>
+    );
   }
 
   return <PropertyDetailsView property={property} />;
