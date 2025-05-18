@@ -19,29 +19,34 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Sparkles, Loader2, Save } from 'lucide-react';
+import { Sparkles, Loader2, Save, UploadCloud, Trash2 } from 'lucide-react';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
 import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
 import { addProperty, sqmToSqft } from '@/lib/property-store';
-import type { Property, PropertyType as PropertyTypeType, ListingType } from '@/lib/types';
+import type { Property, PropertyType as PropertyTypeType, ListingType as ListingTypeType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+const MAX_IMAGES = 10;
 
 const generateDescriptionSchema = z.object({
-  photo: z
+  photos: z
     .custom<FileList>()
-    .refine((files) => files && files.length > 0, 'La foto de la propiedad es requerida.')
-    .refine((files) => files?.[0]?.size <= MAX_FILE_SIZE, `El tamaño máximo del archivo es 5MB.`)
+    .refine((files) => files && files.length > 0, 'Se requiere al menos una foto de la propiedad.')
+    .refine((files) => files && files.length <= MAX_IMAGES, `Puedes subir un máximo de ${MAX_IMAGES} imágenes.`)
     .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files?.[0]?.type),
-      'Se aceptan archivos .jpg, .jpeg, .png y .webp.'
+      (files) => Array.from(files || []).every((file) => file.size <= MAX_FILE_SIZE),
+      `Cada archivo no debe superar los 5MB.`
+    )
+    .refine(
+      (files) => Array.from(files || []).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+      'Solo se aceptan archivos .jpg, .jpeg, .png y .webp.'
     ),
   propertyType: z.string().min(1, { message: 'El tipo de propiedad es requerido.' }) as z.ZodType<PropertyTypeType>,
-  listingType: z.string().min(1, {message: 'El tipo de listado es requerido.'}) as z.ZodType<ListingType>,
+  listingType: z.string().min(1, {message: 'El tipo de listado es requerido.'}) as z.ZodType<ListingTypeType>,
   location: z.string().min(2, { message: 'La ubicación debe tener al menos 2 caracteres.' }),
   title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}),
   price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}),
@@ -60,9 +65,8 @@ export function GenerateDescriptionForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [formDataForSave, setFormDataForSave] = useState<GenerateDescriptionFormValues | null>(null);
-  const [photoDataUriForSave, setPhotoDataUriForSave] = useState<string | null>(null);
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [photoDataUrisForSave, setPhotoDataUrisForSave] = useState<string[]>([]);
 
 
   const form = useForm<GenerateDescriptionFormValues>({
@@ -80,22 +84,92 @@ export function GenerateDescriptionForm() {
     },
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      form.setValue('photo', event.target.files as FileList);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setPreviewImage(result);
-        setPhotoDataUriForSave(result); 
-      };
-      reader.readAsDataURL(file);
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      form.setValue('photos', files); // Update RHF state
+      const fileArray = Array.from(files);
+      
+      if (fileArray.length > MAX_IMAGES) {
+        toast({
+          title: "Demasiadas Imágenes",
+          description: `Has seleccionado ${fileArray.length} imágenes. Solo se procesarán las primeras ${MAX_IMAGES}.`,
+          variant: "destructive",
+        });
+      }
+
+      const limitedFiles = fileArray.slice(0, MAX_IMAGES);
+      const newPreviewImages: string[] = [];
+      const newPhotoDataUris: string[] = [];
+
+      for (const file of limitedFiles) {
+        if (file.size > MAX_FILE_SIZE) {
+          toast({ title: 'Archivo Demasiado Grande', description: `El archivo "${file.name}" excede los 5MB y no será procesado.`, variant: 'destructive' });
+          continue;
+        }
+        if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+          toast({ title: 'Tipo de Archivo No Soportado', description: `El archivo "${file.name}" tiene un formato no soportado y no será procesado.`, variant: 'destructive' });
+          continue;
+        }
+        const reader = new FileReader();
+        const promise = new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => {
+            if (typeof reader.result === 'string') {
+              resolve(reader.result);
+            } else {
+              reject(new Error('Error al leer el archivo.'));
+            }
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+
+        try {
+          const result = await promise;
+          newPreviewImages.push(result);
+          newPhotoDataUris.push(result);
+        } catch (error) {
+          console.error("Error processing file:", error);
+          toast({ title: 'Error al procesar imagen', description: `No se pudo procesar el archivo "${file.name}".`, variant: 'destructive' });
+        }
+      }
+      setPreviewImages(newPreviewImages);
+      setPhotoDataUrisForSave(newPhotoDataUris);
+      if (newPhotoDataUris.length === 0 && files.length > 0) { // if all files failed
+        form.resetField('photos');
+      }
     } else {
-      setPreviewImage(null);
-      setPhotoDataUriForSave(null);
+      setPreviewImages([]);
+      setPhotoDataUrisForSave([]);
+      form.resetField('photos');
     }
   };
+  
+  const removeImage = (index: number) => {
+    const newPreviews = [...previewImages];
+    const newUris = [...photoDataUrisForSave];
+    newPreviews.splice(index, 1);
+    newUris.splice(index, 1);
+    setPreviewImages(newPreviews);
+    setPhotoDataUrisForSave(newUris);
+
+    // Update react-hook-form state
+    const currentFiles = form.getValues('photos');
+    if (currentFiles) {
+      const updatedFileList = Array.from(currentFiles);
+      updatedFileList.splice(index, 1);
+      
+      // Create a new FileList
+      const dataTransfer = new DataTransfer();
+      updatedFileList.forEach(file => dataTransfer.items.add(file));
+      form.setValue('photos', dataTransfer.files, { shouldValidate: true });
+
+      if (dataTransfer.files.length === 0) {
+        form.resetField('photos'); // if all images removed
+      }
+    }
+  };
+
 
   async function onSubmit(data: GenerateDescriptionFormValues) {
     setIsLoading(true);
@@ -103,14 +177,14 @@ export function GenerateDescriptionForm() {
     setFormDataForSave(data); 
 
     try {
-      if (!photoDataUriForSave) {
-        toast({ title: 'Error al leer archivo', description: 'No se pudo leer la foto cargada.', variant: 'destructive' });
+      if (photoDataUrisForSave.length === 0) {
+        toast({ title: 'Fotos Requeridas', description: 'Por favor, sube al menos una foto de la propiedad.', variant: 'destructive' });
         setIsLoading(false);
         return;
       }
       
       const input: GeneratePropertyDescriptionInput = {
-        photoDataUri: photoDataUriForSave,
+        photoDataUri: photoDataUrisForSave[0], // Use the first image for AI description
         propertyType: data.propertyType,
         location: data.location,
         numberOfBedrooms: data.numberOfBedrooms,
@@ -123,7 +197,7 @@ export function GenerateDescriptionForm() {
       setGeneratedDescription(result.description);
       toast({
         title: '¡Descripción Generada!',
-        description: 'Tu descripción de propiedad generada por IA está lista.',
+        description: 'Tu descripción de propiedad generada por IA está lista. La primera imagen fue usada para la generación.',
       });
 
     } catch (error) {
@@ -139,10 +213,10 @@ export function GenerateDescriptionForm() {
   }
 
   const handleSaveProperty = async () => {
-    if (!user || !formDataForSave || !generatedDescription || !photoDataUriForSave) {
+    if (!user || !formDataForSave || !generatedDescription || photoDataUrisForSave.length === 0) {
       toast({
         title: 'Error',
-        description: 'Faltan datos para guardar la propiedad o no has iniciado sesión.',
+        description: 'Faltan datos para guardar la propiedad, no has iniciado sesión, o no hay imágenes válidas.',
         variant: 'destructive',
       });
       return;
@@ -151,7 +225,7 @@ export function GenerateDescriptionForm() {
 
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const newPropertyId = Date.now().toString(); // Using timestamp for simplicity as ID
+    const newPropertyId = Date.now().toString(); 
     const newProperty: Property = {
       id: newPropertyId,
       title: formDataForSave.title, 
@@ -164,7 +238,7 @@ export function GenerateDescriptionForm() {
       type: formDataForSave.propertyType,
       listingType: formDataForSave.listingType,
       description: generatedDescription,
-      images: [photoDataUriForSave, 'https://placehold.co/600x400.png?text=Interior+Propiedad', 'https://placehold.co/600x400.png?text=Detalle+Propiedad'],
+      images: photoDataUrisForSave, // Save all uploaded images
       isFeatured: Math.random() < 0.2, 
       agent: { 
         name: user.name,
@@ -176,7 +250,7 @@ export function GenerateDescriptionForm() {
       yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
       lotSize: formDataForSave.squareFootage + Math.floor(Math.random() * 50), 
       ownerId: user.id,
-      photoDataUri: photoDataUriForSave,
+      photoDataUri: photoDataUrisForSave[0], // Use first image as primary display
       createdAt: Date.now(),
     };
 
@@ -206,24 +280,65 @@ export function GenerateDescriptionForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <FormField
             control={form.control}
-            name="photo"
-            render={({ field }) => (
+            name="photos"
+            render={({ field }) => ( // field is not directly used for input value due to FileList complexity
               <FormItem>
-                <FormLabel>Foto de la Propiedad</FormLabel>
+                <FormLabel>Fotos de la Propiedad (1-10 imágenes)</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="file" 
-                    accept={ACCEPTED_IMAGE_TYPES.join(',')}
-                    onChange={handleFileChange}
-                    disabled={isLoading || isSaving}
-                  />
+                  <div className="flex items-center justify-center w-full">
+                    <label
+                      htmlFor="photos-upload"
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-secondary/50 hover:bg-secondary/70 border-input"
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <UploadCloud className="w-8 h-8 mb-2 text-muted-foreground" />
+                        <p className="mb-1 text-sm text-muted-foreground">
+                          <span className="font-semibold">Haz clic para subir</span> o arrastra y suelta
+                        </p>
+                        <p className="text-xs text-muted-foreground">PNG, JPG, JPEG, WEBP (Máx. 5MB por imagen, {MAX_IMAGES} imágenes máx.)</p>
+                      </div>
+                      <Input 
+                        id="photos-upload"
+                        type="file" 
+                        accept={ACCEPTED_IMAGE_TYPES.join(',')}
+                        multiple
+                        onChange={handleFileChange}
+                        className="hidden"
+                        disabled={isLoading || isSaving}
+                      />
+                    </label>
+                  </div>
                 </FormControl>
-                {previewImage && (
-                  <div className="mt-2 relative w-full h-48 overflow-hidden rounded-md border">
-                    <Image src={previewImage} alt="Vista previa" layout="fill" objectFit="cover" data-ai-hint="foto propiedad"/>
+                {previewImages.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {previewImages.map((src, index) => (
+                      <div key={index} className="relative group aspect-square">
+                        <Image 
+                            src={src} 
+                            alt={`Vista previa ${index + 1}`} 
+                            fill={true}
+                            style={{objectFit: "cover"}}
+                            className="rounded-md border"
+                            data-ai-hint="foto propiedad"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-1 right-1 h-6 w-6 opacity-75 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeImage(index)}
+                          disabled={isLoading || isSaving}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                          <span className="sr-only">Eliminar imagen {index + 1}</span>
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
-                <FormDescription>Sube una foto clara de la propiedad (máx 5MB).</FormDescription>
+                <FormDescription>
+                  Sube fotos claras de la propiedad. La primera imagen será usada para generar la descripción con IA.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -380,7 +495,7 @@ export function GenerateDescriptionForm() {
             )}
           />
 
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading || isSaving}>
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading || isSaving || photoDataUrisForSave.length === 0}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -420,3 +535,4 @@ export function GenerateDescriptionForm() {
     </div>
   );
 }
+
