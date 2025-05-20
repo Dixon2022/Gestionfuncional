@@ -54,6 +54,7 @@ const generateDescriptionSchema = z.object({
   numberOfBathrooms: z.coerce.number().min(0, { message: 'El número de baños no puede ser negativo.' }),
   squareFootage: z.coerce.number().min(1, { message: 'Los metros cuadrados deben ser mayores que 0.' }),
   keyFeatures: z.string().min(5, { message: 'Por favor, lista al menos una característica clave.' }),
+  description: z.string().min(20, { message: "La descripción debe tener al menos 20 caracteres."}),
 });
 
 type GenerateDescriptionFormValues = z.infer<typeof generateDescriptionSchema>;
@@ -62,12 +63,10 @@ export function GenerateDescriptionForm() {
   const { toast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [generatedDescription, setGeneratedDescription] = useState<string | null>(null);
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [photoDataUrisForSave, setPhotoDataUrisForSave] = useState<string[]>([]);
-
 
   const form = useForm<GenerateDescriptionFormValues>({
     resolver: zodResolver(generateDescriptionSchema),
@@ -81,13 +80,14 @@ export function GenerateDescriptionForm() {
       numberOfBathrooms: 1,
       squareFootage: 100, 
       keyFeatures: '',
+      description: '',
     },
   });
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      form.setValue('photos', files); // Update RHF state
+      form.setValue('photos', files);
       const fileArray = Array.from(files);
       
       if (fileArray.length > MAX_IMAGES) {
@@ -135,7 +135,7 @@ export function GenerateDescriptionForm() {
       }
       setPreviewImages(newPreviewImages);
       setPhotoDataUrisForSave(newPhotoDataUris);
-      if (newPhotoDataUris.length === 0 && files.length > 0) { // if all files failed
+      if (newPhotoDataUris.length === 0 && files.length > 0) {
         form.resetField('photos');
       }
     } else {
@@ -153,38 +153,33 @@ export function GenerateDescriptionForm() {
     setPreviewImages(newPreviews);
     setPhotoDataUrisForSave(newUris);
 
-    // Update react-hook-form state
     const currentFiles = form.getValues('photos');
     if (currentFiles) {
       const updatedFileList = Array.from(currentFiles);
       updatedFileList.splice(index, 1);
       
-      // Create a new FileList
       const dataTransfer = new DataTransfer();
       updatedFileList.forEach(file => dataTransfer.items.add(file));
       form.setValue('photos', dataTransfer.files, { shouldValidate: true });
 
       if (dataTransfer.files.length === 0) {
-        form.resetField('photos'); // if all images removed
+        form.resetField('photos');
       }
     }
   };
 
-
-  async function onSubmit(data: GenerateDescriptionFormValues) {
-    setIsLoading(true);
-    setGeneratedDescription(null);
-    setFormDataForSave(data); 
-
+  // This function is triggered by the "Generar Descripción con IA" button
+  async function handleAIGenerateDescription(data: GenerateDescriptionFormValues) {
+    setIsAIGenerating(true);
     try {
       if (photoDataUrisForSave.length === 0) {
         toast({ title: 'Fotos Requeridas', description: 'Por favor, sube al menos una foto de la propiedad.', variant: 'destructive' });
-        setIsLoading(false);
+        setIsAIGenerating(false);
         return;
       }
       
       const input: GeneratePropertyDescriptionInput = {
-        photoDataUri: photoDataUrisForSave[0], // Use the first image for AI description
+        photoDataUri: photoDataUrisForSave[0],
         propertyType: data.propertyType,
         location: data.location,
         numberOfBedrooms: data.numberOfBedrooms,
@@ -194,51 +189,67 @@ export function GenerateDescriptionForm() {
       };
       
       const result = await generatePropertyDescription(input);
-      setGeneratedDescription(result.description);
+      form.setValue('description', result.description); // Set AI description into the form field
       toast({
-        title: '¡Descripción Generada!',
-        description: 'Tu descripción de propiedad generada por IA está lista. La primera imagen fue usada para la generación.',
+        title: '¡Descripción Generada por IA!',
+        description: 'La descripción generada se ha añadido al formulario. Puedes editarla si lo deseas.',
       });
 
     } catch (error) {
-      console.error('Error generando descripción:', error);
+      console.error('Error generando descripción con IA:', error);
       toast({
-        title: 'Falló la Generación',
+        title: 'Falló la Generación con IA',
         description: (error as Error).message || 'Ocurrió un error inesperado.',
         variant: 'destructive',
       });
     } finally {
-      setIsLoading(false);
+      setIsAIGenerating(false);
     }
   }
 
   const handleSaveProperty = async () => {
-    if (!user || !formDataForSave || !generatedDescription || photoDataUrisForSave.length === 0) {
+    const isValid = await form.trigger(); // Validate all fields, including manual description
+    if (!isValid) {
+      toast({ title: "Formulario Inválido", description: "Por favor, completa todos los campos requeridos.", variant: "destructive" });
+      return;
+    }
+
+    const currentFormData = form.getValues();
+
+    if (!user || photoDataUrisForSave.length === 0) {
       toast({
         title: 'Error',
-        description: 'Faltan datos para guardar la propiedad, no has iniciado sesión, o no hay imágenes válidas.',
+        description: 'Faltan fotos para guardar la propiedad o no has iniciado sesión.',
         variant: 'destructive',
       });
       return;
     }
-    setIsSaving(true);
+    if (!currentFormData.description) {
+        toast({
+            title: 'Descripción Requerida',
+            description: 'Por favor, ingresa una descripción para la propiedad o genérala con IA.',
+            variant: 'destructive',
+        });
+        return;
+    }
 
+    setIsSaving(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     const newPropertyId = Date.now().toString(); 
     const newProperty: Property = {
       id: newPropertyId,
-      title: formDataForSave.title, 
-      address: formDataForSave.location, 
-      city: formDataForSave.location.split(',')[0]?.trim() || formDataForSave.location,
-      price: formDataForSave.price,
-      bedrooms: formDataForSave.numberOfBedrooms,
-      bathrooms: formDataForSave.numberOfBathrooms,
-      area: formDataForSave.squareFootage, 
-      type: formDataForSave.propertyType,
-      listingType: formDataForSave.listingType,
-      description: generatedDescription,
-      images: photoDataUrisForSave, // Save all uploaded images
+      title: currentFormData.title, 
+      address: currentFormData.location, 
+      city: currentFormData.location.split(',')[0]?.trim() || currentFormData.location,
+      price: currentFormData.price,
+      bedrooms: currentFormData.numberOfBedrooms,
+      bathrooms: currentFormData.numberOfBathrooms,
+      area: currentFormData.squareFootage, 
+      type: currentFormData.propertyType,
+      listingType: currentFormData.listingType,
+      description: currentFormData.description, // Use description from the form
+      images: photoDataUrisForSave,
       isFeatured: Math.random() < 0.2, 
       agent: { 
         name: user.name,
@@ -246,11 +257,11 @@ export function GenerateDescriptionForm() {
         phone: user.phone, 
         avatarUrl: `https://placehold.co/100x100.png?text=${user.name ? user.name.substring(0,1) : 'U'}`
       },
-      features: formDataForSave.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
+      features: currentFormData.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
       yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
-      lotSize: formDataForSave.squareFootage + Math.floor(Math.random() * 50), 
+      lotSize: currentFormData.squareFootage + Math.floor(Math.random() * 50), 
       ownerId: user.id,
-      photoDataUri: photoDataUrisForSave[0], // Use first image as primary display
+      photoDataUri: photoDataUrisForSave[0],
       createdAt: Date.now(),
     };
 
@@ -269,7 +280,6 @@ export function GenerateDescriptionForm() {
     setIsSaving(false);
   };
 
-
   return (
     <div className="max-w-2xl mx-auto p-6 border rounded-lg shadow-lg bg-card">
       <h2 className="text-2xl font-semibold mb-6 flex items-center">
@@ -277,11 +287,12 @@ export function GenerateDescriptionForm() {
         Detalles de la Propiedad
       </h2>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {/* The form onSubmit now triggers AI generation */}
+        <form onSubmit={form.handleSubmit(handleAIGenerateDescription)} className="space-y-6">
           <FormField
             control={form.control}
             name="photos"
-            render={({ field }) => ( // field is not directly used for input value due to FileList complexity
+            render={({ field }) => (
               <FormItem>
                 <FormLabel>Fotos de la Propiedad (1-10 imágenes)</FormLabel>
                 <FormControl>
@@ -304,7 +315,7 @@ export function GenerateDescriptionForm() {
                         multiple
                         onChange={handleFileChange}
                         className="hidden"
-                        disabled={isLoading || isSaving}
+                        disabled={isAIGenerating || isSaving}
                       />
                     </label>
                   </div>
@@ -327,7 +338,7 @@ export function GenerateDescriptionForm() {
                           size="icon"
                           className="absolute top-1 right-1 h-6 w-6 opacity-75 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeImage(index)}
-                          disabled={isLoading || isSaving}
+                          disabled={isAIGenerating || isSaving}
                         >
                           <Trash2 className="h-3 w-3" />
                           <span className="sr-only">Eliminar imagen {index + 1}</span>
@@ -351,7 +362,7 @@ export function GenerateDescriptionForm() {
               <FormItem>
                 <FormLabel>Título de la Propiedad</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: Hermoso Apartamento con Vistas" {...field} disabled={isLoading || isSaving}/>
+                  <Input placeholder="Ej: Hermoso Apartamento con Vistas" {...field} disabled={isAIGenerating || isSaving}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -365,7 +376,7 @@ export function GenerateDescriptionForm() {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Tipo de Propiedad</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading || isSaving}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAIGenerating || isSaving}>
                     <FormControl>
                         <SelectTrigger>
                         <SelectValue placeholder="Selecciona el tipo" />
@@ -387,7 +398,7 @@ export function GenerateDescriptionForm() {
                 render={({ field }) => (
                 <FormItem>
                     <FormLabel>Tipo de Listado</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isLoading || isSaving}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isAIGenerating || isSaving}>
                     <FormControl>
                         <SelectTrigger>
                         <SelectValue placeholder="Selecciona el listado" />
@@ -412,13 +423,12 @@ export function GenerateDescriptionForm() {
             <FormItem>
                 <FormLabel>Precio (CRC)</FormLabel>
                 <FormControl>
-                <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isLoading || isSaving} />
+                <Input type="number" min="1" placeholder="Ej: 50000000" {...field} disabled={isAIGenerating || isSaving} />
                 </FormControl>
                 <FormMessage />
             </FormItem>
             )}
         />
-
 
           <FormField
             control={form.control}
@@ -427,7 +437,7 @@ export function GenerateDescriptionForm() {
               <FormItem>
                 <FormLabel>Ubicación (Ciudad, Barrio)</FormLabel>
                 <FormControl>
-                  <Input placeholder="Ej: San José, Escazú" {...field} disabled={isLoading || isSaving} />
+                  <Input placeholder="Ej: San José, Escazú" {...field} disabled={isAIGenerating || isSaving} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -442,7 +452,7 @@ export function GenerateDescriptionForm() {
                 <FormItem>
                   <FormLabel>Habitaciones</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" {...field} disabled={isLoading || isSaving}/>
+                    <Input type="number" min="0" {...field} disabled={isAIGenerating || isSaving}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -455,7 +465,7 @@ export function GenerateDescriptionForm() {
                 <FormItem>
                   <FormLabel>Baños</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="0.5" {...field} disabled={isLoading || isSaving}/>
+                    <Input type="number" min="0" step="0.5" {...field} disabled={isAIGenerating || isSaving}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -468,7 +478,7 @@ export function GenerateDescriptionForm() {
                 <FormItem>
                   <FormLabel>Superficie (m²)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="1" {...field} disabled={isLoading || isSaving}/>
+                    <Input type="number" min="1" {...field} disabled={isAIGenerating || isSaving}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -486,7 +496,7 @@ export function GenerateDescriptionForm() {
                   <Textarea
                     placeholder="Ej: Cocina renovada, Suelos de parquet, Amplio jardín"
                     {...field}
-                    disabled={isLoading || isSaving}
+                    disabled={isAIGenerating || isSaving}
                   />
                 </FormControl>
                 <FormDescription>Destaca los mejores aspectos de la propiedad.</FormDescription>
@@ -494,9 +504,28 @@ export function GenerateDescriptionForm() {
               </FormItem>
             )}
           />
+          
+          <FormField
+            control={form.control}
+            name="description"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Descripción de la Propiedad</FormLabel>
+                <FormControl>
+                    <Textarea
+                    placeholder="Describe tu propiedad detalladamente o usa la IA para generarla y luego edítala aquí."
+                    className="min-h-[120px]"
+                    {...field}
+                    disabled={isAIGenerating || isSaving}
+                    />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+           />
 
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading || isSaving || photoDataUrisForSave.length === 0}>
-            {isLoading ? (
+          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isAIGenerating || isSaving || photoDataUrisForSave.length === 0}>
+            {isAIGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Generando Descripción...
@@ -504,35 +533,24 @@ export function GenerateDescriptionForm() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generar Descripción con IA
+                Generar/Regenerar Descripción con IA
               </>
             )}
           </Button>
         </form>
       </Form>
 
-      {generatedDescription && (
-        <div className="mt-8 p-4 border rounded-md bg-secondary/30">
-          <h3 className="text-lg font-semibold mb-2">Descripción Generada por IA:</h3>
-          <p className="text-sm whitespace-pre-line">{generatedDescription}</p>
-          {user && formDataForSave && (
-             <Button onClick={handleSaveProperty} className="w-full mt-4 bg-accent hover:bg-accent/90" disabled={isSaving || isLoading}>
-             {isSaving ? (
-               <>
-                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                 Guardando Propiedad...
-               </>
-             ) : (
-               <>
-                 <Save className="mr-2 h-4 w-4" />
-                 Guardar Propiedad y Ver Listado
-               </>
-             )}
-           </Button>
-          )}
-        </div>
-      )}
+      <Button 
+        onClick={handleSaveProperty} 
+        className="w-full mt-4 bg-accent hover:bg-accent/90 text-accent-foreground" 
+        disabled={isSaving || isAIGenerating}
+      >
+        {isSaving ? (
+          <> <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando Propiedad... </>
+        ) : (
+          <> <Save className="mr-2 h-4 w-4" /> Guardar Propiedad </>
+        )}
+      </Button>
     </div>
   );
 }
-
