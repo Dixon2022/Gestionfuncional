@@ -1,12 +1,5 @@
 
 'use server';
-/**
- * @fileOverview AI-powered property description generator.
- *
- * - generatePropertyDescription - A function that generates a property description.
- * - GeneratePropertyDescriptionInput - The input type for the generatePropertyDescription function.
- * - GeneratePropertyDescriptionOutput - The return type for the generatePropertyDescription function.
- */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
@@ -15,19 +8,19 @@ const GeneratePropertyDescriptionInputSchema = z.object({
   photoDataUri: z
     .string()
     .describe(
-      "A photo of the property, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "Una foto de la propiedad, como un URI de datos que debe incluir un tipo MIME y usar codificación Base64. Formato esperado: 'data:<mimetype>;base64,<encoded_data>'."
     ),
-  propertyType: z.string().describe('El tipo de propiedad (e.g., casa, apartamento, condominio).'),
+  propertyType: z.string().describe('El tipo de propiedad (p.ej., casa, apartamento, condominio).'),
   location: z.string().describe('La ubicación de la propiedad (ciudad, vecindario).'),
   numberOfBedrooms: z.number().describe('El número de habitaciones en la propiedad.'),
   numberOfBathrooms: z.number().describe('El número de baños en la propiedad.'),
-  squareFootage: z.number().describe('La superficie de la propiedad en pies cuadrados.'), // Input to AI is in sqft
+  squareFootage: z.number().describe('La superficie de la propiedad en pies cuadrados.'), 
   keyFeatures: z.string().describe('Una lista separada por comas de las características clave de la propiedad.'),
 });
 export type GeneratePropertyDescriptionInput = z.infer<typeof GeneratePropertyDescriptionInputSchema>;
 
 const GeneratePropertyDescriptionOutputSchema = z.object({
-  description: z.string().describe('Una descripción de propiedad convincente generada por IA en ESPAÑOL.'),
+  description: z.string().describe('Una descripción de propiedad convincente generada por IA EN ESPAÑOL.'),
 });
 export type GeneratePropertyDescriptionOutput = z.infer<typeof GeneratePropertyDescriptionOutputSchema>;
 
