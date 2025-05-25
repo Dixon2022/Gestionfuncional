@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { Building2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
+// Esquema de validación
 const loginSchema = z.object({
   email: z.string().email({ message: "Por favor ingresa un email válido." }),
   password: z.string().min(1, { message: "La contraseña es requerida." }),
@@ -44,23 +45,13 @@ export default function LoginPage() {
         },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("No se pudo conectar con el servidor");
 
-      const users = await response.json();
-
-      const user = users.find(
-        (u: any) => u.email === data.email && u.password === data.password
-      );
-
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "Correo o contraseña incorrectos.",
-          duration: 5000,
-        });
-        setIsLoading(false);
-        return;
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.error || "Error al iniciar sesión");
       }
+
+      const user = await response.json();
 
       login(user.email, user.name, user.phone || "");
       toast({
@@ -133,8 +124,7 @@ export default function LoginPage() {
             "Iniciando sesión..."
           ) : (
             <>
-              {" "}
-              <LogIn className="mr-2" /> Iniciar Sesión{" "}
+              <LogIn className="mr-2" /> Iniciar Sesión
             </>
           )}
         </Button>
