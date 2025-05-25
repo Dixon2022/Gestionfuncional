@@ -1,5 +1,3 @@
-// pages/api/login.ts
-
 import { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../lib/prisma"; // o como tengas configurado tu prisma
 
