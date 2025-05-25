@@ -1,29 +1,33 @@
+// pages/api/login.ts
+
 import { NextApiRequest, NextApiResponse } from "next";
-import prisma from "../../lib/prisma"; // ajusta la ruta según tu proyecto
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
+// Simulación de base de datos (reemplaza por tu lógica real)
+const mockUsers = [
+  {
+    email: "test@example.com",
+    password: "123456",
+    name: "Juan Pérez",
+    phone: "12345678",
+  },
+];
 
-  const { email, password } = req.body;
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === "POST") {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Missing email or password" });
-  }
+    const user = mockUsers.find(
+      (u) => u.email === email && u.password === password
+    );
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-
-    if (!user || user.password !== password) {
-      return res.status(401).json({ error: "Invalid credentials" });
+    if (!user) {
+      return res.status(401).json({ message: "Credenciales inválidas" });
     }
 
-    res.status(200).json(user);
-  } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    return res.status(200).json(user);
   }
+
+  // Si no es POST, rechaza con 405
+  res.setHeader("Allow", ["POST"]);
+  return res.status(405).end(`Método ${req.method} no permitido`);
 }
