@@ -3,14 +3,14 @@ import prisma from "../../../lib/prisma"; // Asegúrate que la ruta sea correcta
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Configurar CORS
-  res.setHeader('Access-Control-Allow-Origin', '*'); // Puedes poner aquí el dominio permitido en vez de '*'
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === 'OPTIONS') {
-    // Respondemos a la preflight request
+  if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
+
 
   {
     try {
