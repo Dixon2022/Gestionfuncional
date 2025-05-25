@@ -45,7 +45,6 @@ export default function LoginPage() {
         },
         body: JSON.stringify({data}),        
       });
-      console.log(data, response.json())
       if (!response.ok) {
         const errorResponse = await response.json();
         throw new Error(errorResponse.error || "Error al iniciar sesión");
