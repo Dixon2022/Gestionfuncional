@@ -1,33 +1,42 @@
-// pages/api/login.ts
+import { NextApiRequest, NextApiResponse } from "next";
+import { PrismaClient } from "@prisma/client";
 
-import type { NextApiRequest, NextApiResponse } from "next";
+const prisma = new PrismaClient();
 
-const mockUsers = [
-  {
-    email: "admin@admin.com",
-    password: "123456",
-    name: "Admin",
-    phone: "12345678",
-  },
-];
-
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    res.setHeader("Allow", ["POST"]);
-    return res.status(405).end(`Método ${req.method} no permitido`);
+    return res.status(405).json({ error: "Método no permitido" });
   }
 
   const { email, password } = req.body;
 
-  const user = mockUsers.find(
-    (u) => u.email === email && u.password === password
-  );
-
-  if (!user) {
-    return res
-      .status(401)
-      .json({ error: "Correo o contraseña incorrectos" });
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email y contraseña son requeridos" });
   }
 
-  return res.status(200).json(user);
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    // Comparación de contraseña en texto plano
+    if (user.password !== password) {
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    // Puedes personalizar los datos que retornas
+    return res.status(200).json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      phone: user.phone,
+    });
+  } catch (error) {
+    console.error("Error en login:", error);
+    return res.status(500).json({ error: "Error en el servidor" });
+  }
 }
