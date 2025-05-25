@@ -1,90 +1,143 @@
-'use client'; // Solo si estás usando la carpeta `app/` de Next.js 13+
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { useState } from 'react';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/auth-context";
+import { Building2, LogIn } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
-type LoginFormInputs = {
-  email: string;
-  password: string;
-};
+// Esquema de validación
+const loginSchema = z.object({
+  email: z.string().email({ message: "Por favor ingresa un email válido." }),
+  password: z.string().min(1, { message: "La contraseña es requerida." }),
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
-  const { register, handleSubmit } = useForm<LoginFormInputs>();
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const router = useRouter();
+  const { login } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data: LoginFormInputs) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
 
+  const onSubmit = async (data: LoginFormValues) => {
+    setIsLoading(true);
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
+      const response = await fetch("/api/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({data}),        
       });
-
-      const text = await res.text();
-
-      let result: any;
-      try {
-        result = JSON.parse(text);
-      } catch {
-        result = null;
+      console.log(data, response.json())
+      if (!response.ok) {
+        const errorResponse = await response.json();
+        throw new Error(errorResponse.error || "Error al iniciar sesión");
       }
 
-      if (!res.ok) {
-        const errorMessage = result?.message || `Error ${res.status}`;
-        setError(errorMessage);
-      } else {
-        setSuccess(true);
-        // puedes redirigir con: router.push('/dashboard') si usas next/router
-      }
-    } catch (err) {
-      setError('Error de red o del servidor.');
+      const user = await response.json();
+
+      login(user.email, user.name, user.phone || "");
+      toast({
+        title: "¡Bienvenido de nuevo!",
+        description: "Has iniciado sesión correctamente.",
+        duration: 7000,
+      });
+      router.push("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ocurrió un error al iniciar sesión.",
+        duration: 5000,
+      });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow">
-      <h1 className="text-2xl font-bold mb-4">Iniciar sesión</h1>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium">Correo electrónico</label>
-          <input
-            type="email"
-            {...register('email', { required: true })}
-            className="w-full border px-3 py-2 rounded"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Contraseña</label>
-          <input
-            type="password"
-            {...register('password', { required: true })}
-            className="w-full border px-3 py-2 rounded"
-          />
-        </div>
-
-        {error && <p className="text-red-500">{error}</p>}
-        {success && <p className="text-green-600">¡Inicio de sesión exitoso!</p>}
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    <>
+      <div className="mb-6 text-center">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2 text-primary mb-4"
         >
-          {loading ? 'Cargando...' : 'Ingresar'}
-        </button>
+          <Building2 className="h-8 w-8" />
+          <span className="text-3xl font-bold">PropVerse</span>
+        </Link>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Iniciar Sesión
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Ingresa tus credenciales para acceder a tu cuenta.
+        </p>
+      </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <div className="space-y-1">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="tu@ejemplo.com"
+            {...form.register("email")}
+            disabled={isLoading}
+          />
+          {form.formState.errors.email && (
+            <p className="text-xs text-destructive">
+              {form.formState.errors.email.message}
+            </p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="password">Contraseña</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            {...form.register("password")}
+            disabled={isLoading}
+          />
+          {form.formState.errors.password && (
+            <p className="text-xs text-destructive">
+              {form.formState.errors.password.message}
+            </p>
+          )}
+        </div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? (
+            "Iniciando sesión..."
+          ) : (
+            <>
+              <LogIn className="mr-2" /> Iniciar Sesión
+            </>
+          )}
+        </Button>
       </form>
-    </div>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        ¿No tienes una cuenta?{" "}
+        <Link
+          href="/signup"
+          className="font-medium text-primary hover:underline"
+        >
+          Regístrate
+        </Link>
+      </p>
+    </>
   );
 }
