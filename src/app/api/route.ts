@@ -39,9 +39,3 @@ export async function POST(req: NextRequest) {
 }
 
 // Opción para manejar métodos no permitidos
-export async function GET() {
-  return NextResponse.json(
-    { error: 'Método no permitido' },
-    { status: 405 }
-  );
-}
