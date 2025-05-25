@@ -37,7 +37,7 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await fetch("https://gestionfuncional.vercel.app/api/users");
+      const response = await fetch("https://gestionfuncional.vercel.app/login/api/users");
       if (!response.ok) throw new Error("No se pudo conectar con el servidor");
 
       const users = await response.json();
