@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '../../../lib/prisma'; // Asegúrate que este path sea correcto
 
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-
     const { email, password } = body;
 
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email y contraseña requeridos' },
+        { error: "Email y contraseña requeridos" },
         { status: 400 }
       );
     }
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
 
     if (!user || user.password !== password) {
       return NextResponse.json(
-        { error: 'Credenciales inválidas' },
+        { error: "Credenciales inválidas" },
         { status: 401 }
       );
     }
@@ -30,12 +30,11 @@ export async function POST(req: NextRequest) {
       phone: user.phone,
     });
   } catch (error) {
-    console.error('Error en /api/login:', error);
+    console.error("Error en /api/login:", error);
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: "Error interno del servidor" },
       { status: 500 }
     );
   }
 }
 
-// Opción para manejar métodos no permitidos
