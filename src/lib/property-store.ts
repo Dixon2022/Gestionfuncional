@@ -6,32 +6,36 @@ const PROPERTIES_STORAGE_KEY = 'propverse-properties';
 
 let properties: Property[] = [];
 
-// Initialize properties from localStorage or use MOCK_PROPERTIES_INITIAL
 const initializeProperties = () => {
   if (typeof window !== 'undefined') {
-    const storedProperties = localStorage.getItem(PROPERTIES_STORAGE_KEY);
-    if (storedProperties) {
-      try {
+    let storedProperties = null;
+    try {
+      storedProperties = localStorage.getItem(PROPERTIES_STORAGE_KEY);
+      if (storedProperties) {
         const parsedProperties = JSON.parse(storedProperties);
         if (Array.isArray(parsedProperties)) {
           properties = parsedProperties;
+          properties.forEach(p => {
+            if (!p.ownerId && MOCK_PROPERTIES_INITIAL.find(mp => mp.id === p.id)) {
+              p.ownerId = MOCK_PROPERTIES_INITIAL.find(mp => mp.id === p.id)!.ownerId;
+            }
+          });
         } else {
-          // Data is not an array, reset to default
-          console.warn("Properties in localStorage were not an array. Resetting to default.");
+          console.warn("Las propiedades en localStorage no eran un array. Restableciendo a valores por defecto.");
           properties = [...MOCK_PROPERTIES_INITIAL];
           localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
         }
-      } catch (e) {
-        console.error("Error parsing properties from localStorage. Resetting to default.", e);
+      } else {
         properties = [...MOCK_PROPERTIES_INITIAL];
         localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
       }
-    } else {
+    } catch (e) {
+      console.error("Error al parsear propiedades desde localStorage o datos inválidos. Restableciendo a valores por defecto.", e);
       properties = [...MOCK_PROPERTIES_INITIAL];
+      if (PROPERTIES_STORAGE_KEY) localStorage.removeItem(PROPERTIES_STORAGE_KEY);
       localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
     }
   } else {
-    // Fallback for non-browser environments, though primarily client-side logic
     properties = [...MOCK_PROPERTIES_INITIAL];
   }
 };
@@ -48,21 +52,22 @@ const notifyListeners = () => {
 };
 
 export const getProperties = (): Property[] => {
-  // Ensure properties are initialized if accessed early on client-side
   if (typeof window !== 'undefined' && properties.length === 0 && localStorage.getItem(PROPERTIES_STORAGE_KEY)) {
     initializeProperties();
   }
-  return [...properties];
+  return [...properties]; 
 };
 
 export const getPropertyById = (id: string): Property | undefined => {
-  const currentProperties = getProperties();
+  const currentProperties = getProperties(); 
   return currentProperties.find(p => p.id === id);
 };
 
 export const addProperty = (property: Property): void => {
-  const currentProperties = getProperties();
-  properties = [property, ...currentProperties];
+  if (properties.length === 0 && typeof window !== 'undefined') {
+    initializeProperties();
+  }
+  properties = [property, ...properties];
   if (typeof window !== 'undefined') {
     localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
   }
@@ -73,12 +78,12 @@ export const updateProperty = (propertyId: string, updatedData: Partial<Property
   const propertyIndex = properties.findIndex(p => p.id === propertyId);
 
   if (propertyIndex === -1) {
-    console.warn(`Property with id ${propertyId} not found for update.`);
+    console.warn(`Propiedad con id ${propertyId} no encontrada para actualizar.`);
     return false;
   }
 
   if (properties[propertyIndex].ownerId !== userId) {
-    console.warn(`User ${userId} is not authorized to update property ${propertyId}.`);
+    console.warn(`Usuario ${userId} no autorizado para actualizar la propiedad ${propertyId}.`);
     return false;
   }
 
@@ -95,12 +100,12 @@ export const deleteProperty = (propertyId: string, userId: string): boolean => {
   const propertyIndex = properties.findIndex(p => p.id === propertyId);
 
   if (propertyIndex === -1) {
-    console.warn(`Property with id ${propertyId} not found for deletion.`);
+    console.warn(`Propiedad con id ${propertyId} no encontrada para eliminar.`);
     return false;
   }
 
   if (properties[propertyIndex].ownerId !== userId) {
-    console.warn(`User ${userId} is not authorized to delete property ${propertyId}.`);
+    console.warn(`Usuario ${userId} no autorizado para eliminar la propiedad ${propertyId}.`);
     return false;
   }
 
@@ -115,7 +120,6 @@ export const deleteProperty = (propertyId: string, userId: string): boolean => {
 
 export const subscribeToProperties = (listener: PropertyChangeListener): (() => void) => {
   listeners.push(listener);
-  // Call listener immediately with current properties
   listener(getProperties()); 
   
   return () => {
@@ -126,12 +130,10 @@ export const subscribeToProperties = (listener: PropertyChangeListener): (() => 
   };
 };
 
-// Helper function to convert square feet to square meters
 export const sqftToSqm = (sqft: number): number => {
-  return parseFloat((sqft * 0.092903).toFixed(1)); // Keep one decimal place for sqm
+  return parseFloat((sqft * 0.092903).toFixed(1));
 };
 
-// Helper function to convert square meters to square feet
 export const sqmToSqft = (sqm: number): number => {
-  return parseFloat((sqm / 0.092903).toFixed(0)); // Round to nearest whole number for sqft
+  return parseFloat((sqm / 0.092903).toFixed(0));
 };

@@ -31,11 +31,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const parsedUser = JSON.parse(storedUserData) as User;
           setUser({
             ...parsedUser,
-            name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
+            name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario', 
             phone: parsedUser.phone || '000-000-0000', 
           });
         } catch (e) {
-          console.error("Error parsing user from localStorage", e);
+          console.error("Error al parsear usuario desde localStorage", e);
           localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
           localStorage.removeItem(`${USER_DATA_PREFIX}${currentUserEmail}`);
         }
@@ -48,25 +48,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = (email: string, name: string, phone: string) => {
     const storageKey = `${USER_DATA_PREFIX}${email}`;
-    let existingUserData = localStorage.getItem(storageKey);
+    let existingUserDataString = localStorage.getItem(storageKey);
     let userToLogin: User;
 
-    if (existingUserData) {
-      // User exists, load their stored data.
-      // The `name` and `phone` parameters from the login form are placeholders
-      // and should not overwrite actual stored data for an existing user.
-      userToLogin = JSON.parse(existingUserData) as User;
-      // Ensure essential fields are present if old stored data was somehow incomplete
-      userToLogin.name = userToLogin.name || email.split('@')[0] || 'Usuario';
-      userToLogin.phone = userToLogin.phone || '000-000-0000';
+    if (existingUserDataString) {
+      const existingUser = JSON.parse(existingUserDataString) as User;
+      userToLogin = {
+        ...existingUser,
+        name: existingUser.name || name || email.split('@')[0] || 'Usuario',
+        phone: existingUser.phone || phone || '000-000-0000',
+      };
     } else {
-      // New user (this path is taken by signup if email is new, or first login to an unknown email)
-      // Here, the `name` and `phone` parameters are the actual values from signup or derived/mock from login.
       userToLogin = { 
         id: Date.now().toString(), 
         email, 
-        name, 
-        phone 
+        name: name || email.split('@')[0] || 'Usuario', 
+        phone: phone || '000-000-0000',
       };
     }
     
@@ -85,12 +82,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const oldUser = { ...user }; 
       const newUserData: User = { 
         ...user, 
-        name: updatedInfo.name ?? user.name,
-        email: updatedInfo.email ?? user.email,
-        phone: updatedInfo.phone ?? user.phone,
+        name: updatedInfo.name !== undefined ? updatedInfo.name : user.name,
+        email: updatedInfo.email !== undefined ? updatedInfo.email : user.email,
+        phone: updatedInfo.phone !== undefined ? updatedInfo.phone : user.phone,
       };
 
-      // If email is being changed, update storage keys
       if (newUserData.email !== oldUser.email) {
         localStorage.removeItem(`${USER_DATA_PREFIX}${oldUser.email}`); 
         localStorage.setItem(CURRENT_USER_EMAIL_KEY, newUserData.email);
@@ -98,24 +94,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(newUserData));
       setUser(newUserData);
 
-      // Propagate changes to user's properties
       const userProperties = getProperties().filter(p => p.ownerId === newUserData.id);
       userProperties.forEach(prop => {
         let agentUpdates: Partial<typeof prop.agent> = {};
         let needsUpdate = false;
 
-        if (updatedInfo.phone && prop.agent.phone === oldUser.phone) {
-          agentUpdates.phone = newUserData.phone;
-          needsUpdate = true;
-        }
-        if (updatedInfo.email && prop.agent.email === oldUser.email) {
-          agentUpdates.email = newUserData.email;
-          needsUpdate = true;
-        }
-        if (updatedInfo.name && prop.agent.name === oldUser.name) {
+        if (updatedInfo.name !== undefined && prop.agent.name === oldUser.name) {
           agentUpdates.name = newUserData.name;
           needsUpdate = true;
         }
+        if (updatedInfo.email !== undefined && prop.agent.email === oldUser.email) {
+          agentUpdates.email = newUserData.email;
+          needsUpdate = true;
+        }
+         if (updatedInfo.phone !== undefined && prop.agent.phone === oldUser.phone) {
+          agentUpdates.phone = newUserData.phone;
+          needsUpdate = true;
+        }
+
 
         if (needsUpdate) {
           updateStoreProperty(prop.id, { agent: { ...prop.agent, ...agentUpdates } }, newUserData.id);
@@ -138,4 +134,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

@@ -50,7 +50,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
           title: "Propiedad Eliminada",
           description: `La propiedad "${property.title}" ha sido eliminada.`,
         });
-        // Note: The list will auto-update due to subscription in PropertiesPage
       } else {
         toast({
           title: "Error al Eliminar",
@@ -78,8 +77,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
               <Image
                 src={property.photoDataUri || property.images[0]}
                 alt={property.title}
-                layout="fill"
-                objectFit="cover"
+                fill={true}
+                style={{objectFit: "cover"}}
                 className="transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint="exterior casa"
               />
@@ -149,8 +148,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Esta acción no se puede deshacer. Esto eliminará permanentemente la propiedad
-                        "{property.title}".
+                        Esta acción no se puede deshacer. Esto eliminará permanentemente la propiedad "{property.title}".
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
