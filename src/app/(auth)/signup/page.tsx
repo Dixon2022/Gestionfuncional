@@ -39,19 +39,46 @@ export default function SignupPage() {
     },
   });
 
-  const onSubmit = async (data: SignupFormValues) => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    login(data.email, data.name, data.phone);
-    
-    toast({
-      title: '¡Cuenta Creada!',
-      description: 'Te has registrado e iniciado sesión correctamente.',
+ const onSubmit = async (data: SignupFormValues) => {
+  setIsLoading(true);
+  try {
+    // Llama a la API para crear el usuario
+    const response = await fetch("http://localhost:9002/api/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        password: data.password,
+      }),
     });
-    router.push('/');
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("Error al crear el usuario:", errorData);
+      throw new Error(errorData.message || "No se pudo crear el usuario.");
+    }
+
+    // Si todo sale bien, loguea al usuario
+    login(data.email, data.name, data.phone);
+
+    toast({
+      title: "¡Cuenta Creada!",
+      description: "Te has registrado e iniciado sesión correctamente.",
+    });
+    router.push("/");
+  } catch (error: any) {
+    toast({
+      title: "Error",
+      description: error.message || "Ocurrió un error al crear la cuenta.",
+    });
+  } finally {
     setIsLoading(false);
-  };
+  }
+};
 
   return (
     <>

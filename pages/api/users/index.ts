@@ -7,14 +7,15 @@ export default async function handler(
 ) {
   try {
     if (req.method === "POST") {
-      const { name, email, phone } = req.body;
+      const { name, email, phone, password } = req.body;
 
-      if (!name || !email || !phone) {
+      if (!name || !email || !phone || !password) {
+        // Validación básica de campos
         return res.status(400).json({ error: "Missing fields" });
       }
 
       const newUser = await prisma.user.create({
-        data: { name, email, phone },
+        data: { name, email, phone, password },
       });
 
       return res.status(201).json(newUser);

@@ -1,22 +1,21 @@
+"use client";
 
-'use client';
-
-import { useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/auth-context';
-import { Building2, LogIn } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/contexts/auth-context";
+import { Building2, LogIn } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
-  password: z.string().min(1, { message: 'La contraseña es requerida.' }), 
+  email: z.string().email({ message: "Por favor ingresa un email válido." }),
+  password: z.string().min(1, { message: "La contraseña es requerida." }),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -30,36 +29,64 @@ export default function LoginPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const name = data.email.split('@')[0]; 
-    const mockPhone = '000-000-0000'; // Placeholder phone for mock login
-    login(data.email, name, mockPhone);
-    
-    toast({
-      title: '¡Bienvenido de nuevo!',
-      description: 'Has iniciado sesión correctamente. Por favor, considera actualizar tu número de teléfono en tu perfil si este es un placeholder.',
-      duration: 7000, // Longer duration for this specific toast
-    });
-    router.push('/');
-    setIsLoading(false);
+    try {
+      const response = await fetch("http://localhost:9002/api/users");
+      if (!response.ok) throw new Error("No se pudo conectar con el servidor");
+
+      const users = await response.json();
+
+      const user = users.find(
+        (u: any) => u.email === data.email && u.password === data.password
+      );
+
+      if (!user) {
+        toast({
+          title: "Error",
+          description: "Correo o contraseña incorrectos.",
+          duration: 5000,
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      login(user.email, user.name, user.phone || "");
+      toast({
+        title: "¡Bienvenido de nuevo!",
+        description: "Has iniciado sesión correctamente.",
+        duration: 7000,
+      });
+      router.push("/");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Ocurrió un error al iniciar sesión.",
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <>
       <div className="mb-6 text-center">
-        <Link href="/" className="inline-flex items-center space-x-2 text-primary mb-4">
+        <Link
+          href="/"
+          className="inline-flex items-center space-x-2 text-primary mb-4"
+        >
           <Building2 className="h-8 w-8" />
           <span className="text-3xl font-bold">PropVerse</span>
         </Link>
-        <h1 className="text-2xl font-semibold tracking-tight">Iniciar Sesión</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Iniciar Sesión
+        </h1>
         <p className="text-sm text-muted-foreground">
           Ingresa tus credenciales para acceder a tu cuenta.
         </p>
@@ -71,11 +98,13 @@ export default function LoginPage() {
             id="email"
             type="email"
             placeholder="tu@ejemplo.com"
-            {...form.register('email')}
+            {...form.register("email")}
             disabled={isLoading}
           />
           {form.formState.errors.email && (
-            <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.email.message}
+            </p>
           )}
         </div>
         <div className="space-y-1">
@@ -84,20 +113,32 @@ export default function LoginPage() {
             id="password"
             type="password"
             placeholder="••••••••"
-            {...form.register('password')}
+            {...form.register("password")}
             disabled={isLoading}
           />
           {form.formState.errors.password && (
-            <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.password.message}
+            </p>
           )}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Iniciando sesión...' : <> <LogIn className="mr-2"/> Iniciar Sesión </>}
+          {isLoading ? (
+            "Iniciando sesión..."
+          ) : (
+            <>
+              {" "}
+              <LogIn className="mr-2" /> Iniciar Sesión{" "}
+            </>
+          )}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        ¿No tienes una cuenta?{' '}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        ¿No tienes una cuenta?{" "}
+        <Link
+          href="/signup"
+          className="font-medium text-primary hover:underline"
+        >
           Regístrate
         </Link>
       </p>
