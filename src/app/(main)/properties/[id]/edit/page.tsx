@@ -48,7 +48,7 @@ type EditPropertyFormValues = z.infer<typeof editPropertySchema>;
 export default function EditPropertyPage() {
   const router = useRouter();
   const params = useParams();
-  const id = typeof params.id === 'string' ? params.id : undefined;
+  const id = params && typeof params.id === 'string' ? params.id : undefined;
 
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();

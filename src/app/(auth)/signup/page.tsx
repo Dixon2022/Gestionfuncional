@@ -43,7 +43,7 @@ export default function SignupPage() {
   setIsLoading(true);
   try {
     // Llama a la API para crear el usuario
-    const response = await fetch("http://localhost:9002/api/users", {
+    const response = await fetch("http://localhost:9002/api/signup", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
