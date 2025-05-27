@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Home, Building2, Sparkles, Search, UserCircle, LogOut, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MainNav } from './main-nav';
-import { useAuth } from '@/contexts/auth-context';
+import { useSession, signOut } from "next-auth/react"; // Import useSession and signOut
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function Header() {
-  const { user, logout, loading } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user;
+  const loading = status === "loading";
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,12 +47,12 @@ export function Header() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Hola, {user.name || user.email.split('@')[0]}</DropdownMenuLabel>
+                  <DropdownMenuLabel>Hola, {user?.name || user?.email?.split('@')[0]}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Mi Perfil</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/login' })}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión
                   </DropdownMenuItem>

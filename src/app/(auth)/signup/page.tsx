@@ -10,7 +10,8 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/auth-context';
+// import { useAuth } from '@/contexts/auth-context'; // Removed useAuth
+import { signIn } from 'next-auth/react'; // Added signIn
 import { Building2, UserPlus, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -25,7 +26,7 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function SignupPage() {
   const router = useRouter();
-  const { login } = useAuth(); 
+  // const { login } = useAuth(); // Removed useAuth
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -62,18 +63,46 @@ export default function SignupPage() {
       throw new Error(errorData.message || "No se pudo crear el usuario.");
     }
 
-    // Si todo sale bien, loguea al usuario
-    login(data.email, data.name, data.phone);
-
-    toast({
-      title: "¡Cuenta Creada!",
-      description: "Te has registrado e iniciado sesión correctamente.",
+    // If signup was successful, try to sign in the user automatically
+    const signInResult = await signIn("credentials", {
+      redirect: false,
+      email: data.email,
+      password: data.password,
     });
-    router.push("/");
+
+    if (signInResult?.error) {
+      // Handle failed sign-in after successful registration
+      toast({
+        title: "Cuenta creada, pero inicio de sesión fallido",
+        description: `Tu cuenta fue creada, pero no pudimos iniciar tu sesión automáticamente. Error: ${signInResult.error}. Por favor, intenta iniciar sesión manualmente.`,
+        variant: "destructive",
+        duration: 7000,
+      });
+      router.push("/login"); // Redirect to login page
+    } else if (signInResult?.ok) {
+      toast({
+        title: "¡Cuenta Creada!",
+        description: "Te has registrado e iniciado sesión correctamente.",
+        duration: 7000,
+      });
+      router.push("/");
+    } else {
+      // Fallback for unexpected signInResult
+      toast({
+        title: "Cuenta creada, error inesperado en inicio de sesión",
+        description: "Tu cuenta fue creada, pero ocurrió un error inesperado al intentar iniciar tu sesión. Por favor, intenta iniciar sesión manualmente.",
+        variant: "destructive",
+        duration: 7000,
+      });
+      router.push("/login");
+    }
+
   } catch (error: any) {
     toast({
-      title: "Error",
+      title: "Error de Registro",
       description: error.message || "Ocurrió un error al crear la cuenta.",
+      variant: "destructive",
+      duration: 5000,
     });
   } finally {
     setIsLoading(false);

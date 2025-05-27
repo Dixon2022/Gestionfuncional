@@ -23,7 +23,7 @@ import { Sparkles, Loader2, Save, UploadCloud, Trash2 } from 'lucide-react';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
 import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
 import Image from 'next/image';
-import { useAuth } from '@/contexts/auth-context';
+import { useSession } from 'next-auth/react'; // Import useSession
 import { addProperty, sqmToSqft } from '@/lib/property-store';
 import type { Property, PropertyType as PropertyTypeType, ListingType as ListingTypeType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
@@ -61,7 +61,8 @@ type GenerateDescriptionFormValues = z.infer<typeof generateDescriptionSchema>;
 
 export function GenerateDescriptionForm() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user as any; // Cast to any to access custom properties
   const router = useRouter();
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -216,10 +217,10 @@ export function GenerateDescriptionForm() {
 
     const currentFormData = form.getValues();
 
-    if (!user || photoDataUrisForSave.length === 0) {
+    if (status === 'unauthenticated' || !user || photoDataUrisForSave.length === 0) {
       toast({
         title: 'Error',
-        description: 'Faltan fotos para guardar la propiedad o no has iniciado sesión.',
+        description: 'Debes iniciar sesión y subir al menos una foto para guardar la propiedad.',
         variant: 'destructive',
       });
       return;
@@ -251,16 +252,16 @@ export function GenerateDescriptionForm() {
       description: currentFormData.description, // Use description from the form
       images: photoDataUrisForSave,
       isFeatured: Math.random() < 0.2, 
-      agent: { 
-        name: user.name,
-        email: user.email,
-        phone: user.phone, 
-        avatarUrl: `https://placehold.co/100x100.png?text=${user.name ? user.name.substring(0,1) : 'U'}`
+      agent: {
+        name: user.name || 'Agente Desconocido', // Fallback if name is not in session
+        email: user.email || '', // Fallback if email is not in session
+        phone: user.phone || '', // Fallback if phone is not in session
+        avatarUrl: `https://placehold.co/100x100.png?text=${user.name ? user.name.substring(0,1).toUpperCase() : 'A'}`
       },
       features: currentFormData.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
-      yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
-      lotSize: currentFormData.squareFootage + Math.floor(Math.random() * 50), 
-      ownerId: user.id,
+      yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20),
+      lotSize: currentFormData.squareFootage + Math.floor(Math.random() * 50),
+      ownerId: user.id, // Assumes id is present in session user
       photoDataUri: photoDataUrisForSave[0],
       createdAt: Date.now(),
     };

@@ -9,7 +9,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/auth-context";
+// import { useAuth } from "@/contexts/auth-context"; // Removed useAuth
+import { signIn } from "next-auth/react"; // Added signIn
 import { Building2, LogIn } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -23,7 +24,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  // const { login } = useAuth(); // Removed useAuth
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,31 +39,38 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),        
+      const result = await signIn("credentials", {
+        redirect: false,
+        email: data.email,
+        password: data.password,
       });
-      if (!response.ok) {
-        const errorResponse = await response.json();
-        throw new Error(errorResponse.error || "Error al iniciar sesión");
+
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
-      const user = await response.json();
-
-      login(user.email, user.name, user.phone || "");
-      toast({
-        title: "¡Bienvenido de nuevo!",
-        description: "Has iniciado sesión correctamente.",
-        duration: 7000,
-      });
-      router.push("/");
+      if (result?.ok) {
+        toast({
+          title: "¡Bienvenido de nuevo!",
+          description: "Has iniciado sesión correctamente.",
+          duration: 7000,
+        });
+        router.push("/");
+      } else {
+        // Should be caught by result?.error but as a fallback
+        throw new Error("Error al iniciar sesión. Inténtalo de nuevo.");
+      }
     } catch (error: any) {
+      let errorMessage = "Ocurrió un error al iniciar sesión.";
+      if (error.message === "CredentialsSignin") {
+        errorMessage = "Credenciales incorrectas. Por favor, verifica tu email y contraseña.";
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
       toast({
-        title: "Error",
-        description: error.message || "Ocurrió un error al iniciar sesión.",
+        title: "Error de inicio de sesión",
+        description: errorMessage,
+        variant: "destructive",
         duration: 5000,
       });
     } finally {

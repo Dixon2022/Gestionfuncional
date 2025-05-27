@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useAuth } from '@/contexts/auth-context';
+import { useSession, signOut } from 'next-auth/react'; // Import useSession and signOut
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -14,23 +14,21 @@ import type { Property } from '@/lib/types';
 import { PropertyCard } from '@/components/property/property-card';
 
 export default function ProfilePage() {
-  const { user, logout, loading } = useAuth();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const user = session?.user as any; // Cast to any to access custom properties like id, phone
+  const isLoading = status === 'loading';
   const [myProperties, setMyProperties] = useState<Property[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  // No longer need isClient for this logic, status handles it.
   
   useEffect(() => {
-    if (isClient && !loading && !user) {
+    if (status === 'unauthenticated') {
       router.push('/login?redirect=/profile');
     }
-  }, [user, loading, router, isClient]);
+  }, [status, router]);
 
   useEffect(() => {
-    if (user && isClient) {
+    if (status === 'authenticated' && user?.id) {
       const unsubscribe = subscribeToProperties((updatedProperties) => {
         setMyProperties(updatedProperties.filter(p => p.ownerId === user.id));
       });
@@ -38,11 +36,13 @@ export default function ProfilePage() {
       const allProps = getProperties();
       setMyProperties(allProps.filter(p => p.ownerId === user.id));
       return () => unsubscribe();
+    } else {
+      setMyProperties([]); // Clear properties if user is not authenticated or no id
     }
-  }, [user, isClient]);
+  }, [status, user]);
 
 
-  if (loading || !isClient) {
+  if (isLoading || status === 'unauthenticated') { // Show loader if loading or if unauthenticated
     return (
       <div className="flex min-h-[calc(100vh-theme(spacing.16))] flex-1 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -50,30 +50,23 @@ export default function ProfilePage() {
       </div>
     );
   }
-
-  if (!user) {
-    return (
-        <div className="container py-8 text-center">
-            <p>Debes iniciar sesión para ver esta página.</p>
-            <Button onClick={() => router.push('/login?redirect=/profile')} className="mt-4">Iniciar Sesión</Button>
-        </div>
-    );
-  }
-
+  
+  // If authenticated and not loading, render the page
   return (
     <div className="container py-8 md:py-12">
       <Card className="max-w-3xl mx-auto shadow-xl">
         <CardHeader className="text-center">
           <Avatar className="mx-auto h-24 w-24 mb-4 border-2 border-primary">
-             <AvatarImage src={user.name ? `https://placehold.co/100x100.png?text=${user.name.substring(0,1)}` : undefined} alt={user.name || 'Usuario'} data-ai-hint="avatar persona"/>
+             <AvatarImage src={user?.name ? `https://placehold.co/100x100.png?text=${user.name.substring(0,1)}` : undefined} alt={user?.name || 'Usuario'} data-ai-hint="avatar persona"/>
             <AvatarFallback className="text-3xl bg-secondary">
-              {user.name ? user.name.substring(0, 2).toUpperCase() : <UserCircle className="h-16 w-16" />}
+              {user?.name ? user.name.substring(0, 2).toUpperCase() : <UserCircle className="h-16 w-16" />}
             </AvatarFallback>
           </Avatar>
-          <CardTitle className="text-3xl">{user.name || 'Usuario'}</CardTitle>
+          <CardTitle className="text-3xl">{user?.name || 'Usuario'}</CardTitle>
           <CardDescription className="flex flex-col items-center justify-center text-md space-y-1">
-            <span className="flex items-center"><Mail className="mr-2 h-4 w-4" /> {user.email}</span>
-            <span className="flex items-center"><Phone className="mr-2 h-4 w-4" /> {user.phone}</span>
+            <span className="flex items-center"><Mail className="mr-2 h-4 w-4" /> {user?.email}</span>
+            {/* Assuming 'phone' is part of your session user object */}
+            {user?.phone && <span className="flex items-center"><Phone className="mr-2 h-4 w-4" /> {user.phone}</span>}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -84,11 +77,15 @@ export default function ProfilePage() {
               </Link>
             </Button>
             <Button variant="default" asChild className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground">
-              <Link href="/generate-description">
+              <Link href="/generate-description"> {/* Assuming this is the correct link for adding property */}
                 <PlusCircle className="mr-2 h-4 w-4" /> Agregar Propiedad
               </Link>
             </Button>
-            <Button variant="destructive" onClick={() => { logout(); router.push('/'); }} className="w-full sm:w-auto">
+            <Button 
+              variant="destructive" 
+              onClick={() => signOut({ callbackUrl: '/login' })} // Sign out and redirect to login
+              className="w-full sm:w-auto"
+            >
               <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
             </Button>
           </div>

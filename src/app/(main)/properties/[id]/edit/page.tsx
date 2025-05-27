@@ -20,7 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useAuth } from '@/contexts/auth-context';
+import { useSession } from 'next-auth/react'; // Import useSession
 import { useToast } from '@/hooks/use-toast';
 import { getPropertyById, updateProperty, sqmToSqft } from '@/lib/property-store';
 import type { Property, PropertyType, ListingType } from '@/lib/types';
@@ -50,7 +50,9 @@ export default function EditPropertyPage() {
   const params = useParams();
   const id = params && typeof params.id === 'string' ? params.id : undefined;
 
-  const { user, loading: authLoading } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user as any; // Cast to any to access custom properties like id
+  const authLoading = status === 'loading';
   const { toast } = useToast();
 
   const [property, setProperty] = useState<Property | null>(null);
@@ -81,19 +83,19 @@ export default function EditPropertyPage() {
   }, []);
   
   useEffect(() => {
-    if (!isClient || authLoading) return;
+    if (!isClient || authLoading) return; // authLoading is status === 'loading'
 
-    if (!user) {
+    if (status === 'unauthenticated') {
       router.push(`/login?redirect=/properties/${id}/edit`);
       return;
     }
 
-    if (id) {
+    if (status === 'authenticated' && user?.id && id) {
       const fetchedProperty = getPropertyById(id);
       if (fetchedProperty) {
-        if (fetchedProperty.ownerId !== user.id) {
+        if (fetchedProperty.ownerId !== user.id) { // Check against session user's id
           toast({ title: "Acceso Denegado", description: "No tienes permiso para editar esta propiedad.", variant: "destructive" });
-          router.push(`/properties/${id}`);
+          router.push(`/properties/${id}`); // Redirect to property view page
           return;
         }
         setProperty(fetchedProperty);
@@ -121,7 +123,7 @@ export default function EditPropertyPage() {
        return;
     }
     setIsLoading(false);
-  }, [id, user, authLoading, router, form, toast, isClient]);
+  }, [id, user, status, authLoading, router, form, toast, isClient]); // Added status to dependency array
 
   const handleGenerateAIDescription = async () => {
     if (!property) return;
@@ -139,9 +141,10 @@ export default function EditPropertyPage() {
         return;
     }
 
-    if (!photoUriToUse.startsWith('data:')) {
-        toast({ title: "Conversión de Foto Necesaria", description: "La foto principal es una URL. Para la generación con IA en edición, se prefiere una foto cargada directamente. Esta función puede no ser óptima.", variant: "default"});
-    }
+    // Removed data URI specific warning as it might be too restrictive or complex for this stage
+    // if (!photoUriToUse.startsWith('data:')) {
+    //     toast({ title: "Conversión de Foto Necesaria", description: "La foto principal es una URL. Para la generación con IA en edición, se prefiere una foto cargada directamente. Esta función puede no ser óptima.", variant: "default"});
+    // }
 
     try {
         const input: GeneratePropertyDescriptionInput = {
@@ -165,7 +168,7 @@ export default function EditPropertyPage() {
   };
 
   const onSubmit = async (data: EditPropertyFormValues) => {
-    if (!property || !user || user.id !== property.ownerId) {
+    if (!property || !user?.id || user.id !== property.ownerId) { // Check against session user's id
         toast({ title: "Error de autorización", description: "No puedes editar esta propiedad.", variant: "destructive" });
         return;
     }
@@ -187,7 +190,7 @@ export default function EditPropertyPage() {
 
     try {
         await new Promise(resolve => setTimeout(resolve, 1000)); 
-        const success = updateProperty(property.id, updatedPropertyData, user.id);
+        const success = updateProperty(property.id, updatedPropertyData, user.id); // Pass session user's id
         if (success) {
             toast({
                 title: '¡Propiedad Actualizada!',
@@ -212,7 +215,7 @@ export default function EditPropertyPage() {
     }
   };
 
-  if (isLoading || authLoading || !isClient) {
+  if (isLoading || authLoading || !isClient || status === 'unauthenticated') { // Also check for unauthenticated status
     return (
       <div className="flex min-h-[calc(100vh-theme(spacing.16))] flex-1 items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

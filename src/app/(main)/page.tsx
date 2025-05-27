@@ -48,27 +48,30 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      const initialProps = await getProperties(); // Now async
+      setAllProperties(initialProps);
+      const initialCounts = initialProps.reduce((acc, property) => {
+        acc[property.type] = (acc[property.type] || 0) + 1;
+        return acc;
+      }, {} as Record<PropertyType, number>);
+      setPropertyCounts(initialCounts);
+      setIsLoading(false);
+    };
+
+    fetchData();
+
     const unsubscribe = subscribeToProperties((updatedProperties) => {
       setAllProperties(updatedProperties);
-
       const counts = updatedProperties.reduce((acc, property) => {
         acc[property.type] = (acc[property.type] || 0) + 1;
         return acc;
       }, {} as Record<PropertyType, number>);
       setPropertyCounts(counts);
-      
-      setIsLoading(false);
+      // Assuming subscribeToProperties might also trigger loading state changes if it re-fetches
+      // For now, main loading is tied to initial fetchData
     });
-
-    // Initial fetch
-    const initialProps = getProperties();
-    setAllProperties(initialProps);
-    const initialCounts = initialProps.reduce((acc, property) => {
-      acc[property.type] = (acc[property.type] || 0) + 1;
-      return acc;
-    }, {} as Record<PropertyType, number>);
-    setPropertyCounts(initialCounts);
-    setIsLoading(false);
 
     return () => unsubscribe();
   }, []);

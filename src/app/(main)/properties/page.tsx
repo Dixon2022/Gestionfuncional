@@ -15,42 +15,60 @@ export default function PropertiesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const searchParams = useSearchParams();
 
+  // Initialize currentFilters from searchParams
   const [currentFilters, setCurrentFilters] = useState<SearchFilters>(() => {
     const params = new URLSearchParams(searchParams.toString());
     return {
       location: params.get('location') || undefined,
       propertyType: params.get('propertyType') as Property['type'] || undefined,
       listingType: params.get('listingType') as ListingType || undefined,
-      minPrice: params.get('minPrice') ? parseInt(params.get('minPrice')!) : undefined,
-      maxPrice: params.get('maxPrice') ? parseInt(params.get('maxPrice')!) : undefined,
-      bedrooms: params.get('bedrooms') ? parseInt(params.get('bedrooms')!) : undefined,
-      bathrooms: params.get('bathrooms') ? parseInt(params.get('bathrooms')!) : undefined,
+      minPrice: params.get('minPrice') ? parseInt(params.get('minPrice')!, 10) : undefined,
+      maxPrice: params.get('maxPrice') ? parseInt(params.get('maxPrice')!, 10) : undefined,
+      bedrooms: params.get('bedrooms') ? parseInt(params.get('bedrooms')!, 10) : undefined,
+      bathrooms: params.get('bathrooms') ? parseInt(params.get('bathrooms')!, 10) : undefined,
     };
   });
 
   useEffect(() => {
-    const unsubscribe = subscribeToProperties((updatedProperties) => {
-      setAllProperties(updatedProperties);
-      filterAndSetProperties(updatedProperties, currentFilters);
+    const fetchDataAndSubscribe = async () => {
+      setIsLoading(true);
+      const initialProperties = await getProperties(); // Now async
+      setAllProperties(initialProperties);
+      filterAndSetProperties(initialProperties, currentFilters); // Initial filter
       setIsLoading(false);
-    });
-    return () => unsubscribe();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
 
+      const unsubscribe = subscribeToProperties((updatedProperties) => {
+        setAllProperties(updatedProperties);
+        // Re-filter when underlying data changes, not just when filters change
+        filterAndSetProperties(updatedProperties, currentFilters); 
+      });
+      return unsubscribe;
+    };
+
+    let unsubscribe: (() => void) | undefined;
+    fetchDataAndSubscribe().then(unsub => unsubscribe = unsub);
+    
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // currentFilters removed from here to avoid re-subscribing on filter change
+
+  // This useEffect is now specifically for re-filtering when currentFilters change
   useEffect(() => {
-    setIsLoading(true);
+    setIsLoading(true); // Show loading when filters change
     filterAndSetProperties(allProperties, currentFilters);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
+    // Simulate a short delay for filter application UX, can be removed if not desired
+    const timer = setTimeout(() => setIsLoading(false), 200); 
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilters, allProperties]);
 
 
   const filterAndSetProperties = (propertiesToFilter: Property[], filters: SearchFilters) => {
-    let properties = [...propertiesToFilter]; 
+    let properties = [...propertiesToFilter];
       if (filters.location && filters.location !== "any") {
         properties = properties.filter(p => p.city.toLowerCase().includes(filters.location!.toLowerCase()));
       }

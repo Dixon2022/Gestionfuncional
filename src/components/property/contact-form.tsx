@@ -53,14 +53,43 @@ export function ContactForm({ propertyId, propertyName, agentEmail, agentName }:
   });
 
   async function onSubmit(data: ContactFormValues) {
-    // Aquí normalmente enviarías los datos a tu backend o a un servicio como Formspree
-    // Para demostración, solo mostraremos un mensaje toast.
-    console.log('Formulario de contacto enviado:', data);
-    toast({
-      title: '¡Consulta Enviada!',
-      description: `Tu mensaje sobre la propiedad "${data.propertyName}" ha sido enviado a ${agentName}.`,
-    });
-    form.reset();
+    form.formState.isSubmitting = true; // Manually set submitting state, react-hook-form might not do it for async without `handleSubmit` managing it.
+    try {
+      const response = await fetch('/api/contact-agent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        toast({
+          title: '¡Consulta Enviada!',
+          description: result.message || `Tu mensaje sobre la propiedad "${data.propertyName}" ha sido enviado a ${agentName}.`,
+        });
+        form.reset();
+      } else {
+        toast({
+          title: 'Error al Enviar Consulta',
+          description: result.error || 'No se pudo enviar tu mensaje. Inténtalo de nuevo.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      toast({
+        title: 'Error Inesperado',
+        description: 'Ocurrió un error al enviar tu consulta. Por favor, inténtalo más tarde.',
+        variant: 'destructive',
+      });
+    } finally {
+      // react-hook-form's isSubmitting should reset automatically, but ensure it does.
+      // For manual control: form.control.setIsSubmitting(false); // if not using form's own state for this
+      // This is a bit of a hack, usually isSubmitting is handled by RHF directly if onSubmit is passed to handleSubmit
+    }
   }
 
   return (

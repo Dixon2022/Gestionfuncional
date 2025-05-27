@@ -18,14 +18,19 @@ export default function PropertyPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (id) {
-      const fetchedProperty = getPropertyById(id);
-      setProperty(fetchedProperty || null); // Set to null if not found after fetch
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
-      setProperty(null); // No ID, so not found
-    }
+    const fetchProperty = async () => {
+      if (id) {
+        setIsLoading(true);
+        const fetchedProperty = await getPropertyById(id); // Now async
+        setProperty(fetchedProperty || null); // Set to null if not found after fetch
+        setIsLoading(false);
+      } else {
+        setProperty(null); // No ID, so not found
+        setIsLoading(false);
+      }
+    };
+
+    fetchProperty();
   }, [id]);
 
   useEffect(() => {

@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Trash2, Pencil, Loader2, Tag } from 'lucide-react';
-import { useAuth } from '@/contexts/auth-context';
+import { useSession } from 'next-auth/react'; // Import useSession
 import { deleteProperty } from '@/lib/property-store';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -31,20 +31,21 @@ interface PropertyCardProps {
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
 export function PropertyCard({ property }: PropertyCardProps) {
-  const { user } = useAuth();
+  const { data: session, status } = useSession();
+  const user = session?.user as any; // Cast to any to access custom properties like id
   const { toast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew = property.createdAt && (Date.now() - property.createdAt) < TWENTY_FOUR_HOURS_MS;
-  const isOwner = user && user.id === property.ownerId;
+  const isOwner = status === 'authenticated' && user && user.id === property.ownerId;
 
   const handleDelete = async () => {
-    if (!isOwner || !user) return; 
+    if (!isOwner || !user?.id) return;
     setIsDeleting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); 
-      const success = deleteProperty(property.id, user.id); 
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const success = deleteProperty(property.id, user.id); // Pass session user's id
       if (success) {
         toast({
           title: "Propiedad Eliminada",
