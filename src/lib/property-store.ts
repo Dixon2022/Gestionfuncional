@@ -1,139 +1,58 @@
-
 import type { Property } from './types';
-import { MOCK_PROPERTIES_INITIAL } from './constants';
 
-const PROPERTIES_STORAGE_KEY = 'propverse-properties';
+const API_BASE = '/api/property';  // Ruta base para API (ajusta según tu setup)
 
-let properties: Property[] = [];
+// Obtener todas las propiedades
+export const getProperties = async (): Promise<Property[]> => {
+  const res = await fetch(API_BASE);
+  if (!res.ok) throw new Error('Error al obtener propiedades');
+  return res.json();
+};
 
-const initializeProperties = () => {
-  if (typeof window !== 'undefined') {
-    let storedProperties = null;
-    try {
-      storedProperties = localStorage.getItem(PROPERTIES_STORAGE_KEY);
-      if (storedProperties) {
-        const parsedProperties = JSON.parse(storedProperties);
-        if (Array.isArray(parsedProperties)) {
-          properties = parsedProperties;
-          properties.forEach(p => {
-            if (!p.ownerId && MOCK_PROPERTIES_INITIAL.find(mp => mp.id === p.id)) {
-              p.ownerId = MOCK_PROPERTIES_INITIAL.find(mp => mp.id === p.id)!.ownerId;
-            }
-          });
-        } else {
-          console.warn("Las propiedades en localStorage no eran un array. Restableciendo a valores por defecto.");
-          properties = [...MOCK_PROPERTIES_INITIAL];
-          localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-        }
-      } else {
-        properties = [...MOCK_PROPERTIES_INITIAL];
-        localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-      }
-    } catch (e) {
-      console.error("Error al parsear propiedades desde localStorage o datos inválidos. Restableciendo a valores por defecto.", e);
-      properties = [...MOCK_PROPERTIES_INITIAL];
-      if (PROPERTIES_STORAGE_KEY) localStorage.removeItem(PROPERTIES_STORAGE_KEY);
-      localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
+// Obtener propiedad por ID
+export const getPropertyById = async (id: string): Promise<Property | undefined> => {
+  const res = await fetch(`${API_BASE}/${id}`);
+  if (!res.ok) return undefined;
+  return res.json();
+};
+
+export const getPropertiesByOwner = async (ownerId: string): Promise<Property[]> => {
+  const res = await fetch(`${API_BASE}?ownerId=${ownerId}`);
+  if (!res.ok) throw new Error('Error al obtener propiedades del usuario');
+  return res.json();
+};
+
+// Añadir propiedad
+export const addProperty = async (property: Property): Promise<Property> => {
+  const res = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(property),
+  });
+  if (!res.ok) throw new Error('Error al agregar propiedad');
+  return res.json();
+};
+
+// Actualizar propiedad (requiere userId para autorización)
+export const updateProperty = async (propertyId: string, updatedData: Partial<Property>, userId: string): Promise<boolean> => {
+  const res = await fetch(`${API_BASE}/${propertyId}`, {
+    method: 'PUT',
+    headers: { 
+      'Content-Type': 'application/json',
+      'X-User-Id': userId // o autorización con token según tu auth
+    },
+    body: JSON.stringify(updatedData),
+  });
+  return res.ok;
+};
+
+// Eliminar propiedad
+export const deleteProperty = async (propertyId: string, userId: string): Promise<boolean> => {
+  const res = await fetch(`${API_BASE}/${propertyId}`, {
+    method: 'DELETE',
+    headers: {
+      'X-User-Id': userId
     }
-  } else {
-    properties = [...MOCK_PROPERTIES_INITIAL];
-  }
-};
-
-if (typeof window !== 'undefined') {
-  initializeProperties();
-}
-
-type PropertyChangeListener = (updatedProperties: Property[]) => void;
-const listeners: PropertyChangeListener[] = [];
-
-const notifyListeners = () => {
-  listeners.forEach(listener => listener([...properties]));
-};
-
-export const getProperties = (): Property[] => {
-  if (typeof window !== 'undefined' && properties.length === 0 && localStorage.getItem(PROPERTIES_STORAGE_KEY)) {
-    initializeProperties();
-  }
-  return [...properties]; 
-};
-
-export const getPropertyById = (id: string): Property | undefined => {
-  const currentProperties = getProperties(); 
-  return currentProperties.find(p => p.id === id);
-};
-
-export const addProperty = (property: Property): void => {
-  if (properties.length === 0 && typeof window !== 'undefined') {
-    initializeProperties();
-  }
-  properties = [property, ...properties];
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-  }
-  notifyListeners();
-};
-
-export const updateProperty = (propertyId: string, updatedData: Partial<Property>, userId: string): boolean => {
-  const propertyIndex = properties.findIndex(p => p.id === propertyId);
-
-  if (propertyIndex === -1) {
-    console.warn(`Propiedad con id ${propertyId} no encontrada para actualizar.`);
-    return false;
-  }
-
-  if (properties[propertyIndex].ownerId !== userId) {
-    console.warn(`Usuario ${userId} no autorizado para actualizar la propiedad ${propertyId}.`);
-    return false;
-  }
-
-  properties[propertyIndex] = { ...properties[propertyIndex], ...updatedData };
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-  }
-  notifyListeners();
-  return true;
-};
-
-export const deleteProperty = (propertyId: string, userId: string): boolean => {
-  const propertyIndex = properties.findIndex(p => p.id === propertyId);
-
-  if (propertyIndex === -1) {
-    console.warn(`Propiedad con id ${propertyId} no encontrada para eliminar.`);
-    return false;
-  }
-
-  if (properties[propertyIndex].ownerId !== userId) {
-    console.warn(`Usuario ${userId} no autorizado para eliminar la propiedad ${propertyId}.`);
-    return false;
-  }
-
-  properties.splice(propertyIndex, 1);
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(PROPERTIES_STORAGE_KEY, JSON.stringify(properties));
-  }
-  notifyListeners();
-  return true;
-};
-
-export const subscribeToProperties = (listener: PropertyChangeListener): (() => void) => {
-  listeners.push(listener);
-  listener(getProperties()); 
-  
-  return () => {
-    const index = listeners.indexOf(listener);
-    if (index > -1) {
-      listeners.splice(index, 1);
-    }
-  };
-};
-
-export const sqftToSqm = (sqft: number): number => {
-  return parseFloat((sqft * 0.092903).toFixed(1));
-};
-
-export const sqmToSqft = (sqm: number): number => {
-  return parseFloat((sqm / 0.092903).toFixed(0));
+  });
+  return res.ok;
 };

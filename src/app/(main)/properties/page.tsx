@@ -1,10 +1,9 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { PropertyCard } from '@/components/property/property-card';
 import { PropertySearchFilters } from '@/components/property/property-search-filters';
-import { getProperties, subscribeToProperties } from '@/lib/property-store';
+import { getProperties } from '@/lib/property-store';
 import type { Property, SearchFilters, ListingType } from '@/lib/types';
 import { useSearchParams } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,14 +28,24 @@ export default function PropertiesPage() {
   });
 
   useEffect(() => {
-    const unsubscribe = subscribeToProperties((updatedProperties) => {
-      setAllProperties(updatedProperties);
-      filterAndSetProperties(updatedProperties, currentFilters);
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
+    // Cargar propiedades solo una vez al montar
+    async function loadProperties() {
+      setIsLoading(true);
+      try {
+        const properties = await getProperties();
+        setAllProperties(properties);
+        filterAndSetProperties(properties, currentFilters);
+      } catch (error) {
+        console.error('Error al cargar propiedades:', error);
+        setAllProperties([]);
+        setFilteredProperties([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadProperties();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); 
+  }, []);
 
   useEffect(() => {
     setIsLoading(true);
@@ -48,37 +57,36 @@ export default function PropertiesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFilters, allProperties]);
 
-
   const filterAndSetProperties = (propertiesToFilter: Property[], filters: SearchFilters) => {
-    let properties = [...propertiesToFilter]; 
-      if (filters.location && filters.location !== "any") {
-        properties = properties.filter(p => p.city.toLowerCase().includes(filters.location!.toLowerCase()));
-      }
-      if (filters.propertyType && filters.propertyType !== "any" as any) {
-        properties = properties.filter(p => p.type === filters.propertyType);
-      }
-      if (filters.listingType && filters.listingType !== "any" as any) {
-        properties = properties.filter(p => p.listingType === filters.listingType);
-      }
-      if (filters.minPrice) {
-        properties = properties.filter(p => p.price >= filters.minPrice!);
-      }
-      if (filters.maxPrice) {
-        properties = properties.filter(p => p.price <= filters.maxPrice!);
-      }
-      if (filters.bedrooms && filters.bedrooms > 0) {
-        properties = properties.filter(p => p.bedrooms >= filters.bedrooms!);
-      }
-      if (filters.bathrooms && filters.bathrooms > 0) {
-        properties = properties.filter(p => p.bathrooms >= filters.bathrooms!);
-      }
-      setFilteredProperties(properties);
+    let properties = [...propertiesToFilter];
+    if (filters.location && filters.location !== "any") {
+      properties = properties.filter(p => p.city.toLowerCase().includes(filters.location!.toLowerCase()));
+    }
+    if (filters.propertyType && filters.propertyType !== "any" as any) {
+      properties = properties.filter(p => p.type === filters.propertyType);
+    }
+    if (filters.listingType && filters.listingType !== "any" as any) {
+      properties = properties.filter(p => p.listingType === filters.listingType);
+    }
+    if (filters.minPrice) {
+      properties = properties.filter(p => p.price >= filters.minPrice!);
+    }
+    if (filters.maxPrice) {
+      properties = properties.filter(p => p.price <= filters.maxPrice!);
+    }
+    if (filters.bedrooms && filters.bedrooms > 0) {
+      properties = properties.filter(p => p.bedrooms >= filters.bedrooms!);
+    }
+    if (filters.bathrooms && filters.bathrooms > 0) {
+      properties = properties.filter(p => p.bathrooms >= filters.bathrooms!);
+    }
+    setFilteredProperties(properties);
   }
 
   const handleSearch = (filters: SearchFilters) => {
     setCurrentFilters(filters);
   };
-  
+
   return (
     <div className="container py-8">
       <h1 className="text-4xl font-bold mb-8 text-center">Encuentra Tu Próxima Propiedad</h1>

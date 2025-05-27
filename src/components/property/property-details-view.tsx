@@ -1,4 +1,4 @@
-
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { Property } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
@@ -7,13 +7,42 @@ import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCirc
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-interface PropertyDetailsViewProps {
-  property: Property;
+interface PropertyDetailsPageProps {
+  propertyId: string;  // Recibimos el ID de la propiedad para hacer fetch
 }
 
-export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
-  const displayArea = `${property.area.toLocaleString()} m²`; 
-  const displayLotSize = property.lotSize ? `${property.lotSize.toLocaleString()} m²` : 'N/A';
+export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProperty() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`/api/property/${propertyId}`);
+        if (!res.ok) throw new Error('Error al cargar la propiedad');
+        const data: Property = await res.json();
+        setProperty(data);
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchProperty();
+  }, [propertyId]);
+
+  if (loading) return <p>Cargando propiedad...</p>;
+  if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (!property) return <p>No se encontró la propiedad.</p>;
+
+  // Validación segura para toLocaleString
+  const displayArea = property.area != null ? `${property.area.toLocaleString()} m²` : 'N/A';
+  const displayLotSize = property.lotSize != null ? `${property.lotSize.toLocaleString()} m²` : 'N/A';
+  const displayPrice = property.price != null ? `₡${property.price.toLocaleString()}` : 'Precio no disponible';
 
   return (
     <div className="container py-8 md:py-12">
@@ -31,18 +60,18 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
                 priority
                 data-ai-hint="imagen principal propiedad"
               />
-               <div className="absolute top-4 left-4 flex flex-col space-y-2">
+              <div className="absolute top-4 left-4 flex flex-col space-y-2">
                 {property.listingType && (
-                    <Badge 
+                  <Badge
                     variant={property.listingType === 'Venta' ? 'default' : 'secondary'}
                     className={`text-sm px-3 py-1 ${property.listingType === 'Alquiler' ? 'bg-blue-500 hover:bg-blue-600 text-white' : ''}`}
-                    >
-                    <Tag className="mr-1 h-4 w-4"/>
+                  >
+                    <Tag className="mr-1 h-4 w-4" />
                     {property.listingType}
-                    </Badge>
+                  </Badge>
                 )}
                 {property.isFeatured && (
-                    <Badge variant="destructive" className="text-sm px-3 py-1">Destacada</Badge>
+                  <Badge variant="destructive" className="text-sm px-3 py-1">Destacada</Badge>
                 )}
               </div>
             </div>
@@ -55,7 +84,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
                       alt={`${property.title} - imagen ${index + 2}`}
                       layout="fill"
                       objectFit="cover"
-                       data-ai-hint="miniatura propiedad"
+                      data-ai-hint="miniatura propiedad"
                     />
                   </div>
                 ))}
@@ -71,8 +100,8 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               <span>{property.address}, {property.city}</span>
             </div>
             <div className="text-3xl font-bold text-primary">
-              <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" /> 
-              ₡{property.price.toLocaleString()} 
+              <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" />
+              {displayPrice}
               <span className="text-xl font-medium text-foreground/80 ml-2">({property.listingType})</span>
               {property.listingType === 'Alquiler' ? <span className="text-lg font-normal text-muted-foreground"> /mes</span> : ''}
             </div>
@@ -96,7 +125,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               </div>
             ))}
           </div>
-          
+
           {/* Description */}
           <div className="mb-8">
             <h2 className="text-2xl font-semibold mb-3">Descripción de la Propiedad</h2>
@@ -110,7 +139,7 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
               <div className="flex flex-wrap gap-2">
                 {property.features.map((feature, index) => (
                   <Badge key={index} variant="secondary" className="px-3 py-1 text-sm">
-                    <Layers className="mr-1.5 h-3.5 w-3.5"/>
+                    <Layers className="mr-1.5 h-3.5 w-3.5" />
                     {feature}
                   </Badge>
                 ))}
@@ -124,33 +153,57 @@ export function PropertyDetailsView({ property }: PropertyDetailsViewProps) {
           {/* Agent Info Card */}
           <div className="p-6 border rounded-lg shadow-lg bg-card">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
-                <UserCircle className="mr-2 h-5 w-5 text-primary" />
-                Agente Inmobiliario
+              <UserCircle className="mr-2 h-5 w-5 text-primary" />
+              Agente Inmobiliario
             </h3>
-            <div className="flex items-center space-x-4 mb-4">
-              <Avatar className="h-16 w-16">
-                <AvatarImage src={property.agent.avatarUrl} alt={property.agent.name} data-ai-hint="retrato persona"/>
-                <AvatarFallback>{property.agent.name.substring(0,2).toUpperCase()}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="font-semibold text-lg">{property.agent.name}</p>
-                <p className="text-sm text-muted-foreground">Agente Inmobiliario</p>
-              </div>
-            </div>
-            <Separator className="my-4"/>
-            <div className="space-y-2 text-sm">
-                <p><strong>Email:</strong> <a href={`mailto:${property.agent.email}`} className="text-primary hover:underline">{property.agent.email}</a></p>
-                <p><strong>Teléfono:</strong> <a href={`tel:${property.agent.phone}`} className="text-primary hover:underline">{property.agent.phone}</a></p>
-            </div>
+
+            {property.owner ? (
+              <>
+                <div className="flex items-center space-x-4 mb-4">
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage 
+                      src={property.owner.avatarUrl || '/default-avatar.png'} 
+                      alt={property.owner.name} 
+                      data-ai-hint="retrato persona" 
+                    />
+                    <AvatarFallback>{property.owner.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-lg">{property.owner.name}</p>
+                    <p className="text-sm text-muted-foreground">Agente Inmobiliario</p>
+                  </div>
+                </div>
+                <Separator className="my-4" />
+                <div className="space-y-2 text-sm">
+                  <p>
+                    <strong>Email: </strong> 
+                    {property.owner.email ? (
+                      <a href={`mailto:${property.owner.email}`} className="text-primary hover:underline">{property.owner.email}</a>
+                    ) : 'No disponible'}
+                  </p>
+                  <p>
+                    <strong>Teléfono: </strong> 
+                    {property.owner.phone ? (
+                      <a href={`tel:${property.owner.phone}`} className="text-primary hover:underline">{property.owner.phone}</a>
+                    ) : 'No disponible'}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p>Información del ownere no disponible</p>
+            )}
           </div>
 
           {/* Contact Form */}
-          <ContactForm 
-            propertyId={property.id} 
-            propertyName={property.title}
-            agentEmail={property.agent.email} 
-            agentName={property.agent.name} 
-          />
+          {/* Solo renderizamos el ContactForm si hay ownere */}
+          {property.owner && (
+            <ContactForm
+              propertyId={property.id}
+              propertyName={property.title}
+              agentEmail={property.owner.email}
+              agentName={property.owner.name}
+            />
+          )}
         </div>
       </div>
     </div>

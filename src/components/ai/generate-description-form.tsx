@@ -24,7 +24,7 @@ import { generatePropertyDescription, type GeneratePropertyDescriptionInput } fr
 import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
 import Image from 'next/image';
 import { useAuth } from '@/contexts/auth-context';
-import { addProperty, sqmToSqft } from '@/lib/property-store';
+import { addProperty } from '@/lib/property-store';
 import type { Property, PropertyType as PropertyTypeType, ListingType as ListingTypeType } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 
@@ -187,6 +187,11 @@ export function GenerateDescriptionForm() {
         squareFootage: sqmToSqft(data.squareFootage), 
         keyFeatures: data.keyFeatures,
       };
+
+      // Helper function to convert square meters to square feet
+      function sqmToSqft(sqm: number): number {
+        return Math.round(sqm * 10.7639);
+      }
       
       const result = await generatePropertyDescription(input);
       form.setValue('description', result.description); // Set AI description into the form field
@@ -251,7 +256,7 @@ export function GenerateDescriptionForm() {
       description: currentFormData.description, // Use description from the form
       images: photoDataUrisForSave,
       isFeatured: Math.random() < 0.2, 
-      agent: { 
+      owner: { 
         name: user.name,
         email: user.email,
         phone: user.phone, 

@@ -3,7 +3,7 @@ import type { Property, PropertyType, ListingType } from './types';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
-export const MOCK_PROPERTIES_INITIAL: Property[] = [
+/*export const MOCK_PROPERTIES_INITIAL: Property[] = [
   {
     id: '1',
     title: 'Moderno Apartamento Céntrico',
@@ -153,7 +153,7 @@ export const MOCK_PROPERTIES_INITIAL: Property[] = [
     ownerId: 'system-agent-5',
   },
 ];
-
+*/
 export const PROPERTY_TYPES: PropertyType[] = ["Casa", "Apartamento", "Condominio", "Adosado", "Terreno"];
 export const LISTING_TYPES: ListingType[] = ["Venta", "Alquiler"];
 export const CITIES: string[] = ["Metrópolis", "Suburbia", "Valleverde", "VistaOceano", "CrestaMontana", "San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];

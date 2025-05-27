@@ -2,7 +2,7 @@
 export type PropertyType = "Casa" | "Apartamento" | "Condominio" | "Adosado" | "Terreno";
 export type ListingType = "Venta" | "Alquiler";
 
-export interface Agent {
+export interface Owner {
   name: string;
   phone: string;
   email: string;
@@ -23,7 +23,7 @@ export interface Property {
   description: string;
   images: string[]; // URLs, first image is primary
   isFeatured?: boolean;
-  agent: Agent;
+  owner: Owner; // Owner details
   features?: string[];
   yearBuilt?: number;
   lotSize?: number; // in sq m

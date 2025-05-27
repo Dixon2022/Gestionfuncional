@@ -1,35 +1,27 @@
-
 'use client';
 
 import { FeaturedListings } from '@/components/property/featured-listings';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Search, ArrowRight, Home as HomeIcon, Building, LandPlot, Building2 as Building2Icon, Hotel } from 'lucide-react';
-import { getProperties, subscribeToProperties } from '@/lib/property-store';
+import { getProperties } from '@/lib/property-store'; // <-- solo getProperties, quitamos subscribeToProperties
 import { useEffect, useState } from 'react';
 import type { Property, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Helper to get an icon for each property type
+// Helpers para iconos y pluralización (igual que antes)
 const getPropertyTypeIcon = (type: PropertyType) => {
   switch (type) {
-    case 'Casa':
-      return <HomeIcon className="mr-2 h-4 w-4" />;
-    case 'Apartamento':
-      return <Building className="mr-2 h-4 w-4" />;
-    case 'Condominio':
-      return <Building2Icon className="mr-2 h-4 w-4" />;
-    case 'Adosado':
-      return <Hotel className="mr-2 h-4 w-4" />;
-    case 'Terreno':
-      return <LandPlot className="mr-2 h-4 w-4" />;
-    default:
-      return <HomeIcon className="mr-2 h-4 w-4" />;
+    case 'Casa': return <HomeIcon className="mr-2 h-4 w-4" />;
+    case 'Apartamento': return <Building className="mr-2 h-4 w-4" />;
+    case 'Condominio': return <Building2Icon className="mr-2 h-4 w-4" />;
+    case 'Adosado': return <Hotel className="mr-2 h-4 w-4" />;
+    case 'Terreno': return <LandPlot className="mr-2 h-4 w-4" />;
+    default: return <HomeIcon className="mr-2 h-4 w-4" />;
   }
 };
 
-// Helper for basic Spanish pluralization
 const pluralizePropertyType = (type: PropertyType, count: number): string => {
   if (count === 1) return type;
   switch (type) {
@@ -48,31 +40,23 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = subscribeToProperties((updatedProperties) => {
-      setAllProperties(updatedProperties);
+    // Solo cargar propiedades una vez
+    const fetchProperties = async () => {
+      const properties = await getProperties();
 
-      const counts = updatedProperties.reduce((acc, property) => {
+      setAllProperties(properties);
+
+      const counts = properties.reduce((acc, property) => {
         acc[property.type] = (acc[property.type] || 0) + 1;
         return acc;
       }, {} as Record<PropertyType, number>);
+
       setPropertyCounts(counts);
-      
       setIsLoading(false);
-    });
+    };
 
-    // Initial fetch
-    const initialProps = getProperties();
-    setAllProperties(initialProps);
-    const initialCounts = initialProps.reduce((acc, property) => {
-      acc[property.type] = (acc[property.type] || 0) + 1;
-      return acc;
-    }, {} as Record<PropertyType, number>);
-    setPropertyCounts(initialCounts);
-    setIsLoading(false);
-
-    return () => unsubscribe();
+    fetchProperties();
   }, []);
-
 
   return (
     <>
@@ -102,11 +86,11 @@ export default function HomePage() {
         <div className="container">
           <h2 className="text-2xl font-bold mb-6 text-center">Explora por Tipo de Propiedad</h2>
           {isLoading || !propertyCounts ? (
-             <div className="flex flex-wrap justify-center gap-3">
-                {PROPERTY_TYPES.map(type => (
-                    <Skeleton key={type} className="h-10 w-32 rounded-md" />
-                ))}
-             </div>
+            <div className="flex flex-wrap justify-center gap-3">
+              {PROPERTY_TYPES.map(type => (
+                <Skeleton key={type} className="h-10 w-32 rounded-md" />
+              ))}
+            </div>
           ) : (
             <div className="flex flex-wrap justify-center gap-3">
               {PROPERTY_TYPES.map(type => {
@@ -127,7 +111,7 @@ export default function HomePage() {
           )}
         </div>
       </section>
-      
+
       {/* Featured Listings Section */}
       {!isLoading && <FeaturedListings properties={allProperties} />}
 

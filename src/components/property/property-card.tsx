@@ -44,7 +44,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
     setIsDeleting(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500)); 
-      const success = deleteProperty(property.id, user.id); 
+      const success = await deleteProperty(property.id, user.id); 
       if (success) {
         toast({
           title: "Propiedad Eliminada",

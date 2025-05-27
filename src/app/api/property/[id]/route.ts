@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../lib/prisma";
 
-export async function GET(_: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+
   const property = await prisma.property.findUnique({
     where: { id: parseInt(params.id) },
     include: { images: true, owner: true },
   });
 
+  // Retornar el resultado o lo que necesites
   if (!property) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return new Response('Property not found', { status: 404 });
   }
 
-  return NextResponse.json(property);
+  return new Response(JSON.stringify(property), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
@@ -26,6 +32,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: "Update failed" }, { status: 400 });
   }
 }
+
+
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
   try {

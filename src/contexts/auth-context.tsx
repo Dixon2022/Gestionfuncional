@@ -1,4 +1,3 @@
-
 'use client';
 
 import type { User } from '@/lib/types';
@@ -9,7 +8,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, name: string, phone: string) => void;
   logout: () => void;
-  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => void;
+  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => Promise<void>;
   loading: boolean;
 }
 
@@ -31,8 +30,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const parsedUser = JSON.parse(storedUserData) as User;
           setUser({
             ...parsedUser,
-            name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario', 
-            phone: parsedUser.phone || '000-000-0000', 
+            name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
+            phone: parsedUser.phone || '000-000-0000',
           });
         } catch (e) {
           console.error("Error al parsear usuario desde localStorage", e);
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           localStorage.removeItem(`${USER_DATA_PREFIX}${currentUserEmail}`);
         }
       } else {
-         localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
+        localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
       }
     }
     setLoading(false);
@@ -59,14 +58,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         phone: existingUser.phone || phone || '000-000-0000',
       };
     } else {
-      userToLogin = { 
-        id: Date.now().toString(), 
-        email, 
-        name: name || email.split('@')[0] || 'Usuario', 
+      userToLogin = {
+        id: Date.now().toString(),
+        email,
+        name: name || email.split('@')[0] || 'Usuario',
         phone: phone || '000-000-0000',
       };
     }
-    
+
     localStorage.setItem(storageKey, JSON.stringify(userToLogin));
     localStorage.setItem(CURRENT_USER_EMAIL_KEY, email);
     setUser(userToLogin);
@@ -77,46 +76,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
   };
 
-  const updateUser = (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => {
+  const updateUser = async (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => {
     if (user) {
-      const oldUser = { ...user }; 
-      const newUserData: User = { 
-        ...user, 
+      const oldUser = { ...user };
+      const newUserData: User = {
+        ...user,
         name: updatedInfo.name !== undefined ? updatedInfo.name : user.name,
         email: updatedInfo.email !== undefined ? updatedInfo.email : user.email,
         phone: updatedInfo.phone !== undefined ? updatedInfo.phone : user.phone,
       };
 
       if (newUserData.email !== oldUser.email) {
-        localStorage.removeItem(`${USER_DATA_PREFIX}${oldUser.email}`); 
+        localStorage.removeItem(`${USER_DATA_PREFIX}${oldUser.email}`);
         localStorage.setItem(CURRENT_USER_EMAIL_KEY, newUserData.email);
       }
       localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(newUserData));
       setUser(newUserData);
 
-      const userProperties = getProperties().filter(p => p.ownerId === newUserData.id);
-      userProperties.forEach(prop => {
-        let agentUpdates: Partial<typeof prop.agent> = {};
-        let needsUpdate = false;
+      try {
+        const allProperties = await getProperties(); // ✅ Esperar la promesa
+        const userProperties = allProperties.filter(p => p.ownerId === newUserData.id);
 
-        if (updatedInfo.name !== undefined && prop.agent.name === oldUser.name) {
-          agentUpdates.name = newUserData.name;
-          needsUpdate = true;
-        }
-        if (updatedInfo.email !== undefined && prop.agent.email === oldUser.email) {
-          agentUpdates.email = newUserData.email;
-          needsUpdate = true;
-        }
-         if (updatedInfo.phone !== undefined && prop.agent.phone === oldUser.phone) {
-          agentUpdates.phone = newUserData.phone;
-          needsUpdate = true;
-        }
+        userProperties.forEach(prop => {
+          let agentUpdates: Partial<typeof prop.owner> = {};
+          let needsUpdate = false;
 
+          if (updatedInfo.name !== undefined && prop.owner.name === oldUser.name) {
+            agentUpdates.name = newUserData.name;
+            needsUpdate = true;
+          }
+          if (updatedInfo.email !== undefined && prop.owner.email === oldUser.email) {
+            agentUpdates.email = newUserData.email;
+            needsUpdate = true;
+          }
+          if (updatedInfo.phone !== undefined && prop.owner.phone === oldUser.phone) {
+            agentUpdates.phone = newUserData.phone;
+            needsUpdate = true;
+          }
 
-        if (needsUpdate) {
-          updateStoreProperty(prop.id, { agent: { ...prop.agent, ...agentUpdates } }, newUserData.id);
-        }
-      });
+          if (needsUpdate) {
+            updateStoreProperty(prop.id, { owner: { ...prop.owner, ...agentUpdates } }, newUserData.id);
+          }
+        });
+      } catch (err) {
+        console.error("Error actualizando propiedades del usuario", err);
+      }
     }
   };
 
