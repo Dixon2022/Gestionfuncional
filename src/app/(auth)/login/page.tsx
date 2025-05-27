@@ -78,7 +78,7 @@ export default function LoginPage() {
           className="inline-flex items-center space-x-2 text-primary mb-4"
         >
           <Building2 className="h-8 w-8" />
-          <span className="text-3xl font-bold">PropVerse</span>
+          <span className="text-3xl font-bold">FindHome</span>
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           Iniciar Sesión

@@ -14,8 +14,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const CURRENT_USER_EMAIL_KEY = 'propverse-current-user-email';
-const USER_DATA_PREFIX = 'propverse-user-data-';
+const CURRENT_USER_EMAIL_KEY = 'FindHome-current-user-email';
+const USER_DATA_PREFIX = 'FindHome-user-data-';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

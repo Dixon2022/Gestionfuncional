@@ -1,4 +1,4 @@
-# **App Name**: PropVerse
+# **App Name**: FindHome
 
 ## Core Features:
 

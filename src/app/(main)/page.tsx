@@ -67,7 +67,7 @@ export default function HomePage() {
             Encuentra la Propiedad de Tus Sueños
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Descubre una amplia gama de propiedades con PropVerse. Búsqueda avanzada, listados detallados e información potenciada por IA.
+            Descubre una amplia gama de propiedades con FindHome. Búsqueda avanzada, listados detallados e información potenciada por IA.
           </p>
           <div className="flex justify-center">
             <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">

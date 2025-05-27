@@ -38,9 +38,9 @@ export default function PropertyPage() {
 
   useEffect(() => {
     if (property && property.title) {
-      document.title = `${property.title} - PropVerse`;
+      document.title = `${property.title} - FindHome`;
     } else if (property === null && !isLoading) {
-      document.title = 'Propiedad No Encontrada - PropVerse';
+      document.title = 'Propiedad No Encontrada - FindHome';
     }
   }, [property, isLoading]);
 

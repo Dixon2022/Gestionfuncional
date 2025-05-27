@@ -10,7 +10,7 @@ import type { Metadata } from 'next';
 
 // Static metadata for the page
 // export const metadata: Metadata = {
-//   title: 'Generador de Descripciones de Propiedades con IA - PropVerse',
+//   title: 'Generador de Descripciones de Propiedades con IA - FindHome',
 //   description: 'Genera descripciones de propiedades atractivas usando IA. Ingresa los detalles de la propiedad y deja que nuestra IA cree el texto perfecto para tu listado.',
 // };
 

@@ -23,7 +23,7 @@ export function Header() {
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Building2 className="h-6 w-6 text-primary" />
           <span className="font-bold sm:inline-block text-xl">
-            PropVerse
+            FindHome
           </span>
         </Link>
         <MainNav />
