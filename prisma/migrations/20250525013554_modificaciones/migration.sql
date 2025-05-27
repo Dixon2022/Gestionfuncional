@@ -5,10 +5,10 @@
 
 */
 -- CreateEnum
-CREATE TYPE "PropertyType" AS ENUM ('CASA', 'APARTAMENTO', 'CONDOMINIO', 'ADOSADO', 'TERRENO', 'ANY');
+CREATE TYPE "PropertyType" AS ENUM ('Casa', 'Apartamento', 'Condominio', 'Adosado', 'Terreno', 'ANY');
 
 -- CreateEnum
-CREATE TYPE "ListingType" AS ENUM ('VENTA', 'ALQUILER', 'ANY');
+CREATE TYPE "ListingType" AS ENUM ('Venta', 'Alquiler', 'ANY');
 
 -- DropTable
 DROP TABLE "Usuario";

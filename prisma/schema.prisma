@@ -56,16 +56,16 @@ model PropertyImage {
 }
 
 enum PropertyType {
-  CASA
-  APARTAMENTO
-  CONDOMINIO
-  ADOSADO
-  TERRENO
+  Casa
+  Apartamento
+  Condominio
+  Adosado
+  Terreno
   ANY
 }
 
 enum ListingType {
-  VENTA
-  ALQUILER
+  Venta
+  Alquiler
   ANY
 }

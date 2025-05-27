@@ -37,7 +37,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew = property.createdAt && (Date.now() - property.createdAt) < TWENTY_FOUR_HOURS_MS;
-  const isOwner = user && user.id === property.ownerId;
+  const isOwner = user && user.name === property.owner.name;
+  console.log('PropertyCard', { property, user, isOwner });
 
   const handleDelete = async () => {
     if (!isOwner || !user) return; 
