@@ -1,13 +1,10 @@
-//Formulario del lado del cliente para reportar una propiedad
-// report-form
-
 'use client';
 
 import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReportFormProps {
   propertyId: string;
@@ -17,6 +14,7 @@ export function ReportForm({ propertyId }: ReportFormProps) {
   const [reason, setReason] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,11 +30,19 @@ export function ReportForm({ propertyId }: ReportFormProps) {
 
       if (!res.ok) throw new Error(data.error || 'Error al enviar el reporte');
 
-      toast.success('¡Reporte enviado con éxito!');
+      toast({
+        title: 'Reporte enviado',
+        description: '¡Reporte enviado con éxito!',
+      });
+
       setReason('');
       setMessage('');
     } catch (err: any) {
-      toast.error(err.message || 'Error al enviar el reporte');
+      toast({
+        title: 'Error',
+        description: err.message || 'Error al enviar el reporte',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }

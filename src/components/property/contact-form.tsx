@@ -131,14 +131,14 @@ export function ContactForm({ propertyId, propertyName, agentEmail, agentName }:
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? 'Enviando...' : <> <Send className="mr-2 h-4 w-4" /> Enviar Consulta </>}
           </Button>
-          <details className="mt-8 border-t pt-4">
+        </form>
+      </Form>
+      <details className="mt-8 border-t pt-4">
             <summary className="cursor-pointer text-sm text-muted-foreground mb-2">
               ¿Encontraste un problema con esta propiedad?
             </summary>
             {propertyId && <ReportForm propertyId={propertyId} />}
           </details>
-        </form>
-      </Form>
     </div>
   );
 }
