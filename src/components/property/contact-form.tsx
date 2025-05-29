@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Send } from 'lucide-react';
+import { ReportForm } from './report-form';
 
 const contactFormSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
@@ -130,6 +131,12 @@ export function ContactForm({ propertyId, propertyName, agentEmail, agentName }:
           <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? 'Enviando...' : <> <Send className="mr-2 h-4 w-4" /> Enviar Consulta </>}
           </Button>
+          <details className="mt-8 border-t pt-4">
+            <summary className="cursor-pointer text-sm text-muted-foreground mb-2">
+              ¿Encontraste un problema con esta propiedad?
+            </summary>
+            {propertyId && <ReportForm propertyId={propertyId} />}
+          </details>
         </form>
       </Form>
     </div>

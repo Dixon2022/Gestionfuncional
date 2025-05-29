@@ -33,8 +33,13 @@ export default function PropertiesPage() {
       setIsLoading(true);
       try {
         const properties = await getProperties();
-        setAllProperties(properties);
-        filterAndSetProperties(properties, currentFilters);
+        const sorted = [...properties].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+        setAllProperties(sorted);
+        filterAndSetProperties(sorted, currentFilters);
       } catch (error) {
         console.error('Error al cargar propiedades:', error);
         setAllProperties([]);

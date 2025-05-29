@@ -6,6 +6,8 @@ import { ContactForm } from './contact-form';
 import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCircle, Landmark, Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// Update the path below if your report-form file is in a different directory
+
 
 interface PropertyDetailsPageProps {
   propertyId: string;  // Recibimos el ID de la propiedad para hacer fetch

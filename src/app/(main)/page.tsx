@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import type { Property, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
+import { date } from 'zod';
 
 // Helpers para iconos y pluralización (igual que antes)
 const getPropertyTypeIcon = (type: PropertyType) => {
@@ -43,10 +44,14 @@ export default function HomePage() {
     // Solo cargar propiedades una vez
     const fetchProperties = async () => {
       const properties = await getProperties();
+      const sorted = [...properties].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      setAllProperties(sorted);
 
-      setAllProperties(properties);
-
-      const counts = properties.reduce((acc, property) => {
+      const counts = sorted.reduce((acc, property) => {
         acc[property.type] = (acc[property.type] || 0) + 1;
         return acc;
       }, {} as Record<PropertyType, number>);

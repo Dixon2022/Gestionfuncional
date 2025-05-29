@@ -44,6 +44,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
+    "express": "^5.1.0",
     "firebase": "^11.7.3",
     "genkit": "^1.8.0",
     "lucide-react": "^0.475.0",
@@ -55,6 +56,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.1",
+    "sonner": "^2.0.3",
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.24.2"
@@ -72,7 +74,8 @@
   "description": "This is a NextJS starter in Firebase Studio.",
   "main": "index.js",
   "directories": {
-    "doc": "docs"
+    "doc": "docs",
+    "lib": "lib"
   },
   "repository": {
     "type": "git",

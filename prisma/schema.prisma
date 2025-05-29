@@ -43,6 +43,7 @@ model Property {
   owner        User            @relation(fields: [ownerId], references: [id])
 
   images       PropertyImage[]
+  reports      PropertyReport[]
 }
 
 model PropertyImage {
@@ -68,4 +69,13 @@ enum ListingType {
   Venta
   Alquiler
   ANY
+}
+
+model PropertyReport {
+  id          Int   @id @default(autoincrement())
+  reason      String
+  message     String?
+  property    Property @relation(fields: [propertyId], references: [id])
+  propertyId  Int
+  createdAt   DateTime @default(now())
 }
