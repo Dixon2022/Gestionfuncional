@@ -2,10 +2,18 @@ import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import type { Property } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
+import { toast } from "@/hooks/use-toast";
 import { ContactForm } from './contact-form';
 import { BedDouble, Bath, Home, MapPin, Building, CalendarDays, Layers, UserCircle, Landmark, Tag } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  FacebookShareButton,
+  FacebookIcon,
+  WhatsappShareButton,
+  WhatsappIcon,
+} from 'react-share';
+import { Copy } from 'lucide-react';
 // Update the path below if your report-form file is in a different directory
 
 
@@ -45,6 +53,8 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const displayArea = property.area != null ? `${property.area.toLocaleString()} m²` : 'N/A';
   const displayLotSize = property.lotSize != null ? `${property.lotSize.toLocaleString()} m²` : 'N/A';
   const displayPrice = property.price != null ? `₡${property.price.toLocaleString()}` : 'Precio no disponible';
+
+
 
   return (
     <div className="container py-8 md:py-12">
@@ -93,10 +103,45 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
               </div>
             )}
           </div>
+          <div className="p-4 pt-0 mt-2 flex items-center gap-2">
+            <FacebookShareButton
+              url={`${
+                typeof window !== "undefined" ? window.location.origin : ""
+              }/properties/${property.id}`}
+            >
+              <FacebookIcon size={32} round />
+            </FacebookShareButton>
+
+            <WhatsappShareButton
+              url={`${
+                typeof window !== "undefined" ? window.location.origin : ""
+              }/properties/${property.id}`}
+            >
+              <WhatsappIcon size={32} round />
+            </WhatsappShareButton>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `${window.location.origin}/properties/${property.id}`
+                );
+                toast({
+                  title: "Enlace copiado",
+                  description: "Has copieda el enlace de la propiedad.",
+                  duration: 7000,
+                });
+              }}
+              title="Copiar enlace"
+              className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+            >
+              <Copy className="h-5 w-5" />
+            </button>
+          </div>
 
           {/* Property Info Header */}
           <div className="mb-6 pb-4 border-b">
+            
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{property.title}</h1>
+            
             <div className="flex items-center text-muted-foreground mb-3">
               <MapPin className="mr-2 h-5 w-5" />
               <span>{property.address}, {property.city}</span>
