@@ -120,23 +120,7 @@ export default function HomePage() {
       {/* Featured Listings Section */}
       {!isLoading && <FeaturedListings properties={allProperties} />}
 
-      {/* AI Description Generator CTA Section */}
-      <section className="py-12">
-        <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">
-            ¿Listo para Vender o Alquilar?
-          </h2>
-          <p className="text-lg text-muted-foreground mb-6 max-w-xl mx-auto">
-            Aprovecha nuestra IA para crear descripciones de propiedades atractivas que atraigan compradores o inquilinos.
-          </p>
-          <Button size="lg" variant="outline" asChild>
-            <Link href="/generate-description">
-              Generar Descripción con IA
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Link>
-          </Button>
-        </div>
-      </section>
+      
     </>
   );
 }
