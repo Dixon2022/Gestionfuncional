@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: 'FindHome - Encuentra la propiedad de tus sueños',
-  description: 'Búsqueda avanzada de propiedades y descripciones con IA por FindHome.',
+  description: 'Búsqueda avanzada de propiedades con FindHome.',
 };
 
 export default function RootLayout({
