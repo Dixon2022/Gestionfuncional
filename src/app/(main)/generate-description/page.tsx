@@ -57,9 +57,9 @@ export default function GenerateDescriptionPage() {
   return (
     <div className="container py-8 md:py-12">
       <div className="text-center mb-10">
-        <h1 className="text-3xl md:text-4xl font-bold">Generador de Descripciones de Propiedades con IA</h1>
+        <h1 className="text-3xl md:text-4xl font-bold">Agregar propiedades nuevas</h1>
         <p className="text-lg text-muted-foreground mt-2 max-w-xl mx-auto">
-          Crea descripciones de propiedades atractivas sin esfuerzo. Proporciona algunos detalles y deja que nuestra IA haga el resto.
+          Agregar propiedades nuevas a tu listado es fácil y rápido. Completa los detalles de la propiedad
         </p>
       </div>
       <GenerateDescriptionForm />

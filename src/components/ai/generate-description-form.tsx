@@ -528,20 +528,6 @@ export function GenerateDescriptionForm() {
                 </FormItem>
             )}
            />
-
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isAIGenerating || isSaving || photoDataUrisForSave.length === 0}>
-            {isAIGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generando Descripción...
-              </>
-            ) : (
-              <>
-                <Sparkles className="mr-2 h-4 w-4" />
-                Generar/Regenerar Descripción con IA
-              </>
-            )}
-          </Button>
         </form>
       </Form>
 
