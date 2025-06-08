@@ -179,6 +179,11 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
             <p className="text-foreground/80 leading-relaxed whitespace-pre-line">{property.description}</p>
           </div>
 
+          <div>
+            <p className="text-2xl font-semibold mb-3">Reportes de la propiedad</p>
+            
+          </div>
+
           {/* Features */}
           {property.features && property.features.length > 0 && (
             <div className="mb-8">
