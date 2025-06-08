@@ -17,6 +17,8 @@ export function MainNav() {
     // { href: '/generate-description', label: 'Descripción IA', icon: Sparkles }, // Removed
     // Add profile link if user is logged in
     ...(user ? [{ href: '/profile', label: 'Mi Perfil', icon: UserCircle }] : []),
+
+
   ];
 
 

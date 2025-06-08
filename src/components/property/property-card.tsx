@@ -46,6 +46,7 @@ import {
   WhatsappIcon,
 } from "react-share";
 import { Copy } from "lucide-react";
+import { link } from "fs";
 
 interface PropertyCardProps {
   property: Property;
@@ -214,7 +215,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-            {isOwner && (
+            {(isOwner || user?.role === "admin")&& (
               <>
                 <Button
                   variant="outline"

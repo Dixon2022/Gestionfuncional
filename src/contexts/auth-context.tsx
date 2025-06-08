@@ -1,14 +1,17 @@
 'use client';
 
-import type { User } from '@/lib/types';
+import type { User, Role} from '@/lib/types';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getProperties, updateProperty as updateStoreProperty } from '@/lib/property-store';
+import { parseDomainOfCategoryAxis } from 'recharts/types/util/ChartUtils';
+
+
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, name: string, phone: string) => void;
+  login: (email: string, name: string, phone: string, role: Role) => void;
   logout: () => void;
-  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => Promise<void>;
+  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'  >>) => Promise<void>;
   loading: boolean;
 }
 
@@ -45,7 +48,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setLoading(false);
   }, []);
 
-  const login = (email: string, name: string, phone: string) => {
+  const login = (email: string, name: string, phone: string, role: Role) => {
     const storageKey = `${USER_DATA_PREFIX}${email}`;
     let existingUserDataString = localStorage.getItem(storageKey);
     let userToLogin: User;
@@ -55,14 +58,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       userToLogin = {
         ...existingUser,
         name: existingUser.name || name || email.split('@')[0] || 'Usuario',
-        phone: existingUser.phone || phone || '000-000-0000',
+        phone: existingUser.phone || phone || '000-000-0000' ,
+        role: role || 'user', 
       };
     } else {
       userToLogin = {
         id: Date.now().toString(),
         email,
         name: name || email.split('@')[0] || 'Usuario',
-        phone: phone || '000-000-0000',
+        phone: phone || '000-000-0000' , 
+        role: role ||'user' ,
       };
     }
 
@@ -84,6 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: updatedInfo.name !== undefined ? updatedInfo.name : user.name,
         email: updatedInfo.email !== undefined ? updatedInfo.email : user.email,
         phone: updatedInfo.phone !== undefined ? updatedInfo.phone : user.phone,
+
       };
 
       if (newUserData.email !== oldUser.email) {

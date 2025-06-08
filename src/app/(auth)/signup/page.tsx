@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/auth-context';
 import { Building2, UserPlus, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Role } from '@prisma/client';
 
 const signupSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
@@ -53,6 +54,7 @@ export default function SignupPage() {
         email: data.email,
         phone: data.phone,
         password: data.password,
+       
       }),
     });
 
@@ -63,7 +65,7 @@ export default function SignupPage() {
     }
 
     // Si todo sale bien, loguea al usuario
-    login(data.email, data.name, data.phone);
+    login(data.email, data.name, data.phone,'user');
 
     toast({
       title: "¡Cuenta Creada!",

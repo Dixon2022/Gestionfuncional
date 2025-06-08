@@ -52,13 +52,20 @@ export default function LoginPage() {
 
       const user = await response.json();
 
-      login(user.email, user.name, user.phone || "");
+     login(user.email, user.name, user.phone || "", user.role);
+
       toast({
         title: "¡Bienvenido de nuevo!",
         description: "Has iniciado sesión correctamente.",
         duration: 7000,
       });
-      router.push("/");
+
+      // Redirecciona dependiendo del rol
+      if (user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (error: any) {
       toast({
         title: "Error",

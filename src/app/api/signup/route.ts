@@ -1,7 +1,7 @@
 // app/api/signup/route.ts
 
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Role } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -9,7 +9,7 @@ const prisma = new PrismaClient();
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name, phone } = body;
+    const { email, password, name, phone, role } = body;
 
     // Validación básica
     if (!email || !password || !name || !phone) {
@@ -50,6 +50,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         name,
         phone,
+        role,
       },
     });
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
         email: newUser.email,
         name: newUser.name,
         phone: newUser.phone,
+        role: newUser.role,
       },
     });
   } catch (error) {

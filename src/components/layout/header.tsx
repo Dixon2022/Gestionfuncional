@@ -50,6 +50,13 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Mi Perfil</Link>
                   </DropdownMenuItem>
+
+                    {user.role === 'admin' && (
+                        <DropdownMenuItem asChild>
+                          <Link href="/admin/">Propiedades Reportadas</Link>
+                        </DropdownMenuItem>
+                      )}
+
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión

@@ -26,6 +26,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         email: data.email,
         phone: data.phone,
         updatedAt: new Date(),
+        role: data.role,
       },
     });
     return NextResponse.json(updated);

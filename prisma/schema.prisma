@@ -15,8 +15,13 @@ model User {
   password  String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now())
-
+  role Role @default(user)
   properties Property[]
+}
+
+enum Role {
+  admin
+  user
 }
 
 model Property {

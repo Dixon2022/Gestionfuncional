@@ -1,7 +1,8 @@
 
+
 export type PropertyType = "Casa" | "Apartamento" | "Condominio" | "Adosado" | "Terreno";
 export type ListingType = "Venta" | "Alquiler";
-
+export type Role = 'user' | 'admin';
 export interface Owner {
   name: string;
   phone: string;
@@ -47,4 +48,15 @@ export interface User {
   email: string; 
   name: string;
   phone: string;
+  role: Role;
 }
+
+
+  interface Session {
+    user: {
+      name: string
+      email: string
+      image?: string
+      role: Role
+    }
+  }

@@ -21,6 +21,7 @@ import {
   LogOut,
   PlusCircle,
   Phone,
+  Flag,
 } from "lucide-react";
 import { getPropertiesByOwner } from "@/lib/property-store";
 import type { Property } from "@/lib/types";
@@ -70,6 +71,10 @@ export default function ProfilePage() {
       </div>
     );
   }
+  const visibleProperties =
+    user.role === "admin"
+      ? myProperties
+      : myProperties.filter((property) => property.ownerId === user.id);
 
   return (
     <div className="container py-8 md:py-12">
@@ -132,15 +137,26 @@ export default function ProfilePage() {
             >
               <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
             </Button>
+            {user?.role === "admin" && (
+              <Button
+                variant="secondary"
+                asChild
+                className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white"
+              >
+                <Link href="/admin">
+                  <Flag className="mr-2 h-4 w-4" /> Administrar Reportes
+                </Link>
+              </Button>
+            )}
           </div>
 
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">
               Mis Propiedades Publicadas
             </h2>
-            {myProperties.length > 0 ? (
+            {visibleProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {myProperties.map((property) => (
+                {visibleProperties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
               </div>
