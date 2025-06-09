@@ -20,7 +20,7 @@ const GeneratePropertyDescriptionInputSchema = z.object({
 export type GeneratePropertyDescriptionInput = z.infer<typeof GeneratePropertyDescriptionInputSchema>;
 
 const GeneratePropertyDescriptionOutputSchema = z.object({
-  description: z.string().describe('Una descripción de propiedad convincente generada por IA EN ESPAÑOL.'),
+  description: z.string().describe('Una descripción de propiedad convincente y atractiva en español.'),
 });
 export type GeneratePropertyDescriptionOutput = z.infer<typeof GeneratePropertyDescriptionOutputSchema>;
 

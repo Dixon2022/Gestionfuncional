@@ -34,6 +34,7 @@ export async function GET() {
     const reports = await prisma.propertyReport.findMany({
       include: {
         property: true,
+        
       },
       orderBy: {
         createdAt: 'desc',

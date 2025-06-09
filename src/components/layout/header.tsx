@@ -37,7 +37,6 @@ export function Header() {
             height={100}
             className="rounded-sm"
           />
-          <span className="font-bold sm:inline-block text-xl">FindHome</span>
         </Link>
         <MainNav />
         <div className="flex flex-1 items-center justify-end space-x-2">
