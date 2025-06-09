@@ -44,6 +44,7 @@ export default function HomePage() {
     // Solo cargar propiedades una vez
     const fetchProperties = async () => {
       const properties = await getProperties();
+      console.log("PROPIEDADES:", properties); // <-- Agrega esto
       const sorted = [...properties].sort((a, b) => {
         const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
