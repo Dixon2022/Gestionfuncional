@@ -87,11 +87,10 @@ export default function LoginPage() {
           <img
             src="/favicon.ico"
             alt="FindHome Logo"
-            width={32}
-            height={32}
+            width={100}
+            height={100}
             className="rounded-sm"
           />
-          <span className="text-3xl font-bold">FindHome</span>
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           Iniciar Sesión
