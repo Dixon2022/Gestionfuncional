@@ -1,4 +1,3 @@
-
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -54,13 +53,29 @@ export function ContactForm({ propertyId, propertyName, agentEmail, agentName }:
   });
 
   async function onSubmit(data: ContactFormValues) {
-    // Aquí normalmente enviarías los datos a tu backend o a un servicio como Formspree
-    // Para demostración, solo mostraremos un mensaje toast.
-    console.log('Formulario de contacto enviado:', data);
-    toast({
-      title: '¡Consulta Enviada!',
-      description: `Tu mensaje sobre la propiedad "${data.propertyName}" ha sido enviado a ${agentName}.`,
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...data,
+        agentEmail, // Pass the agent's email
+        propertyName,
+      }),
     });
+
+    if (response.ok) {
+      toast({
+        title: '¡Consulta Enviada!',
+        description: `Tu mensaje ha sido enviado a ${agentName}.`,
+      });
+      form.reset();
+    } else {
+      toast({
+        title: 'Error',
+        description: 'No se pudo enviar el mensaje. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    }
     form.reset();
   }
 
