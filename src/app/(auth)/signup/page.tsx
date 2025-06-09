@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -85,7 +84,13 @@ export default function SignupPage() {
     <>
       <div className="mb-6 text-center">
         <Link href="/" className="inline-flex items-center space-x-2 text-primary mb-4">
-          <Building2 className="h-8 w-8" />
+          <img
+            src="/favicon.ico"
+            alt="FindHome Logo"
+            width={32}
+            height={32}
+            className="rounded-sm"
+          />
           <span className="text-3xl font-bold">FindHome</span>
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">Crear una Cuenta</h1>
