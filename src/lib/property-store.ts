@@ -10,11 +10,11 @@ export const getProperties = async (): Promise<Property[]> => {
 };
 
 // Obtener propiedad por ID
-export const getPropertyById = async (id: string): Promise<Property | undefined> => {
-  const res = await fetch(`${API_BASE}/${id}`);
-  if (!res.ok) return undefined;
-  return res.json();
-};
+export async function getPropertyById(id: string) {
+  const res = await fetch(`/api/property/${id}`);
+  if (!res.ok) return null;
+  return await res.json();
+}
 
 export const getPropertiesByOwner = async (ownerId: string): Promise<Property[]> => {
   const res = await fetch(`${API_BASE}?ownerId=${ownerId}`);

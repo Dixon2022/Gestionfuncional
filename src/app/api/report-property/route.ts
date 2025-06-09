@@ -29,18 +29,15 @@ export async function POST(req: Request) {
 }
 
 // GET: Obtener todos los reportes (idealmente solo para admin)
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const propertyId = searchParams.get("propertyId");
+    const where = propertyId ? { propertyId: Number(propertyId) } : {};
     const reports = await prisma.propertyReport.findMany({
-      include: {
-        property: true,
-        
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where,
+      orderBy: { createdAt: "desc" },
     });
-
     return NextResponse.json({ reports });
   } catch (error) {
     console.error('[REPORT GET ERROR]', error);

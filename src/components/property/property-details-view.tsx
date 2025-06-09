@@ -26,6 +26,7 @@ import {
 } from "react-share";
 import { Copy } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
+import { useAuth } from "@/contexts/auth-context";
 
 // Update the path below if your report-form file is in a different directory
 
@@ -34,9 +35,11 @@ interface PropertyDetailsPageProps {
 }
 
 export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
+  const { user } = useAuth(); // <-- aquí obtienes el usuario
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reports, setReports] = useState<any[]>([]);
   const { convert, symbol } = useCurrency();
 
   useEffect(() => {
@@ -57,6 +60,19 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
 
     fetchProperty();
   }, [propertyId]);
+
+  useEffect(() => {
+    async function fetchReports() {
+      if (user?.role === "admin") {
+        const res = await fetch(`/api/report-property?propertyId=${propertyId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setReports(data.reports || []);
+        }
+      }
+    }
+    fetchReports();
+  }, [propertyId, user]);
 
   if (loading) return <p>Cargando propiedad...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
@@ -242,11 +258,24 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
           </div>
 
           {/* AQUI SE AGREGAN LOS REPORTES POR SI ACASO */}
-          <div>
-            <p className="text-2xl font-semibold mb-3">
-              Reportes de la propiedad
-            </p>
-          </div>
+          {user?.role === "admin" && (
+            <div className="mb-8">
+              <p className="text-2xl font-semibold mb-3">Reportes de la propiedad</p>
+              {reports.length === 0 ? (
+                <p className="text-muted-foreground">No hay reportes para esta propiedad.</p>
+              ) : (
+                <ul className="space-y-4">
+                  {reports.map((report, idx) => (
+                    <li key={idx} className="p-4 border rounded-lg bg-secondary/30">
+                      <p className="font-semibold">Motivo: {report.reason}</p>
+                      <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
+                      <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
 
           {/* Features */}
           {property.features && property.features.length > 0 && (
