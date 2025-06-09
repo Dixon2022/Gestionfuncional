@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,6 +15,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Search, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCurrency } from "@/contexts/currency-context";
 
 interface PropertySearchFiltersProps {
   onSearch: (filters: SearchFilters) => void;
@@ -37,15 +37,29 @@ const defaultFilters: SearchFilters = {
 
 export function PropertySearchFilters({ onSearch, initialFilters }: PropertySearchFiltersProps) {
   const [filters, setFilters] = useState<SearchFilters>(initialFilters || defaultFilters);
-  
+  const { currency, convert, symbol } = useCurrency();
+
+  // Convierte de CRC a la moneda seleccionada
+  const toDisplay = (crc: number) => Math.round(convert(crc));
+  // Convierte de la moneda seleccionada a CRC
+  const toCRC = (val: number) => Math.round(val / convert(1));
+
   const getMaxPriceForType = (listingType?: ListingType) => {
     return listingType === 'Alquiler' ? MAX_PRICE_CRC_RENT : MAX_PRICE_CRC_SALE;
   };
 
   const [priceRange, setPriceRange] = useState<[number, number]>([
-    initialFilters?.minPrice || defaultFilters.minPrice || 0, 
-    initialFilters?.maxPrice || getMaxPriceForType(initialFilters?.listingType)
+    toDisplay(initialFilters?.minPrice || defaultFilters.minPrice || 0),
+    toDisplay(initialFilters?.maxPrice || getMaxPriceForType(initialFilters?.listingType))
   ]);
+
+  useEffect(() => {
+    setPriceRange([
+      toDisplay(filters.minPrice || 0),
+      toDisplay(filters.maxPrice || getMaxPriceForType(filters.listingType))
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currency, filters.listingType]);
 
   useEffect(() => {
     if (initialFilters) {
@@ -79,7 +93,11 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
   
   const handlePriceRangeChange = (value: [number, number]) => {
     setPriceRange(value);
-    setFilters((prev) => ({ ...prev, minPrice: value[0], maxPrice: value[1] }));
+    setFilters((prev) => ({
+      ...prev,
+      minPrice: toCRC(value[0]),
+      maxPrice: toCRC(value[1]),
+    }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -149,14 +167,16 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
           </div>
           
           <div className="space-y-2 md:col-span-2 lg:col-span-3">
-            <Label htmlFor="priceRange">Rango de Precio: ₡{priceRange[0].toLocaleString()} - ₡{priceRange[1].toLocaleString()} {filters.listingType === 'Alquiler' ? '/mes' : ''}</Label>
+            <Label htmlFor="priceRange">
+              Rango de Precio: {symbol}{priceRange[0].toLocaleString()} - {symbol}{priceRange[1].toLocaleString()} {filters.listingType === 'Alquiler' ? '/mes' : ''}
+            </Label>
             <Slider
               id="priceRange"
               min={0}
-              max={getMaxPriceForType(filters.listingType)}
-              step={filters.listingType === 'Alquiler' ? 50000 : 1000000} 
+              max={toDisplay(getMaxPriceForType(filters.listingType))}
+              step={filters.listingType === 'Alquiler' ? toDisplay(50000) : toDisplay(1000000)}
               value={priceRange}
-              onValueChange={(value) => handlePriceRangeChange(value as [number,number])}
+              onValueChange={(value) => handlePriceRangeChange(value as [number, number])}
               className="py-2"
             />
           </div>
