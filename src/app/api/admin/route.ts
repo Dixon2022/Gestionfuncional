@@ -17,7 +17,6 @@ export async function GET() {
         createdAt: 'desc',
       },
     });
-
     return NextResponse.json({ reports });
   } catch (error) {
     console.error('[ADMIN REPORTES GET]', error);

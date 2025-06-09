@@ -22,9 +22,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
+import { useCurrency } from "@/contexts/currency-context";
 
 export function Header() {
   const { user, logout, loading } = useAuth();
+  const { currency, setCurrency } = useCurrency();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -40,6 +42,16 @@ export function Header() {
         </Link>
         <MainNav />
         <div className="flex flex-1 items-center justify-end space-x-2">
+          {/* Selector de moneda */}
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value as "CRC" | "USD")}
+            className="border rounded px-2 py-1 mr-2"
+            aria-label="Seleccionar moneda"
+          >
+            <option value="CRC">₡ CRC</option>
+            <option value="USD">$ USD</option>
+          </select>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/properties" aria-label="Buscar Propiedades">
               <Search className="h-5 w-5" />

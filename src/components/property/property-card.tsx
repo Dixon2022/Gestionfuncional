@@ -47,6 +47,7 @@ import {
 } from "react-share";
 import { Copy } from "lucide-react";
 import { link } from "fs";
+import { useCurrency } from "@/contexts/currency-context";
 
 interface PropertyCardProps {
   property: Property;
@@ -57,6 +58,7 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 export function PropertyCard({ property }: PropertyCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { convert, symbol } = useCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
 
   const displayArea = `${property.area.toLocaleString()} m²`;
@@ -148,7 +150,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
               {property.address}, {property.city}
             </div>
             <p className="text-xl font-bold text-primary mb-2">
-              ₡{property.price.toLocaleString()}{" "}
+              {symbol}
+              {convert(property.price).toLocaleString(undefined, {
+                maximumFractionDigits: 2,
+              })}{" "}
               {property.listingType === "Alquiler" ? (
                 <span className="text-sm font-normal text-muted-foreground">
                   /mes

@@ -25,6 +25,8 @@ import {
   WhatsappIcon,
 } from "react-share";
 import { Copy } from "lucide-react";
+import { useCurrency } from "@/contexts/currency-context";
+
 // Update the path below if your report-form file is in a different directory
 
 interface PropertyDetailsPageProps {
@@ -35,6 +37,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { convert, symbol } = useCurrency();
 
   useEffect(() => {
     async function fetchProperty() {
@@ -68,7 +71,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
       : "N/A";
   const displayPrice =
     property.price != null
-      ? `₡${property.price.toLocaleString()}`
+      ? `${symbol}${convert(property.price).toLocaleString(undefined, {
+          maximumFractionDigits: 2,
+        })}`
       : "Precio no disponible";
 
   return (
