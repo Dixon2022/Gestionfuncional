@@ -45,12 +45,14 @@ export function Header() {
           {/* Selector de moneda */}
           <select
             value={currency}
-            onChange={(e) => setCurrency(e.target.value as "CRC" | "USD")}
+            onChange={(e) => setCurrency(e.target.value as any)}
             className="border rounded px-2 py-1 mr-2"
             aria-label="Seleccionar moneda"
           >
             <option value="CRC">₡ CRC</option>
             <option value="USD">$ USD</option>
+            <option value="EUR">€ EUR</option>
+            <option value="MXN">$ MXN</option>
           </select>
           <Button variant="ghost" size="icon" asChild>
             <Link href="/properties" aria-label="Buscar Propiedades">
