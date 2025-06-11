@@ -1,28 +1,35 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import { prisma } from '../../../../lib/prisma'; // Asegúrate de importar prisma
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' });
-  }
-
-  const { email } = req.body;
+export async function POST(req: Request) {
+  const body = await req.json();
+  const { email } = body;
   if (!email || typeof email !== 'string' || !isValidEmail(email)) {
-    return res.status(400).json({ message: 'Email inválido.' });
+    return NextResponse.json({ message: 'Email inválido.' }, { status: 400 });
   }
 
-  // Generate a reset token (in production, store this in DB with expiration)
+  // Generate a reset token
   const token = crypto.randomBytes(32).toString('hex');
-  // TODO: Save token and email to DB with expiration for real implementation
+  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+
+  // Guarda el token en la base de datos
+  await prisma.passwordResetToken.create({
+    data: {
+      email,
+      token,
+      expiresAt: expires,
+    },
+  });
 
   // Construct reset URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-  const resetUrl = `${baseUrl}/reset-password?token=${token}`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://gestionfuncional.vercel.app';
+  const resetUrl = `${baseUrl}/profile/reset-password?token=${token}`;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -41,9 +48,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       text: `Has solicitado cambiar tu contraseña. Haz clic en el siguiente enlace para restablecerla:\n\n${resetUrl}\n\nSi no solicitaste este cambio, ignora este mensaje.`,
     });
 
-    res.status(200).json({ message: 'Email de recuperación enviado. Revisa tu bandeja de entrada.' });
+    return NextResponse.json({ message: 'Email de recuperación enviado. Revisa tu bandeja de entrada.' });
   } catch (error) {
     console.error('Error enviando email de recuperación:', error);
-    res.status(500).json({ message: 'Error enviando el email de recuperación.' });
+    return NextResponse.json({ message: 'Error enviando el email de recuperación.' }, { status: 500 });
   }
 }

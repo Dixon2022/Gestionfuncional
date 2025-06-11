@@ -84,3 +84,10 @@ model PropertyReport {
   propertyId  Int
   createdAt   DateTime @default(now())
 }
+
+model PasswordResetToken {
+  id        Int      @id @default(autoincrement())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+}

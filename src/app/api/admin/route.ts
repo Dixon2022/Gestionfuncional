@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
-
+import bcrypt from 'bcryptjs';
 
 export async function GET() {
   try {
@@ -42,4 +42,40 @@ export async function DELETE(req: Request) {
     console.error('[ADMIN REPORTES DELETE]', error);
     return NextResponse.json({ error: 'Error al eliminar propiedad' }, { status: 500 });
   }
+}
+
+export async function POST(req: Request) {
+  const { token, newPassword } = await req.json();
+  if (!token || !newPassword) {
+    return NextResponse.json({ message: 'Datos incompletos.' }, { status: 400 });
+  }
+
+  const reset = await prisma.passwordResetToken.findUnique({ where: { token } });
+  if (!reset || reset.expiresAt < new Date()) {
+    return NextResponse.json({ message: 'Token inválido o expirado.' }, { status:400 });
+  }
+
+  const hashed = await bcrypt.hash(newPassword, 10);
+  await prisma.user.update({
+    where: { email: reset.email },
+    data: { password: hashed },
+  });
+
+  // Borra el token para que no se reutilice
+  await prisma.passwordResetToken.delete({ where: { token } });
+
+  return NextResponse.json({ message: 'Contraseña actualizada correctamente.' });
+}
+
+// Código para manejar la creación del token de restablecimiento de contraseña
+export async function createResetToken(email: string) {
+  const token = crypto.randomUUID();
+  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+  await prisma.passwordResetToken.create({
+    data: {
+      email,
+      token,
+      expiresAt: expires,
+    },
+  });
 }
