@@ -1,3 +1,9 @@
+// --- Password Reset Feature ---
+// Added a button and handler to send a password reset email to the user's email address.
+// This triggers the /api/request-password-reset endpoint, which sends an email with a reset link.
+// The reset link should point to a /reset-password page (to be implemented) where the user can set a new password.
+// State variables (resetLoading, resetMessage) manage UI feedback for this process.
+// --- End Password Reset Feature ---
 
 'use client';
 
@@ -28,6 +34,8 @@ export default function EditProfilePage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false); // For password reset button loading state
+  const [resetMessage, setResetMessage] = useState(""); // For password reset feedback message
 
   useEffect(() => {
     setIsClient(true);
@@ -48,9 +56,9 @@ export default function EditProfilePage() {
     }
     if (user) {
       form.reset({
-        name: user.name || '',
-        email: user.email || '', 
-        phone: user.phone || '',
+        name: user?.name || '',
+        email: user?.email || '', 
+        phone: user?.phone || '',
       });
     }
   }, [user, authLoading, router, form, isClient]);
@@ -69,6 +77,30 @@ export default function EditProfilePage() {
     setIsLoading(false);
   };
   
+  // Handler for sending password reset email to the user's email address
+  // Calls /api/request-password-reset and shows feedback
+  const handleSendResetEmail = async () => {
+    if (!user || !user.email) {
+      setResetMessage("No se puede enviar el email de recuperación porque no hay usuario autenticado.");
+      return;
+    }
+    setResetLoading(true);
+    setResetMessage("");
+    try {
+      const res = await fetch("/api/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email }),
+      });
+      const data = await res.json();
+      setResetMessage(data.message || "");
+    } catch (err) {
+      setResetMessage("Error enviando el email de recuperación.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   if (authLoading || !isClient) {
     return (
       <div className="flex min-h-[calc(100vh-theme(spacing.16))] flex-1 items-center justify-center">
@@ -138,6 +170,10 @@ export default function EditProfilePage() {
               )}
             </div>
             <div className="flex justify-end space-x-3">
+                {/* Button to trigger password reset email for the user */}
+                <Button type="button" variant="secondary" onClick={handleSendResetEmail} disabled={resetLoading || isLoading}>
+                  {resetLoading ? "Enviando..." : "Enviar email para cambiar contraseña"}
+                </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
                     Cancelar
                 </Button>
@@ -153,6 +189,8 @@ export default function EditProfilePage() {
                 )}
                 </Button>
             </div>
+            {/* Feedback message for password reset email */}
+            {resetMessage && <div className="text-center text-sm mt-2">{resetMessage}</div>}
           </form>
         </CardContent>
       </Card>
