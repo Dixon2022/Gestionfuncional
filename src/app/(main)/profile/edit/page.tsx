@@ -172,7 +172,7 @@ export default function EditProfilePage() {
             <div className="flex justify-end space-x-3">
                 {/* Button to trigger password reset email for the user */}
                 <Button type="button" variant="secondary" onClick={handleSendResetEmail} disabled={resetLoading || isLoading}>
-                  {resetLoading ? "Enviando..." : "Enviar email para cambiar contraseña"}
+                  {resetLoading ? "Enviando..." : "Cambiar contraseña"}
                 </Button>
                 <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
                     Cancelar
