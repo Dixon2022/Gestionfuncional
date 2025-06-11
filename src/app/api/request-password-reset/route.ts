@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   });
 
   // Construct reset URL
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://gestionfuncional.vercel.app';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://gestionfuncional.vercel.app';
   const resetUrl = `${baseUrl}/profile/reset-password?token=${token}`;
 
   try {
