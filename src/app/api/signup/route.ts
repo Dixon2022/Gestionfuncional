@@ -48,7 +48,6 @@ export async function POST(req: Request) {
         password: hashedPassword,
         name,
         phone,
-        role: "admin", // Asignar el rol de usuario
       },
     });
 
