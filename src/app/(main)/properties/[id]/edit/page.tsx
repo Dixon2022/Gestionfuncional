@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/use-toast';
 import { getPropertyById, updateProperty } from '@/lib/property-store';
 import type { Property, PropertyType, ListingType } from '@/lib/types';
 import { PROPERTY_TYPES, LISTING_TYPES } from '@/lib/constants';
-import { Loader2, Save, PencilLine, Sparkles } from 'lucide-react';
+import { Loader2, Save, PencilLine, Sparkles, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import { generatePropertyDescription, type GeneratePropertyDescriptionInput } from '@/ai/flows/generate-property-description';
 
@@ -225,6 +225,20 @@ export default function EditPropertyPage() {
         await fetch(`/api/property/${property.id}/images/${imageId}`, { method: "DELETE" });
       }
 
+      // Encuentra las imágenes nuevas (base64)
+      const newImages = (property.images ?? []).filter(
+        (img) => typeof img === "string" && img.startsWith("data:")
+      );
+
+      // Envía las imágenes nuevas al backend
+      if (newImages.length > 0) {
+        await fetch(`/api/property/${property.id}/images`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ images: newImages }),
+        });
+      }
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       const success = await updateProperty(property.id, updatedPropertyData, user.id);
       if (success) {
@@ -330,38 +344,53 @@ export default function EditPropertyPage() {
                   }}
                 />
               </label>
+              {/* Galería de imágenes actual */}
               {property.images && property.images.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                  {property.images.map((img, idx) => (
-                    <div key={idx} className="relative group aspect-square">
-                      <Image
-                        src={img}
-                        alt={`Imagen ${idx + 1}`}
-                        fill
-                        style={{ objectFit: "cover" }}
-                        className="rounded-md border"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-1 right-1 h-6 w-6 opacity-75 group-hover:opacity-100 transition-opacity"
-                        onClick={async () => {
-                          // Si img es un objeto con id, lo agregamos a imagesToDelete
-                          if (typeof img === "object" && img !== null && "id" in img) {
-                            setImagesToDelete((prev) => [...prev, (img as { id: number }).id]);
-                            setProperty({
-                              ...property,
-                              images: property.images.filter((_, i) => i !== idx),
-                            });
-                          }
-                        }}
-                      >
-                        <span className="sr-only">Eliminar imagen {idx + 1}</span>
-                        ×
-                      </Button>
-                    </div>
-                  ))}
+                <div className="mt-6">
+                  <label className="block text-sm font-medium mb-2">Imágenes actuales de la propiedad</label>
+                  <div className="flex flex-wrap justify-center gap-3">
+                    {property.images.map((img: string | { id: number; [key: string]: any }, idx: number) => {
+                      // Si es una imagen existente en la BD, tendrá un id numérico
+                      const isDbImage = typeof img !== "string" && typeof img.id === "number";
+                      const imageUrl = typeof img === "string" ? img : img.url;
+
+                      return (
+                        <div key={isDbImage ? (img as { id: number }).id : idx} className="relative group">
+                          <Image
+                            src={imageUrl}
+                            alt={`Imagen ${idx + 1}`}
+                            width={180}
+                            height={120}
+                            className="rounded-lg shadow object-cover bg-white border"
+                            style={{ maxHeight: 120, minWidth: 120 }}
+                          />
+                          <button
+                            type="button"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-80 hover:opacity-100 transition"
+                            title="Quitar imagen"
+                            onClick={() => {
+                              if (isDbImage) {
+                                setImagesToDelete((prev) => [...prev, img.id]);
+                                setProperty((prev) => ({
+                                  ...prev!,
+                                  images: prev!.images?.filter((im) =>
+                                    typeof im === "string" ? true : (im as { id: number }).id !== (img as { id: number }).id
+                                  ),
+                                }));
+                              } else {
+                                setProperty((prev) => ({
+                                  ...prev!,
+                                  images: prev!.images?.filter((_, i) => i !== idx),
+                                }));
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               <p className="text-xs text-muted-foreground mt-1">

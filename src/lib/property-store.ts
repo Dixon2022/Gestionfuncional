@@ -47,12 +47,18 @@ export const updateProperty = async (propertyId: string, updatedData: Partial<Pr
 };
 
 // Eliminar propiedad
-export const deleteProperty = async (propertyId: string, userId: string): Promise<boolean> => {
+export const deleteProperty = async (
+  propertyId: string,
+  ownerId: number
+): Promise<boolean> => {
   const res = await fetch(`${API_BASE}/${propertyId}`, {
     method: 'DELETE',
     headers: {
-      'X-User-Id': userId
-    }
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      ownerId // solo envía el ownerId
+    }),
   });
   return res.ok;
 };

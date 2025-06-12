@@ -26,12 +26,23 @@ import {
 import { getPropertiesByOwner } from "@/lib/property-store";
 import type { Property } from "@/lib/types";
 import { PropertyCard } from "@/components/property/property-card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils"; // Si tienes una función para combinar clases
 
 export default function ProfilePage() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
   const [myProperties, setMyProperties] = useState<Property[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [search, setSearch] = useState("");
+  const [order, setOrder] = useState<"desc" | "asc">("desc"); // Nuevo estado
 
   useEffect(() => {
     setIsClient(true);
@@ -76,55 +87,90 @@ export default function ProfilePage() {
       ? myProperties
       : myProperties.filter((property) => property.ownerId === user.id);
 
+  const filteredProperties = visibleProperties
+    .filter((property) =>
+      [property.title, property.city, property.address]
+        .join(" ")
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    )
+    .sort((a, b) =>
+      order === "desc"
+        ? Number(b.id) - Number(a.id) // Más reciente primero
+        : Number(a.id) - Number(b.id) // Más antiguo primero
+    ); // Última propiedad primero
+
   return (
     <div className="container py-8 md:py-12">
       <Card className="max-w-3xl mx-auto shadow-xl">
         <CardHeader className="text-center">
-          <Avatar className="mx-auto h-24 w-24 mb-4 border-2 border-primary">
-            <AvatarImage
-              src={
-                user.name
-                  ? `https://placehold.co/100x100.png?text=${user.name.substring(
-                      0,
-                      1
-                    )}`
-                  : undefined
-              }
-              alt={user.name || "Usuario"}
-              data-ai-hint="avatar persona"
-            />
-            <AvatarFallback className="text-3xl bg-secondary">
-              {user.name ? (
-                user.name.substring(0, 2).toUpperCase()
-              ) : (
-                <UserCircle className="h-16 w-16" />
-              )}
-            </AvatarFallback>
-          </Avatar>
-          <CardTitle className="text-3xl">{user.name || "Usuario"}</CardTitle>
-          <CardDescription className="flex flex-col items-center justify-center text-md space-y-1">
-            <span className="flex items-center">
-              <Mail className="mr-2 h-4 w-4" /> {user.email}
-            </span>
-            <span className="flex items-center">
-              <Phone className="mr-2 h-4 w-4" /> {user.phone}
-            </span>
-          </CardDescription>
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 rounded-2xl p-6 shadow-inner">
+            {/* Avatar y nombre a la izquierda, alineados horizontalmente */}
+            <div className="flex flex-1 flex-row items-center gap-4">
+              <Avatar className="h-24 w-24 border-4 border-blue-400 shadow-lg">
+                <AvatarImage
+                  src={
+                    user.name
+                      ? `https://placehold.co/100x100.png?text=${user.name.substring(0, 1)}`
+                      : undefined
+                  }
+                  alt={user.name || "Usuario"}
+                  data-ai-hint="avatar persona"
+                />
+                <AvatarFallback className="text-3xl bg-secondary">
+                  {user.name ? (
+                    user.name.substring(0, 2).toUpperCase()
+                  ) : (
+                    <UserCircle className="h-16 w-16" />
+                  )}
+                </AvatarFallback>
+              </Avatar>
+              <CardTitle className="text-3xl font-bold text-blue-900 self-center">
+                {user.name || "Usuario"}
+              </CardTitle>
+            </div>
+            {/* Información de contacto a la derecha */}
+            <div className="flex flex-col items-center md:items-end gap-3 flex-1 text-blue-800">
+              <span className="flex items-center gap-2">
+                <Mail className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">{user.email}</span>
+              </span>
+              <span className="flex items-center gap-2">
+                <Phone className="h-5 w-5 text-blue-500" />
+                <span className="font-medium">{user.phone}</span>
+              </span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
-            <Button variant="outline" asChild className="w-full sm:w-auto">
+            {/* Botones de acción */}
+            <Button
+              asChild
+              className={cn(
+                "w-full sm:w-auto",
+                "bg-gradient-to-r from-indigo-400 via-sky-400 to-blue-500",
+                "text-white font-semibold shadow-md",
+                "hover:from-indigo-500 hover:via-sky-500 hover:to-blue-600",
+                "hover:scale-105 hover:shadow-lg",
+                "transition-all duration-200 border-0"
+              )}
+            >
               <Link href="/profile/edit">
-                <Edit3 className="mr-2 h-4 w-4" /> Editar Perfil
+                <Edit3 className="mr-2 h-4 w-4" />
+                <span className="font-semibold tracking-wide">Editar Perfil</span>
               </Link>
             </Button>
             <Button
               variant="default"
               asChild
-              className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
+              className={cn(
+                "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+              )}
             >
               <Link href="/generate-description">
-                <PlusCircle className="mr-2 h-4 w-4" /> Agregar Propiedad
+                <PlusCircle className="mr-2 h-4 w-4" />
+                <span className="font-semibold">Agregar Propiedad</span>
               </Link>
             </Button>
             <Button
@@ -133,30 +179,59 @@ export default function ProfilePage() {
                 logout();
                 router.push("/");
               }}
-              className="w-full sm:w-auto"
+              className={cn(
+                "w-full sm:w-auto bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:from-red-600 hover:to-pink-600 hover:scale-105 transition-transform duration-200"
+              )}
             >
-              <LogOut className="mr-2 h-4 w-4" /> Cerrar Sesión
+              <LogOut className="mr-2 h-4 w-4" />
+              <span className="font-semibold">Cerrar Sesión</span>
             </Button>
             {user?.role === "admin" && (
               <Button
                 variant="secondary"
                 asChild
-                className="w-full sm:w-auto bg-yellow-500 hover:bg-yellow-600 text-white"
+                className={cn(
+                  "w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg hover:from-yellow-500 hover:to-yellow-700 hover:scale-105 transition-transform duration-200"
+                )}
               >
                 <Link href="/admin">
-                  <Flag className="mr-2 h-4 w-4" /> Administrar Reportes
+                  <Flag className="mr-2 h-4 w-4" />
+                  <span className="font-semibold">Administrar Reportes</span>
                 </Link>
               </Button>
             )}
+          </div>
+
+          {/* Buscador y filtro debajo de los botones */}
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mb-8 px-4 py-4 rounded-xl bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 shadow-inner max-w-2xl mx-auto">
+            <Input
+              type="text"
+              placeholder="Buscar por título, ciudad o dirección..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="max-w-md w-full border border-blue-200 shadow-sm focus:ring-2 focus:ring-blue-400 transition"
+            />
+            <Select
+              value={order}
+              onValueChange={(v) => setOrder(v as "desc" | "asc")}
+            >
+              <SelectTrigger className="w-40 border border-blue-200 shadow-sm focus:ring-2 focus:ring-blue-400 transition bg-white">
+                <SelectValue placeholder="Ordenar" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">Más reciente</SelectItem>
+                <SelectItem value="asc">Más antiguo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">
               Mis Propiedades Publicadas
             </h2>
-            {visibleProperties.length > 0 ? (
+            {filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {visibleProperties.map((property) => (
+                {filteredProperties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
               </div>

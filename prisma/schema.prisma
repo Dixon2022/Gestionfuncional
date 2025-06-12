@@ -58,7 +58,7 @@ model PropertyImage {
   createdAt  DateTime @default(now())
 
   propertyId   Int
-  property     Property @relation(fields: [propertyId], references: [id])
+  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 enum PropertyType {

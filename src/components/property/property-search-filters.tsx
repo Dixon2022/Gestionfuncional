@@ -118,63 +118,118 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
   };
 
   return (
-    <Card className="mb-8 shadow-md">
+    <Card
+      className="mb-8 shadow-xl border-0 bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100 rounded-2xl"
+    >
       <CardHeader>
-        <CardTitle className="text-2xl flex items-center">
-          <Search className="mr-2 h-6 w-6 text-primary" />
+        <CardTitle className="text-2xl flex items-center gap-2 text-blue-900">
+          <Search className="h-6 w-6 text-blue-500" />
           Filtrar Propiedades
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-6"
+        >
           <div className="space-y-2">
-            <Label htmlFor="location">Ubicación</Label>
-            <Select value={filters.location || 'any'} onValueChange={handleSelectChange('location')}>
-              <SelectTrigger id="location">
+            <Label htmlFor="location" className="text-blue-900 font-semibold">
+              Ubicación
+            </Label>
+            <Select
+              value={filters.location || "any"}
+              onValueChange={handleSelectChange("location")}
+            >
+              <SelectTrigger
+                id="location"
+                className="bg-white/80 border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              >
                 <SelectValue placeholder="Cualquier Ubicación" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">Cualquier Ubicación</SelectItem>
-                {CITIES.map(city => <SelectItem key={city} value={city}>{city}</SelectItem>)}
+                {CITIES.map((city) => (
+                  <SelectItem key={city} value={city}>
+                    {city}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="propertyType">Tipo de Propiedad</Label>
-            <Select value={filters.propertyType || 'any'} onValueChange={handleSelectChange('propertyType')}>
-              <SelectTrigger id="propertyType">
+            <Label htmlFor="propertyType" className="text-blue-900 font-semibold">
+              Tipo de Propiedad
+            </Label>
+            <Select
+              value={filters.propertyType || "any"}
+              onValueChange={handleSelectChange("propertyType")}
+            >
+              <SelectTrigger
+                id="propertyType"
+                className="bg-white/80 border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              >
                 <SelectValue placeholder="Cualquier Tipo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">Cualquier Tipo</SelectItem>
-                {PROPERTY_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                {PROPERTY_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="listingType">Tipo de Listado</Label>
-            <Select value={filters.listingType || 'any'} onValueChange={handleSelectChange('listingType')}>
-              <SelectTrigger id="listingType">
+            <Label htmlFor="listingType" className="text-blue-900 font-semibold">
+              Tipo de Listado
+            </Label>
+            <Select
+              value={filters.listingType || "any"}
+              onValueChange={handleSelectChange("listingType")}
+            >
+              <SelectTrigger
+                id="listingType"
+                className="bg-white/80 border-blue-200 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-400"
+              >
                 <SelectValue placeholder="Venta o Alquiler" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">Venta o Alquiler</SelectItem>
-                {LISTING_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                {LISTING_TYPES.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2 md:col-span-2 lg:col-span-3">
-            <Label htmlFor="priceRange">
-              Rango de Precio: {symbol}{priceRange[0].toLocaleString()} - {symbol}{priceRange[1].toLocaleString()} {filters.listingType === 'Alquiler' ? '/mes' : ''}
+            <Label htmlFor="priceRange" className="text-blue-900 font-semibold">
+              Rango de Precio:
             </Label>
+            <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-gradient-to-r from-blue-100 via-sky-100 to-indigo-100 shadow-inner w-fit mb-2">
+              <span className="font-bold text-blue-700 text-lg">
+                {symbol}{priceRange[0].toLocaleString()}
+              </span>
+              <span className="text-blue-400 font-bold text-xl">—</span>
+              <span className="font-bold text-blue-700 text-lg">
+                {symbol}{priceRange[1].toLocaleString()}
+                {filters.listingType === "Alquiler" ? <span className="text-base font-normal text-blue-500">/mes</span> : null}
+              </span>
+            </div>
             <Slider
               id="priceRange"
               min={0}
               max={toDisplay(getMaxPriceForType(filters.listingType))}
-              step={filters.listingType === 'Alquiler' ? toDisplay(50000) : toDisplay(1000000)}
+              step={
+                filters.listingType === "Alquiler"
+                  ? toDisplay(50000)
+                  : toDisplay(1000000)
+              }
               value={priceRange}
               onValueChange={(value) => handlePriceRangeChange(value as [number, number])}
               className="py-2"
@@ -182,36 +237,50 @@ export function PropertySearchFilters({ onSearch, initialFilters }: PropertySear
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bedrooms">Mín. Habitaciones: {filters.bedrooms || 'Cualquiera'}</Label>
+            <Label htmlFor="bedrooms" className="text-blue-900 font-semibold">
+              Mín. Habitaciones:{" "}
+              <span className="font-bold text-blue-700">
+                {filters.bedrooms || "Cualquiera"}
+              </span>
+            </Label>
             <Slider
               id="bedrooms"
               min={0}
               max={5}
               step={1}
               value={[filters.bedrooms || 0]}
-              onValueChange={handleSliderChange('bedrooms')}
-               className="py-2"
+              onValueChange={handleSliderChange("bedrooms")}
+              className="py-2"
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="bathrooms">Mín. Baños: {filters.bathrooms || 'Cualquiera'}</Label>
+            <Label htmlFor="bathrooms" className="text-blue-900 font-semibold">
+              Mín. Baños:{" "}
+              <span className="font-bold text-blue-700">
+                {filters.bathrooms || "Cualquiera"}
+              </span>
+            </Label>
             <Slider
               id="bathrooms"
               min={0}
               max={5}
-              step={1} 
+              step={1}
               value={[filters.bathrooms || 0]}
-              onValueChange={handleSliderChange('bathrooms')}
-               className="py-2"
+              onValueChange={handleSliderChange("bathrooms")}
+              className="py-2"
             />
-          </div>
-
-          <div className="flex items-end space-x-3 md:col-span-full lg:col-start-3 lg:justify-end pt-2">
-            <Button type="button" variant="outline" onClick={handleReset} className="w-full sm:w-auto">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleReset}
+              className="w-full sm:w-auto border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
               <X className="mr-2 h-4 w-4" /> Reiniciar
             </Button>
-            <Button type="submit" className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+            <Button
+              type="submit"
+              className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:from-blue-600 hover:to-indigo-600"
+            >
               <Search className="mr-2 h-4 w-4" /> Buscar
             </Button>
           </div>

@@ -43,6 +43,8 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const { convert, symbol } = useCurrency();
   const [mainImgError, setMainImgError] = useState(false);
   const [thumbsError, setThumbsError] = useState<{ [key: number]: boolean }>({});
+  const [mainImageIdx, setMainImageIdx] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     async function fetchProperty() {
@@ -95,336 +97,350 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
       : "Precio no disponible";
 
   return (
-    <div className="container py-8 md:py-12">
-      <div className="grid md:grid-cols-3 gap-8">
-        {/* Main Content Column */}
-        <div className="md:col-span-2">
-          {/* Image Gallery */}
-          <div className="mb-6">
-            <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden shadow-lg">
-              {!mainImgError && (property.photoDataUri || property.images[0]) ? (
-                <Image
-                  src={property.photoDataUri || property.images[0]}
-                  alt={property.title}
-                  layout="fill"
-                  objectFit="cover"
-                  priority
-                  data-ai-hint="imagen principal propiedad"
-                  onError={() => setMainImgError(true)}
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full w-full bg-gray-200">
-                  <span className="text-gray-600 font-semibold text-center px-2">
-                    {property.title}
-                  </span>
-                </div>
-              )}
-              <div className="absolute top-4 left-4 flex flex-col space-y-2">
-                {property.listingType && (
-                  <Badge
-                    variant={
-                      property.listingType === "Venta" ? "default" : "secondary"
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-100 py-8">
+      <div className="container">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {/* Main Content Column */}
+          <div className="md:col-span-2 bg-white/90 rounded-2xl shadow-2xl p-6">
+            {/* Galería de imágenes principal con miniaturas debajo */}
+            {property.images && property.images.length > 0 && (
+              <div className="mb-8 flex flex-col items-center">
+                {/* Imagen principal */}
+                <div
+                  className="relative w-full max-w-2xl h-[250px] md:h-[450px] rounded-xl overflow-hidden shadow-lg bg-white flex justify-center items-center cursor-pointer"
+                  onClick={() => setShowModal(true)}
+                  title="Ver imagen completa"
+                >
+                  <Image
+                    src={
+                      typeof property.images[mainImageIdx] === "string"
+                        ? property.images[mainImageIdx]
+                        : (property.images[mainImageIdx] as { url: string }).url
                     }
-                    className={`text-sm px-3 py-1 ${
-                      property.listingType === "Alquiler"
-                        ? "bg-blue-500 hover:bg-blue-600 text-white"
-                        : ""
-                    }`}
-                  >
-                    <Tag className="mr-1 h-4 w-4" />
-                    {property.listingType}
-                  </Badge>
-                )}
-                {property.isFeatured && (
-                  <Badge variant="destructive" className="text-sm px-3 py-1">
-                    Destacada
-                  </Badge>
-                )}
-              </div>
-            </div>
-            {property.images.length > 1 && (
-              <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                {property.images.slice(1, 6).map((img, index) => (
-                  <div
-                    key={index}
-                    className="relative h-24 w-full rounded-md overflow-hidden shadow-md"
-                  >
-                    {!thumbsError[index] ? (
-                      <Image
-                        src={img}
-                        alt={`${property.title} - imagen ${index + 2}`}
-                        layout="fill"
-                        objectFit="cover"
-                        data-ai-hint="miniatura propiedad"
-                        onError={() =>
-                          setThumbsError((prev) => ({
-                            ...prev,
-                            [index]: true,
-                          }))
-                        }
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full w-full bg-gray-200">
-                        <span className="text-gray-600 font-semibold text-center px-2 text-xs">
-                          {property.title}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="p-4 pt-0 mt-2 flex items-center gap-2">
-            <FacebookShareButton
-              url={`${
-                typeof window !== "undefined" ? window.location.origin : ""
-              }/properties/${property.id}`}
-            >
-              <FacebookIcon size={32} round />
-            </FacebookShareButton>
-
-            <WhatsappShareButton
-              url={`${
-                typeof window !== "undefined" ? window.location.origin : ""
-              }/properties/${property.id}`}
-            >
-              <WhatsappIcon size={32} round />
-            </WhatsappShareButton>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(
-                  `${window.location.origin}/properties/${property.id}`
-                );
-                toast({
-                  title: "Enlace copiado",
-                  description: "Has copieda el enlace de la propiedad.",
-                  duration: 7000,
-                });
-              }}
-              title="Copiar enlace"
-              className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-            >
-              <Copy className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Property Info Header */}
-          <div className="mb-6 pb-4 border-b">
-            <h1 className="text-3xl md:text-4xl font-bold mb-2">
-              {property.title}
-            </h1>
-
-            <div className="flex items-center text-muted-foreground mb-3">
-              <MapPin className="mr-2 h-5 w-5" />
-              <span>
-                {property.address}, {property.city}
-              </span>
-            </div>
-            <div className="text-3xl font-bold text-primary">
-              <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" />
-              {displayPrice}
-              <span className="text-xl font-medium text-foreground/80 ml-2">
-                ({property.listingType})
-              </span>
-              {property.listingType === "Alquiler" ? (
-                <span className="text-lg font-normal text-muted-foreground">
-                  {" "}
-                  /mes
-                </span>
-              ) : (
-                ""
-              )}
-            </div>
-          </div>
-
-          {/* Key Details Section */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-center">
-            {[
-              {
-                icon: BedDouble,
-                label: "Habitaciones",
-                value: property.bedrooms,
-              },
-              { icon: Bath, label: "Baños", value: property.bathrooms },
-              { icon: Home, label: "Superficie (m²)", value: displayArea },
-              { icon: Building, label: "Tipo Prop.", value: property.type },
-              { icon: Tag, label: "Listado", value: property.listingType },
-              {
-                icon: CalendarDays,
-                label: "Año Const.",
-                value: property.yearBuilt || "N/A",
-              },
-              {
-                icon: Layers,
-                label: "Sup. Terreno (m²)",
-                value: displayLotSize,
-              },
-            ].map((detail) => (
-              <div
-                key={detail.label}
-                className="p-4 bg-secondary/50 rounded-lg shadow-sm"
-              >
-                <detail.icon className="h-7 w-7 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">{detail.label}</p>
-                <p className="font-semibold text-lg">{detail.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Description */}
-          <div className="mb-8">
-            <h2 className="text-2xl font-semibold mb-3">
-              Descripción de la Propiedad
-            </h2>
-            <p className="text-foreground/80 leading-relaxed whitespace-pre-line">
-              {property.description}
-            </p>
-          </div>
-
-          {/* AQUI SE AGREGAN LOS REPORTES POR SI ACASO */}
-          {user?.role === "admin" && (
-            <div className="mb-8">
-              <p className="text-2xl font-semibold mb-3">Reportes de la propiedad</p>
-              {reports.length === 0 ? (
-                <p className="text-muted-foreground">No hay reportes para esta propiedad.</p>
-              ) : (
-                <ul className="space-y-4">
-                  {reports.map((report, idx) => (
-                    <li key={report.id} className="p-4 border rounded-lg bg-secondary/30 flex flex-col gap-2">
-                      <div>
-                        <p className="font-semibold">Motivo: {report.reason}</p>
-                        <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
-                        <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
-                      </div>
+                    alt={`Imagen principal ${mainImageIdx + 1}`}
+                    fill
+                    style={{ objectFit: "cover" }}
+                    className="rounded-xl transition-transform hover:scale-105"
+                    priority
+                    data-ai-hint="imagen propiedad principal"
+                  />
+                </div>
+                {/* Miniaturas debajo */}
+                {property.images.length > 1 && (
+                  <div className="flex flex-row gap-2 mt-4 justify-start items-center">
+                    {property.images.map((img, idx) => (
                       <button
-                        className="self-end px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                        onClick={async () => {
-                          if (confirm("¿Eliminar este reporte?")) {
-                            const res = await fetch(`/api/report-property?id=${report.id}`, {
-                              method: "DELETE",
-                            });
-                            if (res.ok) {
-                              setReports(reports.filter(r => r.id !== report.id));
-                              toast({
-                                title: "Reporte eliminado",
-                                description: "El reporte ha sido eliminado.",
-                              });
-                            } else {
-                              toast({
-                                title: "Error",
-                                description: "No se pudo eliminar el reporte.",
-                                variant: "destructive",
-                              });
-                            }
-                          }
-                        }}
+                        key={idx}
+                        type="button"
+                        onClick={() => setMainImageIdx(idx)}
+                        className={`
+                        relative rounded-lg overflow-hidden shadow
+                        border-2 ${mainImageIdx === idx ? "border-blue-500" : "border-transparent"}
+                        focus:outline-none focus:ring-2 focus:ring-blue-400
+                        transition-all
+                        bg-white
+                        ${mainImageIdx === idx ? "scale-105" : ""}
+                      `}
+                        style={{ width: 100, height: 84 }}
+                        title={`Ver imagen ${idx + 1}`}
                       >
-                        Eliminar
+                        <Image
+                          src={typeof img === "string" ? img : (img as { url: string }).url}
+                          alt={`Miniatura ${idx + 1}`}
+                          fill
+                          style={{ objectFit: "cover" }}
+                          className="rounded-lg"
+                          data-ai-hint="miniatura propiedad"
+                          sizes="64px"
+                        />
                       </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
-
-          {/* Features */}
-          {property.features && property.features.length > 0 && (
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold mb-3">Características</h2>
-              <div className="flex flex-wrap gap-2">
-                {property.features.map((feature, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="px-3 py-1 text-sm"
+                    ))}
+                  </div>
+                )}
+                {/* Modal para ver imagen completa */}
+                {showModal && (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+                    onClick={() => setShowModal(false)}
                   >
-                    <Layers className="mr-1.5 h-3.5 w-3.5" />
-                    {feature}
-                  </Badge>
-                ))}
+                    <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                      <button
+                        className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-2 hover:bg-white"
+                        onClick={() => setShowModal(false)}
+                        aria-label="Cerrar"
+                      >
+                        ✕
+                      </button>
+                      <Image
+                        src={
+                          typeof property.images[mainImageIdx] === "string"
+                            ? property.images[mainImageIdx]
+                            : (property.images[mainImageIdx] as { url: string }).url
+                        }
+                        alt={`Imagen ampliada ${mainImageIdx + 1}`}
+                        width={900}
+                        height={600}
+                        className="rounded-xl mx-auto shadow-lg object-contain bg-white"
+                        style={{ maxHeight: "80vh", width: "auto", height: "auto" }}
+                        data-ai-hint="imagen propiedad ampliada"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="p-4 pt-0 mt-2 flex items-center gap-2">
+              <FacebookShareButton
+                url={`${
+                  typeof window !== "undefined" ? window.location.origin : ""
+                }/properties/${property.id}`}
+              >
+                <FacebookIcon size={32} round />
+              </FacebookShareButton>
+
+              <WhatsappShareButton
+                url={`${
+                  typeof window !== "undefined" ? window.location.origin : ""
+                }/properties/${property.id}`}
+              >
+                <WhatsappIcon size={32} round />
+              </WhatsappShareButton>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${window.location.origin}/properties/${property.id}`
+                  );
+                  toast({
+                    title: "Enlace copiado",
+                    description: "Has copieda el enlace de la propiedad.",
+                    duration: 7000,
+                  });
+                }}
+                title="Copiar enlace"
+                className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+              >
+                <Copy className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Property Info Header */}
+            <div className="mb-6 pb-4 border-b">
+              <h1 className="text-3xl md:text-4xl font-bold mb-2">
+                {property.title}
+              </h1>
+
+              <div className="flex items-center text-muted-foreground mb-3">
+                <MapPin className="mr-2 h-5 w-5" />
+                <span>
+                  {property.address}, {property.city}
+                </span>
+              </div>
+              <div className="text-3xl font-bold text-primary">
+                <Landmark className="inline-block mr-1 h-7 w-7 relative -top-0.5" />
+                {displayPrice}
+                <span className="text-xl font-medium text-foreground/80 ml-2">
+                  ({property.listingType})
+                </span>
+                {property.listingType === "Alquiler" ? (
+                  <span className="text-lg font-normal text-muted-foreground">
+                    {" "}
+                    /mes
+                  </span>
+                ) : (
+                  ""
+                )}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Sidebar Column (Agent Info & Contact Form) */}
-        <div className="md:col-span-1 space-y-8">
-          {/* Agent Info Card */}
-          <div className="p-6 border rounded-lg shadow-lg bg-card">
-            <h3 className="text-xl font-semibold mb-4 flex items-center">
-              <UserCircle className="mr-2 h-5 w-5 text-primary" />
-              Agente Inmobiliario
-            </h3>
+            {/* Key Details Section */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 text-center">
+              {[
+                {
+                  icon: BedDouble,
+                  label: "Habitaciones",
+                  value: property.bedrooms,
+                },
+                { icon: Bath, label: "Baños", value: property.bathrooms },
+                { icon: Home, label: "Superficie (m²)", value: displayArea },
+                { icon: Building, label: "Tipo Prop.", value: property.type },
+                { icon: Tag, label: "Listado", value: property.listingType },
+                {
+                  icon: CalendarDays,
+                  label: "Año Const.",
+                  value: property.yearBuilt || "N/A",
+                },
+                {
+                  icon: Layers,
+                  label: "Sup. Terreno (m²)",
+                  value: displayLotSize,
+                },
+              ].map((detail) => (
+                <div
+                  key={detail.label}
+                  className="p-4 bg-secondary/50 rounded-lg shadow-sm"
+                >
+                  <detail.icon className="h-7 w-7 text-primary mx-auto mb-2" />
+                  <p className="text-sm text-muted-foreground">{detail.label}</p>
+                  <p className="font-semibold text-lg">{detail.value}</p>
+                </div>
+              ))}
+            </div>
 
-            {property.owner ? (
-              <>
-                <div className="flex items-center space-x-4 mb-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage
-                      src={property.owner.avatarUrl || "/default-avatar.png"}
-                      alt={property.owner.name}
-                      data-ai-hint="retrato persona"
-                    />
-                    <AvatarFallback>
-                      {property.owner.name.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-semibold text-lg">
-                      {property.owner.name}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Agente Inmobiliario
-                    </p>
-                  </div>
+            {/* Description */}
+            <div className="mb-8">
+              <h2 className="text-2xl font-semibold mb-3">
+                Descripción de la Propiedad
+              </h2>
+              <p className="text-foreground/80 leading-relaxed whitespace-pre-line">
+                {property.description}
+              </p>
+            </div>
+
+            {/* AQUI SE AGREGAN LOS REPORTES POR SI ACASO */}
+            {user?.role === "admin" && (
+              <div className="mb-8">
+                <p className="text-2xl font-semibold mb-3">Reportes de la propiedad</p>
+                {reports.length === 0 ? (
+                  <p className="text-muted-foreground">No hay reportes para esta propiedad.</p>
+                ) : (
+                  <ul className="space-y-4">
+                    {reports.map((report, idx) => (
+                      <li key={report.id} className="p-4 border rounded-lg bg-secondary/30 flex flex-col gap-2">
+                        <div>
+                          <p className="font-semibold">Motivo: {report.reason}</p>
+                          <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
+                          <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
+                        </div>
+                        <button
+                          className="self-end px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                          onClick={async () => {
+                            if (confirm("¿Eliminar este reporte?")) {
+                              const res = await fetch(`/api/report-property?id=${report.id}`, {
+                                method: "DELETE",
+                              });
+                              if (res.ok) {
+                                setReports(reports.filter(r => r.id !== report.id));
+                                toast({
+                                  title: "Reporte eliminado",
+                                  description: "El reporte ha sido eliminado.",
+                                });
+                              } else {
+                                toast({
+                                  title: "Error",
+                                  description: "No se pudo eliminar el reporte.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }
+                          }}
+                        >
+                          Eliminar
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* Features */}
+            {property.features && property.features.length > 0 && (
+              <div className="mb-8">
+                <h2 className="text-2xl font-semibold mb-3">Características</h2>
+                <div className="flex flex-wrap gap-2">
+                  {property.features.map((feature, index) => (
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="px-3 py-1 text-sm"
+                    >
+                      <Layers className="mr-1.5 h-3.5 w-3.5" />
+                      {feature}
+                    </Badge>
+                  ))}
                 </div>
-                <Separator className="my-4" />
-                <div className="space-y-2 text-sm">
-                  <p>
-                    <strong>Email: </strong>
-                    {property.owner.email ? (
-                      <a
-                        href={`mailto:${property.owner.email}`}
-                        className="text-primary hover:underline"
-                      >
-                        {property.owner.email}
-                      </a>
-                    ) : (
-                      "No disponible"
-                    )}
-                  </p>
-                  <p>
-                    <strong>Teléfono: </strong>
-                    {property.owner.phone ? (
-                      <a
-                        href={`tel:${property.owner.phone}`}
-                        className="text-primary hover:underline"
-                      >
-                        {property.owner.phone}
-                      </a>
-                    ) : (
-                      "No disponible"
-                    )}
-                  </p>
-                </div>
-              </>
-            ) : (
-              <p>Información del ownere no disponible</p>
+              </div>
             )}
           </div>
 
-          {/* Contact Form */}
-          {/* Solo renderizamos el ContactForm si hay ownere */}
-          {property.owner && (
-            <ContactForm
-              propertyId={property.id}
-              propertyName={property.title}
-              agentEmail={property.owner.email}
-              agentName={property.owner.name}
-            />
-          )}
+          {/* Sidebar Column (Agent Info & Contact Form) */}
+          <div className="md:col-span-1 space-y-8">
+            {/* Agent Info Card */}
+            <div className="p-6 border rounded-lg shadow-lg bg-card">
+              <h3 className="text-xl font-semibold mb-4 flex items-center">
+                <UserCircle className="mr-2 h-5 w-5 text-primary" />
+                Agente Inmobiliario
+              </h3>
+
+              {property.owner ? (
+                <>
+                  <div className="flex items-center space-x-4 mb-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage
+                        src={property.owner.avatarUrl || "/default-avatar.png"}
+                        alt={property.owner.name}
+                        data-ai-hint="retrato persona"
+                      />
+                      <AvatarFallback>
+                        {property.owner.name.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold text-lg">
+                        {property.owner.name}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Agente Inmobiliario
+                      </p>
+                    </div>
+                  </div>
+                  <Separator className="my-4" />
+                  <div className="space-y-2 text-sm">
+                    <p>
+                      <strong>Email: </strong>
+                      {property.owner.email ? (
+                        <a
+                          href={`mailto:${property.owner.email}`}
+                          className="text-primary hover:underline"
+                        >
+                          {property.owner.email}
+                        </a>
+                      ) : (
+                        "No disponible"
+                      )}
+                    </p>
+                    <p>
+                      <strong>Teléfono: </strong>
+                      {property.owner.phone ? (
+                        <a
+                          href={`tel:${property.owner.phone}`}
+                          className="text-primary hover:underline"
+                        >
+                          {property.owner.phone}
+                        </a>
+                      ) : (
+                        "No disponible"
+                      )}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p>Información del ownere no disponible</p>
+              )}
+            </div>
+
+            {/* Contact Form */}
+            {/* Solo renderizamos el ContactForm si hay ownere */}
+            {property.owner && (
+              <ContactForm
+                propertyId={property.id}
+                propertyName={property.title}
+                agentEmail={property.owner.email}
+                agentName={property.owner.name}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>

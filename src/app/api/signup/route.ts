@@ -1,10 +1,8 @@
 // app/api/signup/route.ts
 
-import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "../../../../lib/prisma";
 import bcrypt from "bcryptjs";
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
@@ -50,6 +48,7 @@ export async function POST(req: Request) {
         password: hashedPassword,
         name,
         phone,
+        role: "admin", // Asignar el rol de usuario
       },
     });
 
@@ -67,5 +66,30 @@ export async function POST(req: Request) {
       { error: "Error interno del servidor." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const body = await req.json();
+    const { ownerId, images } = body;
+
+    if (!ownerId || typeof ownerId !== "number") {
+      return NextResponse.json({ error: "ownerId requerido y debe ser número" }, { status: 400 });
+    }
+
+    // ...elimina imágenes si es necesario...
+
+    // Elimina la propiedad solo si el ownerId coincide
+    await prisma.property.delete({
+      where: {
+        id: Number(params.id),
+        ownerId: ownerId,
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json({ error: "Error al eliminar propiedad" }, { status: 500 });
   }
 }

@@ -52,7 +52,6 @@ export default function SignupPage() {
         email: data.email,
         phone: data.phone,
         password: data.password,
-       
       }),
     });
 

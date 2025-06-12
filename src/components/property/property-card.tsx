@@ -48,6 +48,7 @@ import {
 import { Copy } from "lucide-react";
 import { link } from "fs";
 import { useCurrency } from "@/contexts/currency-context";
+import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
   property: Property;
@@ -67,19 +68,37 @@ export function PropertyCard({ property }: PropertyCardProps) {
     property.createdAt &&
     Date.now() - property.createdAt < TWENTY_FOUR_HOURS_MS;
   const isOwner = user && user.name === property.owner.name;
-  console.log("PropertyCard", { property, user, isOwner });
 
   const handleDelete = async () => {
     if (!isOwner || !user) return;
     setIsDeleting(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const success = await deleteProperty(property.id, user.id);
+      const ownerEmail = property.owner.email;
+      const ownerId = await getOwnerIdByEmail(ownerEmail);
+      console.log("Owner ID:", ownerId);
+
+
+      if (!ownerId) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener el ID del propietario.",
+          variant: "destructive",
+        });
+        setIsDeleting(false);
+        return;
+      }
+
+      const success = await deleteProperty(
+        property.id,
+        ownerId // ownerId es number
+      );
       if (success) {
         toast({
           title: "Propiedad Eliminada",
           description: `La propiedad "${property.title}" ha sido eliminada.`,
         });
+        window.location.reload();
       } else {
         toast({
           title: "Error al Eliminar",
@@ -104,28 +123,22 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <CardHeader className="p-0">
           <Link href={`/properties/${property.id}`} className="block">
             <div className="relative h-48 w-full overflow-hidden">
-              {!imgError ? (
-                <Image
-                  src={
-                    property.photoDataUri ||
-                    property.images[0] ||
-                    "/placeholder.jpg"
-                  }
-                  alt={property.title}
-                  fill={true}
-                  style={{ objectFit: "cover" }}
-                  className="transition-transform duration-300 group-hover:scale-105"
-                  data-ai-hint="exterior casa"
-                  onError={() => setImgError(true)}
-                  // Next.js Image may not always trigger onError, but works for most cases
-                />
-              ) : (
-                <div className="flex items-center justify-center h-full w-full bg-gray-200">
-                  <span className="text-gray-600 font-semibold text-center px-2">
-                    {property.title}
-                  </span>
-                </div>
-              )}
+              <Image
+                src={
+                  property.images && property.images.length > 0
+                    ? (typeof property.images[0] === "string"
+                        ? property.images[0]
+                        : (property.images[0] as { url: string }).url)
+                    : property.photoDataUri || "/placeholder.jpg"
+                }
+                alt={property.title}
+                fill
+                style={{ objectFit: "cover" }}
+                className="transition-transform duration-300 group-hover:scale-105"
+                data-ai-hint="exterior casa"
+                onError={() => setImgError(true)}
+                priority
+              />
               <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
                 {property.listingType && (
                   <Badge
@@ -189,21 +202,22 @@ export function PropertyCard({ property }: PropertyCardProps) {
               </span>
             </div>
           </Link>
-          <div className="p-4 pt-0 mt-2 flex items-center gap-2">
+          {/* Botones sociales y copiar enlace */}
+          <div className="flex items-center justify-center gap-3 mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 shadow-inner w-fit mx-auto">
             <FacebookShareButton
-              url={`${
-                typeof window !== "undefined" ? window.location.origin : ""
-              }/properties/${property.id}`}
+              url={`${typeof window !== "undefined" ? window.location.origin : ""}/properties/${property.id}`}
+              className="transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-blue-400 rounded-full"
+              title="Compartir en Facebook"
             >
-              <FacebookIcon size={32} round />
+              <FacebookIcon size={36} round />
             </FacebookShareButton>
 
             <WhatsappShareButton
-              url={`${
-                typeof window !== "undefined" ? window.location.origin : ""
-              }/properties/${property.id}`}
+              url={`${typeof window !== "undefined" ? window.location.origin : ""}/properties/${property.id}`}
+              className="transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-green-400 rounded-full"
+              title="Compartir en WhatsApp"
             >
-              <WhatsappIcon size={32} round />
+              <WhatsappIcon size={36} round />
             </WhatsappShareButton>
             <button
               onClick={() => {
@@ -212,36 +226,54 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 );
                 toast({
                   title: "Enlace copiado",
-                  description: "Has copieda el enlace de la propiedad.",
+                  description: "Has copiado el enlace de la propiedad.",
                   duration: 7000,
                 });
               }}
               title="Copiar enlace"
-              className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
+              className="p-2 bg-white border border-blue-200 rounded-full shadow hover:bg-blue-100 hover:scale-110 transition-all focus-visible:ring-2 focus-visible:ring-blue-400"
             >
-              <Copy className="h-5 w-5" />
+              <Copy className="h-6 w-6 text-blue-500" />
             </button>
           </div>
         </CardContent>
+        {/* Footer con botones de acción */}
         <CardFooter className="p-4 pt-0 mt-auto">
           <div className="flex w-full gap-2">
             <Button
-              variant="outline"
-              className="flex-grow group-hover:bg-accent group-hover:text-accent-foreground"
               asChild
+              className={cn(
+                "flex-grow relative z-0 overflow-hidden",
+                "bg-gradient-to-r from-blue-500 via-sky-400 to-indigo-400",
+                "text-white font-semibold shadow-md",
+                "hover:from-blue-600 hover:via-sky-500 hover:to-indigo-500",
+                "hover:scale-105 hover:shadow-lg",
+                "transition-all duration-200 border-0 group"
+              )}
             >
               <Link href={`/properties/${property.id}`}>
-                Ver Detalles{" "}
-                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <span className="flex items-center">
+                  Ver Detalles
+                  <ArrowRight
+                    className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
+                  />
+                </span>
               </Link>
             </Button>
-            {(isOwner || user?.role === "admin")&& (
+            {(isOwner || user?.role === "admin") && (
               <>
                 <Button
                   variant="outline"
                   size="icon"
                   asChild
                   aria-label="Editar propiedad"
+                  className={cn(
+                    "relative z-10",
+                    "bg-gradient-to-r from-indigo-400 via-sky-400 to-blue-500 text-white border-0 shadow-md",
+                    "hover:from-indigo-500 hover:via-sky-500 hover:to-blue-600 hover:scale-110",
+                    "transition-all duration-200"
+                  )}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   <Link href={`/properties/${property.id}/edit`}>
                     <Pencil />
@@ -254,6 +286,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
                       size="icon"
                       disabled={isDeleting}
                       aria-label="Eliminar propiedad"
+                      className={cn(
+                        "relative z-10",
+                        "shadow-md hover:scale-110 transition-all duration-200"
+                      )}
+                      onClick={(e) => e.stopPropagation()}
                     >
                       {isDeleting ? (
                         <Loader2 className="animate-spin" />
@@ -291,4 +328,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
       </div>
     </Card>
   );
+}
+
+async function getOwnerIdByEmail(email: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `/api/user/by-email?email=${encodeURIComponent(email)}`
+    );
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user.id ?? null;
+  } catch {
+    return null;
+  }
 }

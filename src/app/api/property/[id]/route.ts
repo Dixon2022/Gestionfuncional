@@ -37,15 +37,32 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
   }
 }
 
-export async function DELETE(_: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
   const propertyId = parseInt(params.id);
   if (isNaN(propertyId)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
+
+  let ownerId: number | undefined;
+  try {
+    const body = await req.json();
+    ownerId = Number(body.ownerId);
+    // No necesitas procesar images aquí, la DB lo hace en cascada
+  } catch {
+    return NextResponse.json({ error: "Body inválido" }, { status: 400 });
+  }
+
+  if (!ownerId || isNaN(ownerId)) {
+    return NextResponse.json({ error: "ownerId requerido y debe ser número" }, { status: 400 });
+  }
+
   try {
     await prisma.property.delete({
-      where: { id: propertyId },
+      where: {
+        id: propertyId,
+        ownerId: ownerId,
+      },
     });
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

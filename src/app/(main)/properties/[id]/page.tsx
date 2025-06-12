@@ -84,18 +84,6 @@ export default function PropertyPage() {
   return (
     <div>
       <PropertyDetailsPage propertyId={property.id} />
-      <div className="property-images">
-        {property.images.map((img, idx) => (
-          <Image
-            key={idx}
-            src={typeof img === 'string' ? img : (img as { url: string }).url}
-            alt={`Imagen ${idx + 1}`}
-            width={500}
-            height={300}
-            className="object-cover"
-          />
-        ))}
-      </div>
     </div>
   );
 }

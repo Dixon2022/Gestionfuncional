@@ -11,6 +11,12 @@ export async function DELETE(
     return NextResponse.json({ error: "ID de imagen inválido" }, { status: 400 });
   }
   try {
+    const image = await prisma.propertyImage.findUnique({
+      where: { id: imageId },
+    });
+    if (!image) {
+      return NextResponse.json({ error: "Imagen no encontrada" }, { status: 404 });
+    }
     await prisma.propertyImage.delete({
       where: { id: imageId },
     });
