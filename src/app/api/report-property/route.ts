@@ -44,3 +44,16 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Error al obtener reportes' }, { status: 500 });
   }
 }
+
+// DELETE: Eliminar un reporte
+export async function DELETE(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Falta id" }, { status: 400 });
+  }
+  await prisma.propertyReport.delete({
+    where: { id: Number(id) },
+  });
+  return NextResponse.json({ message: "Reporte eliminado" });
+}

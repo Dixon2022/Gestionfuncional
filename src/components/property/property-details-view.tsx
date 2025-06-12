@@ -266,10 +266,37 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
               ) : (
                 <ul className="space-y-4">
                   {reports.map((report, idx) => (
-                    <li key={idx} className="p-4 border rounded-lg bg-secondary/30">
-                      <p className="font-semibold">Motivo: {report.reason}</p>
-                      <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
-                      <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
+                    <li key={report.id} className="p-4 border rounded-lg bg-secondary/30 flex flex-col gap-2">
+                      <div>
+                        <p className="font-semibold">Motivo: {report.reason}</p>
+                        <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
+                        <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
+                      </div>
+                      <button
+                        className="self-end px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                        onClick={async () => {
+                          if (confirm("¿Eliminar este reporte?")) {
+                            const res = await fetch(`/api/report-property?id=${report.id}`, {
+                              method: "DELETE",
+                            });
+                            if (res.ok) {
+                              setReports(reports.filter(r => r.id !== report.id));
+                              toast({
+                                title: "Reporte eliminado",
+                                description: "El reporte ha sido eliminado.",
+                              });
+                            } else {
+                              toast({
+                                title: "Error",
+                                description: "No se pudo eliminar el reporte.",
+                                variant: "destructive",
+                              });
+                            }
+                          }
+                        }}
+                      >
+                        Eliminar
+                      </button>
                     </li>
                   ))}
                 </ul>

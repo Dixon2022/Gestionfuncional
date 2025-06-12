@@ -98,6 +98,10 @@ export default function ReportedPropertiesPage() {
     }
   };
 
+  const uniqueProperties = Array.from(
+    new Map(properties.map((report) => [report.property.id, report])).values()
+  );
+
   return (
     <>
       <Header />
@@ -109,9 +113,9 @@ export default function ReportedPropertiesPage() {
               <Skeleton key={i} className="h-48 w-full rounded-md" />
             ))}
           </div>
-        ) : properties.length > 0 ? (
+        ) : uniqueProperties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {properties.map((report) => (
+            {uniqueProperties.map((report) => (
               <div key={report.id} className="relative">
                 <PropertyCard property={report.property} />
               </div>
