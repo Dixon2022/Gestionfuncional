@@ -52,11 +52,14 @@ export default function EditPropertyPage() {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [property, setProperty] = useState<Property | null>(null);
+  // Explicitly type images as (string | { id: number; [key: string]: any })[]
+  type PropertyWithTypedImages = Property & { images?: (string | { id: number; [key: string]: any })[] };
+  const [property, setProperty] = useState<PropertyWithTypedImages | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingAIDescription, setIsGeneratingAIDescription] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
 
   const form = useForm<EditPropertyFormValues>({
     resolver: zodResolver(editPropertySchema),
@@ -217,6 +220,11 @@ export default function EditPropertyPage() {
     };
 
     try {
+      // Elimina primero las imágenes que se van a borrar
+      for (const imageId of imagesToDelete) {
+        await fetch(`/api/property/${property.id}/images/${imageId}`, { method: "DELETE" });
+      }
+
       await new Promise(resolve => setTimeout(resolve, 1000));
       const success = await updateProperty(property.id, updatedPropertyData, user.id);
       if (success) {
@@ -240,6 +248,7 @@ export default function EditPropertyPage() {
       });
     } finally {
       setIsSaving(false);
+      setImagesToDelete([]); // Limpia el array después de guardar
     }
   };
 
@@ -337,11 +346,15 @@ export default function EditPropertyPage() {
                         variant="destructive"
                         size="icon"
                         className="absolute top-1 right-1 h-6 w-6 opacity-75 group-hover:opacity-100 transition-opacity"
-                        onClick={() => {
-                          setProperty({
-                            ...property,
-                            images: property.images.filter((_, i) => i !== idx),
-                          });
+                        onClick={async () => {
+                          // Si img es un objeto con id, lo agregamos a imagesToDelete
+                          if (typeof img === "object" && img !== null && "id" in img) {
+                            setImagesToDelete((prev) => [...prev, (img as { id: number }).id]);
+                            setProperty({
+                              ...property,
+                              images: property.images.filter((_, i) => i !== idx),
+                            });
+                          }
                         }}
                       >
                         <span className="sr-only">Eliminar imagen {idx + 1}</span>
@@ -544,7 +557,8 @@ export default function EditPropertyPage() {
                   {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Guardando...
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar Cambios
                     </>
                   ) : (
                     <>

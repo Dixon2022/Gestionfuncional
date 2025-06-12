@@ -7,6 +7,7 @@ import { getPropertyById } from '@/lib/property-store';
 import type { Property } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 function useProperty(id?: string) {
   const [property, setProperty] = useState<Property | null | undefined>(undefined);
@@ -16,7 +17,14 @@ function useProperty(id?: string) {
     const fetchProperty = async () => {
       if (id) {
         const fetchedProperty = await getPropertyById(id);
-        setProperty(fetchedProperty || null);
+        setProperty(
+          fetchedProperty
+            ? { 
+                ...fetchedProperty, 
+                images: fetchedProperty.images as (string | { url: string })[] 
+              }
+            : null
+        );
         setIsLoading(false);
       } else {
         setProperty(null);
@@ -73,5 +81,21 @@ export default function PropertyPage() {
     );
   }
 
-  return <PropertyDetailsPage propertyId={property.id} />;
+  return (
+    <div>
+      <PropertyDetailsPage propertyId={property.id} />
+      <div className="property-images">
+        {property.images.map((img, idx) => (
+          <Image
+            key={idx}
+            src={typeof img === 'string' ? img : (img as { url: string }).url}
+            alt={`Imagen ${idx + 1}`}
+            width={500}
+            height={300}
+            className="object-cover"
+          />
+        ))}
+      </div>
+    </div>
+  );
 }
