@@ -9,7 +9,6 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
     include: { images: true, owner: true },
   });
 
-  // Retornar el resultado o lo que necesites
   if (!property) {
     return new Response('Property not found', { status: 404 });
   }
@@ -20,11 +19,16 @@ export async function GET(_: NextRequest, context: { params: Promise<{ id: strin
   });
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
   const body = await req.json();
+  const propertyId = parseInt(params.id);
+  if (isNaN(propertyId)) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
   try {
     const updated = await prisma.property.update({
-      where: { id: parseInt(params.id) },
+      where: { id: propertyId },
       data: body,
     });
     return NextResponse.json(updated);
@@ -33,12 +37,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-
-
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const params = await context.params;
+  const propertyId = parseInt(params.id);
+  if (isNaN(propertyId)) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
   try {
     await prisma.property.delete({
-      where: { id: parseInt(params.id) },
+      where: { id: propertyId },
     });
     return NextResponse.json({ message: "Deleted successfully" });
   } catch (error) {

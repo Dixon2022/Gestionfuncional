@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -241,9 +240,26 @@ export function GenerateDescriptionForm() {
     setIsSaving(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const newPropertyId = Date.now().toString(); 
-    const newProperty: Property = {
-      id: newPropertyId,
+    // 1. Guarda la propiedad (sin ID)
+    // 1. Busca el usuario por email para obtener su ID real en la base de datos
+    const userRes = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+    if (!userRes.ok) {
+      toast({
+      title: 'Error al obtener usuario',
+      description: 'No se pudo obtener el usuario desde la base de datos.',
+      variant: 'destructive',
+      });
+      setIsSaving(false);
+      return;
+    }
+    const userDb = await userRes.json();
+    const realUserId = userDb?.id || user.id;
+
+    // 2. Guarda la propiedad usando el ID real del usuario
+    const response = await fetch('/api/property', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
       title: currentFormData.title, 
       address: currentFormData.location, 
       city: currentFormData.location.split(',')[0]?.trim() || currentFormData.location,
@@ -253,7 +269,7 @@ export function GenerateDescriptionForm() {
       area: currentFormData.squareFootage, 
       type: currentFormData.propertyType,
       listingType: currentFormData.listingType,
-      description: currentFormData.description, // Use description from the form
+      description: currentFormData.description,
       images: photoDataUrisForSave,
       isFeatured: Math.random() < 0.2, 
       owner: { 
@@ -265,23 +281,43 @@ export function GenerateDescriptionForm() {
       features: currentFormData.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
       yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
       lotSize: currentFormData.squareFootage + Math.floor(Math.random() * 50), 
-      ownerId: user.id,
-      photoDataUri: photoDataUrisForSave[0],
+      ownerId: realUserId,
+      mainImageUri: photoDataUrisForSave[0],
       createdAt: Date.now(),
-    };
+      }),
+    });
+    const savedProperty = await response.json();
+    const propertyId = savedProperty.id; // Este sí es pequeño y válido
 
-    addProperty(newProperty);
+    // 2. Sube las imágenes usando el ID generado por el backend
+    const uploadResponse = await fetch(`/api/property/${propertyId}/images`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ images: photoDataUrisForSave }),
+    });
+
+    if (!uploadResponse.ok) {
+      toast({
+        title: 'Error al Subir Imágenes',
+        description: 'Ocurrió un error al subir las imágenes de la propiedad. Por favor, intenta nuevamente.',
+        variant: 'destructive',
+      });
+      setIsSaving(false);
+      return;
+    }
 
     toast({
       title: '¡Propiedad Guardada!',
       description: 'Tu nueva propiedad ha sido añadida y está visible.',
       action: (
-        <Button variant="outline" size="sm" onClick={() => router.push(`/properties/${newPropertyId}`)}>
+        <Button variant="outline" size="sm" onClick={() => router.push(`/properties/${propertyId}`)}>
           Ver Propiedad
         </Button>
       )
     });
-    router.push(`/properties/${newPropertyId}`);
+    router.push(`/properties/${propertyId}`);
     setIsSaving(false);
   };
 
@@ -292,7 +328,6 @@ export function GenerateDescriptionForm() {
         Detalles de la Propiedad
       </h2>
       <Form {...form}>
-        {/* The form onSubmit now triggers AI generation */}
         <form onSubmit={form.handleSubmit(handleAIGenerateDescription)} className="space-y-6">
           <FormField
             control={form.control}

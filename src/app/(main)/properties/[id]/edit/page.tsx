@@ -189,7 +189,13 @@ export default function EditPropertyPage() {
   };
 
   const onSubmit = async (data: EditPropertyFormValues) => {
-    if (!property || !user || user.id !== property.ownerId) {
+    if (
+      !property ||
+      !user ||
+      // Cambia esta línea:
+      // user.id !== property.ownerId
+      ( user.name !== property.owner.name)
+    ) {
       toast({ title: "Error de autorización", description: "No puedes editar esta propiedad.", variant: "destructive" });
       return;
     }
@@ -262,10 +268,294 @@ export default function EditPropertyPage() {
             <PencilLine className="mr-2 h-6 w-6 text-primary" />
             Editar Propiedad
           </CardTitle>
-          <CardDescription>Actualiza los detalles de tu propiedad "{property.title}".</CardDescription>
+          <CardDescription>
+            Actualiza los detalles de tu propiedad "{property.title}".
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* ...Tu formulario continúa aquí... */}
+          {/* Galería de imágenes arriba del formulario, estilo generate-description-form */}
+          <div className="mb-8">
+            <label className="block text-sm font-medium mb-2">Imágenes de la Propiedad (máx. 10)</label>
+            <div className="flex flex-col gap-2">
+              <label
+                htmlFor="edit-photos-upload"
+                className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-secondary/50 hover:bg-secondary/70 border-input transition"
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 16V4m0 0L8 8m4-4l4 4M20 16v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2" />
+                  </svg>
+                  <p className="mb-1 text-sm text-muted-foreground">
+                    <span className="font-semibold">Haz clic para subir</span> o arrastra y suelta
+                  </p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG, JPEG, WEBP (Máx. 5MB por imagen, 10 imágenes máx.)</p>
+                </div>
+                <Input
+                  id="edit-photos-upload"
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files ?? []);
+                    const limitedFiles = files.slice(0, 10);
+                    const fileReaders = await Promise.all(
+                      limitedFiles.map(
+                        (file) =>
+                          new Promise<string>((resolve, reject) => {
+                            if (file.size > 5 * 1024 * 1024) return resolve(""); // skip large files
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = reject;
+                            reader.readAsDataURL(file);
+                          })
+                      )
+                    );
+                    setProperty({
+                      ...property,
+                      images: [
+                        ...(property.images ?? []),
+                        ...fileReaders.filter(Boolean),
+                      ].slice(0, 10),
+                    });
+                  }}
+                />
+              </label>
+              {property.images && property.images.length > 0 && (
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                  {property.images.map((img, idx) => (
+                    <div key={idx} className="relative group aspect-square">
+                      <Image
+                        src={img}
+                        alt={`Imagen ${idx + 1}`}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        className="rounded-md border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6 opacity-75 group-hover:opacity-100 transition-opacity"
+                        onClick={() => {
+                          setProperty({
+                            ...property,
+                            images: property.images.filter((_, i) => i !== idx),
+                          });
+                        }}
+                      >
+                        <span className="sr-only">Eliminar imagen {idx + 1}</span>
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Sube fotos claras de la propiedad. La primera imagen será la principal.
+              </p>
+            </div>
+          </div>
+          {/* Fin galería de imágenes */}
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Título</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Título de la propiedad" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Precio</FormLabel>
+                    <FormControl>
+                      <Input type="number" placeholder="Precio" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="propertyType"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Tipo de Propiedad</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona tipo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {PROPERTY_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="listingType"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Tipo de Listado</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecciona listado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LISTING_TYPES.map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dirección</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Dirección" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ciudad</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ciudad" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex gap-4">
+                <FormField
+                  control={form.control}
+                  name="numberOfBedrooms"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Habitaciones</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="numberOfBathrooms"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Baños</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={0} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="area"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Área (m²)</FormLabel>
+                      <FormControl>
+                        <Input type="number" min={1} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="keyFeatures"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Características Clave</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Piscina, Jardín, Garaje" {...field} />
+                    </FormControl>
+                    <FormDescription>
+                      Separa las características con comas.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Descripción</FormLabel>
+                    <FormControl>
+                      <Textarea rows={5} placeholder="Describe la propiedad..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="flex items-center gap-4">
+
+                <Button type="submit" disabled={isSaving}>
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Guardar Cambios
+                    </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

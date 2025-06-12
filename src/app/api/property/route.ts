@@ -34,9 +34,13 @@ export async function POST(req: NextRequest) {
       listingType,
       features,
       isFeatured,
-      mainImageUri,
+      mainImageUri, // <-- asegúrate de recibirlo
       ownerId,
     } = body;
+
+    if (!mainImageUri) {
+      return NextResponse.json({ error: "mainImageUri es requerido" }, { status: 400 });
+    }
 
     const property = await prisma.property.create({
       data: {
@@ -54,8 +58,8 @@ export async function POST(req: NextRequest) {
         listingType,
         features,
         isFeatured,
-        mainImageUri,
-        ownerId,
+        mainImageUri, // <-- pásalo aquí
+        ownerId: parseInt(ownerId), // <-- ver siguiente error
       },
     });
 
