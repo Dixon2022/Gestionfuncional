@@ -60,6 +60,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const { toast } = useToast();
   const { convert, symbol } = useCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew =
@@ -103,14 +104,28 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <CardHeader className="p-0">
           <Link href={`/properties/${property.id}`} className="block">
             <div className="relative h-48 w-full overflow-hidden">
-              <Image
-                src={property.photoDataUri || property.images[0]}
-                alt={property.title}
-                fill={true}
-                style={{ objectFit: "cover" }}
-                className="transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint="exterior casa"
-              />
+              {!imgError ? (
+                <Image
+                  src={
+                    property.photoDataUri ||
+                    property.images[0] ||
+                    "/placeholder.jpg"
+                  }
+                  alt={property.title}
+                  fill={true}
+                  style={{ objectFit: "cover" }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                  data-ai-hint="exterior casa"
+                  onError={() => setImgError(true)}
+                  // Next.js Image may not always trigger onError, but works for most cases
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full bg-gray-200">
+                  <span className="text-gray-600 font-semibold text-center px-2">
+                    {property.title}
+                  </span>
+                </div>
+              )}
               <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
                 {property.listingType && (
                   <Badge
