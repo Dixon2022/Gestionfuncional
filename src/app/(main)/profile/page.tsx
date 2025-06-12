@@ -35,7 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils"; // Si tienes una función para combinar clases
-
+import { toast } from "@/hooks/use-toast";
 export default function ProfilePage() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
@@ -94,10 +94,11 @@ export default function ProfilePage() {
         .toLowerCase()
         .includes(search.toLowerCase())
     )
-    .sort((a, b) =>
-      order === "desc"
-        ? Number(b.id) - Number(a.id) // Más reciente primero
-        : Number(a.id) - Number(b.id) // Más antiguo primero
+    .sort(
+      (a, b) =>
+        order === "desc"
+          ? Number(b.id) - Number(a.id) // Más reciente primero
+          : Number(a.id) - Number(b.id) // Más antiguo primero
     ); // Última propiedad primero
 
   return (
@@ -111,7 +112,10 @@ export default function ProfilePage() {
                 <AvatarImage
                   src={
                     user.name
-                      ? `https://placehold.co/100x100.png?text=${user.name.substring(0, 1)}`
+                      ? `https://placehold.co/100x100.png?text=${user.name.substring(
+                          0,
+                          1
+                        )}`
                       : undefined
                   }
                   alt={user.name || "Usuario"}
@@ -133,11 +137,39 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center md:items-end gap-3 flex-1 text-blue-800">
               <span className="flex items-center gap-2">
                 <Mail className="h-5 w-5 text-blue-500" />
-                <span className="font-medium">{user.email}</span>
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${
+                    user.email
+                  }&su=Hola%20desde%20la%20plataforma&body=Hola%20${encodeURIComponent(
+                    user.name || ""
+                  )},%20me%20gustaría%20contactarte%20sobre%20una%20propiedad.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium underline hover:text-blue-600 transition"
+                  title="Redactar en Gmail"
+                >
+                  {user.email}
+                </a>
               </span>
               <span className="flex items-center gap-2">
                 <Phone className="h-5 w-5 text-blue-500" />
                 <span className="font-medium">{user.phone}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(user.phone);
+                    toast({
+                      title: "¡Número copiado!",
+                      description:
+                        "El número de teléfono se copió al portapapeles.",
+                      duration: 3000,
+                    });
+                  }}
+                  className="ml-1 px-2 py-1 rounded bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-semibold transition"
+                  title="Copiar número"
+                >
+                  Copiar
+                </button>
               </span>
             </div>
           </div>
@@ -158,7 +190,9 @@ export default function ProfilePage() {
             >
               <Link href="/profile/edit">
                 <Edit3 className="mr-2 h-4 w-4" />
-                <span className="font-semibold tracking-wide">Editar Perfil</span>
+                <span className="font-semibold tracking-wide">
+                  Editar Perfil
+                </span>
               </Link>
             </Button>
             <Button

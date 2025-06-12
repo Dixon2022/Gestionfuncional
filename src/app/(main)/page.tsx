@@ -1,6 +1,5 @@
 'use client';
 
-import { FeaturedListings } from '@/components/property/featured-listings';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Search, ArrowRight, Home as HomeIcon, Building, LandPlot, Building2 as Building2Icon, Hotel } from 'lucide-react';
@@ -10,6 +9,7 @@ import type { Property, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
 import { date } from 'zod';
+import { PropertyCard } from '@/components/property/property-card';
 
 // Helpers para iconos y pluralización (igual que antes)
 const getPropertyTypeIcon = (type: PropertyType) => {
@@ -119,9 +119,24 @@ export default function HomePage() {
       </section>
 
       {/* Featured Listings Section */}
-      {!isLoading && <FeaturedListings properties={allProperties} />}
-
-      
+      <section className="py-8 md:py-12">
+        <div className="container">
+          <h2 className="text-2xl font-bold mb-6 text-center">Propiedades Destacadas</h2>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-4">
+              {[...Array(6)].map((_, index) => (
+                <Skeleton key={index} className="h-64 rounded-md" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-4">
+              {allProperties.map((property) => (
+                <PropertyCard key={property.id} property={property} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
     </>
   );
 }

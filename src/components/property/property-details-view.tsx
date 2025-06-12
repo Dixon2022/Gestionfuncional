@@ -42,7 +42,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const [reports, setReports] = useState<any[]>([]);
   const { convert, symbol } = useCurrency();
   const [mainImgError, setMainImgError] = useState(false);
-  const [thumbsError, setThumbsError] = useState<{ [key: number]: boolean }>({});
+  const [thumbsError, setThumbsError] = useState<{ [key: number]: boolean }>(
+    {}
+  );
   const [mainImageIdx, setMainImageIdx] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
@@ -68,7 +70,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   useEffect(() => {
     async function fetchReports() {
       if (user?.role === "admin") {
-        const res = await fetch(`/api/report-property?propertyId=${propertyId}`);
+        const res = await fetch(
+          `/api/report-property?propertyId=${propertyId}`
+        );
         if (res.ok) {
           const data = await res.json();
           setReports(data.reports || []);
@@ -135,7 +139,11 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                         onClick={() => setMainImageIdx(idx)}
                         className={`
                         relative rounded-lg overflow-hidden shadow
-                        border-2 ${mainImageIdx === idx ? "border-blue-500" : "border-transparent"}
+                        border-2 ${
+                          mainImageIdx === idx
+                            ? "border-blue-500"
+                            : "border-transparent"
+                        }
                         focus:outline-none focus:ring-2 focus:ring-blue-400
                         transition-all
                         bg-white
@@ -145,7 +153,11 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                         title={`Ver imagen ${idx + 1}`}
                       >
                         <Image
-                          src={typeof img === "string" ? img : (img as { url: string }).url}
+                          src={
+                            typeof img === "string"
+                              ? img
+                              : (img as { url: string }).url
+                          }
                           alt={`Miniatura ${idx + 1}`}
                           fill
                           style={{ objectFit: "cover" }}
@@ -163,7 +175,10 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                     className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
                     onClick={() => setShowModal(false)}
                   >
-                    <div className="relative max-w-3xl w-full" onClick={e => e.stopPropagation()}>
+                    <div
+                      className="relative max-w-3xl w-full"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
                         className="absolute top-2 right-2 z-10 bg-white/80 rounded-full p-2 hover:bg-white"
                         onClick={() => setShowModal(false)}
@@ -175,13 +190,18 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                         src={
                           typeof property.images[mainImageIdx] === "string"
                             ? property.images[mainImageIdx]
-                            : (property.images[mainImageIdx] as { url: string }).url
+                            : (property.images[mainImageIdx] as { url: string })
+                                .url
                         }
                         alt={`Imagen ampliada ${mainImageIdx + 1}`}
                         width={900}
                         height={600}
                         className="rounded-xl mx-auto shadow-lg object-contain bg-white"
-                        style={{ maxHeight: "80vh", width: "auto", height: "auto" }}
+                        style={{
+                          maxHeight: "80vh",
+                          width: "auto",
+                          height: "auto",
+                        }}
                         data-ai-hint="imagen propiedad ampliada"
                       />
                     </div>
@@ -206,7 +226,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                 <div className="flex flex-col items-center">
                   <FacebookShareButton
                     url={`${
-                      typeof window !== "undefined" ? window.location.origin : ""
+                      typeof window !== "undefined"
+                        ? window.location.origin
+                        : ""
                     }/properties/${property.id}`}
                     className="group"
                     title="Compartir en Facebook"
@@ -222,7 +244,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                 <div className="flex flex-col items-center">
                   <WhatsappShareButton
                     url={`${
-                      typeof window !== "undefined" ? window.location.origin : ""
+                      typeof window !== "undefined"
+                        ? window.location.origin
+                        : ""
                     }/properties/${property.id}`}
                     className="group"
                     title="Compartir en WhatsApp"
@@ -318,7 +342,9 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                   className="p-4 bg-secondary/50 rounded-lg shadow-sm"
                 >
                   <detail.icon className="h-7 w-7 text-primary mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">{detail.label}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {detail.label}
+                  </p>
                   <p className="font-semibold text-lg">{detail.value}</p>
                 </div>
               ))}
@@ -337,27 +363,45 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
             {/* AQUI SE AGREGAN LOS REPORTES POR SI ACASO */}
             {user?.role === "admin" && (
               <div className="mb-8">
-                <p className="text-2xl font-semibold mb-3">Reportes de la propiedad</p>
+                <p className="text-2xl font-semibold mb-3">
+                  Reportes de la propiedad
+                </p>
                 {reports.length === 0 ? (
-                  <p className="text-muted-foreground">No hay reportes para esta propiedad.</p>
+                  <p className="text-muted-foreground">
+                    No hay reportes para esta propiedad.
+                  </p>
                 ) : (
                   <ul className="space-y-4">
                     {reports.map((report, idx) => (
-                      <li key={report.id} className="p-4 border rounded-lg bg-secondary/30 flex flex-col gap-2">
+                      <li
+                        key={report.id}
+                        className="p-4 border rounded-lg bg-secondary/30 flex flex-col gap-2"
+                      >
                         <div>
-                          <p className="font-semibold">Motivo: {report.reason}</p>
-                          <p className="text-sm text-muted-foreground">Mensaje: {report.message}</p>
-                          <p className="text-xs text-muted-foreground">Fecha: {new Date(report.createdAt).toLocaleString()}</p>
+                          <p className="font-semibold">
+                            Motivo: {report.reason}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Mensaje: {report.message}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Fecha: {new Date(report.createdAt).toLocaleString()}
+                          </p>
                         </div>
                         <button
                           className="self-end px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                           onClick={async () => {
                             if (confirm("¿Eliminar este reporte?")) {
-                              const res = await fetch(`/api/report-property?id=${report.id}`, {
-                                method: "DELETE",
-                              });
+                              const res = await fetch(
+                                `/api/report-property?id=${report.id}`,
+                                {
+                                  method: "DELETE",
+                                }
+                              );
                               if (res.ok) {
-                                setReports(reports.filter(r => r.id !== report.id));
+                                setReports(
+                                  reports.filter((r) => r.id !== report.id)
+                                );
                                 toast({
                                   title: "Reporte eliminado",
                                   description: "El reporte ha sido eliminado.",
@@ -365,7 +409,8 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                               } else {
                                 toast({
                                   title: "Error",
-                                  description: "No se pudo eliminar el reporte.",
+                                  description:
+                                    "No se pudo eliminar el reporte.",
                                   variant: "destructive",
                                 });
                               }
@@ -437,9 +482,16 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                     <p>
                       <strong>Email: </strong>
                       {property.owner.email ? (
-                        <a
-                          href={`mailto:${property.owner.email}`}
+                        <a 
+                          href={`https://mail.google.com/mail/?view=cm&fs=1&to=${
+                            property.owner.email
+                          }&su=Hola%20desde%20la%20plataforma&body=Hola%20${encodeURIComponent(
+                            property.owner.name || ""
+                          )},%20me%20gustaría%20contactarte%20sobre%20una%20propiedad.`}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-primary hover:underline"
+                          title="Redactar en Gmail"
                         >
                           {property.owner.email}
                         </a>
@@ -451,8 +503,16 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                       <strong>Teléfono: </strong>
                       {property.owner.phone ? (
                         <a
-                          href={`tel:${property.owner.phone}`}
                           className="text-primary hover:underline"
+                          onClick={() => {
+                            navigator.clipboard.writeText(property.owner.phone);
+                            toast({
+                              title: "¡Número copiado!",
+                              description:
+                                "El número de teléfono se copió al portapapeles.",
+                              duration: 3000,
+                            });
+                          }}
                         >
                           {property.owner.phone}
                         </a>
