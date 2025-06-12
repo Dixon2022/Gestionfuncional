@@ -93,10 +93,11 @@ export default function PropertiesPage() {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 px-2 md:px-4">
       <h1 className="text-4xl font-bold mb-8 text-center">Encuentra Tu Próxima Propiedad</h1>
-      <PropertySearchFilters onSearch={handleSearch} initialFilters={currentFilters} />
-      
+      <div className="mb-6">
+        <PropertySearchFilters onSearch={handleSearch} initialFilters={currentFilters} />
+      </div>
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (

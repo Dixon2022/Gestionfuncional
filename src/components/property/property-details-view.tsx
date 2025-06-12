@@ -103,7 +103,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
           {/* Main Content Column */}
           <div className="md:col-span-2 bg-white/90 rounded-2xl shadow-2xl p-6">
             {/* Galería de imágenes principal con miniaturas debajo */}
-            {property.images && property.images.length > 0 && (
+            {property.images && property.images.length > 0 ? (
               <div className="mb-8 flex flex-col items-center">
                 {/* Imagen principal */}
                 <div
@@ -188,40 +188,77 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                   </div>
                 )}
               </div>
+            ) : (
+              <div className="mb-8 flex flex-col items-center">
+                <div
+                  className="relative w-full max-w-2xl h-[250px] md:h-[450px] rounded-xl overflow-hidden shadow-lg bg-gray-200 flex justify-center items-center"
+                  title="Sin imagen"
+                >
+                  <span className="text-gray-500 text-2xl font-semibold text-center px-4">
+                    {property.title}
+                  </span>
+                </div>
+              </div>
             )}
 
-            <div className="p-4 pt-0 mt-2 flex items-center gap-2">
-              <FacebookShareButton
-                url={`${
-                  typeof window !== "undefined" ? window.location.origin : ""
-                }/properties/${property.id}`}
-              >
-                <FacebookIcon size={32} round />
-              </FacebookShareButton>
-
-              <WhatsappShareButton
-                url={`${
-                  typeof window !== "undefined" ? window.location.origin : ""
-                }/properties/${property.id}`}
-              >
-                <WhatsappIcon size={32} round />
-              </WhatsappShareButton>
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(
-                    `${window.location.origin}/properties/${property.id}`
-                  );
-                  toast({
-                    title: "Enlace copiado",
-                    description: "Has copieda el enlace de la propiedad.",
-                    duration: 7000,
-                  });
-                }}
-                title="Copiar enlace"
-                className="p-2 bg-gray-200 rounded-full hover:bg-gray-300"
-              >
-                <Copy className="h-5 w-5" />
-              </button>
+            <div className="p-4 pt-0 mt-2 flex items-center justify-center">
+              <div className="flex flex-row gap-6">
+                <div className="flex flex-col items-center">
+                  <FacebookShareButton
+                    url={`${
+                      typeof window !== "undefined" ? window.location.origin : ""
+                    }/properties/${property.id}`}
+                    className="group"
+                    title="Compartir en Facebook"
+                  >
+                    <div className="rounded-full bg-blue-600 group-hover:bg-blue-700 transition-colors shadow-xl p-3 flex items-center justify-center">
+                      <FacebookIcon size={32} round />
+                    </div>
+                  </FacebookShareButton>
+                  <span className="text-xs mt-2 text-blue-700 group-hover:font-semibold transition-all select-none">
+                    Facebook
+                  </span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <WhatsappShareButton
+                    url={`${
+                      typeof window !== "undefined" ? window.location.origin : ""
+                    }/properties/${property.id}`}
+                    className="group"
+                    title="Compartir en WhatsApp"
+                  >
+                    <div className="rounded-full bg-green-500 group-hover:bg-green-600 transition-colors shadow-xl p-3 flex items-center justify-center">
+                      <WhatsappIcon size={32} round />
+                    </div>
+                  </WhatsappShareButton>
+                  <span className="text-xs mt-2 text-green-700 group-hover:font-semibold transition-all select-none">
+                    WhatsApp
+                  </span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        `${window.location.origin}/properties/${property.id}`
+                      );
+                      toast({
+                        title: "Enlace copiado",
+                        description: "Has copiado el enlace de la propiedad.",
+                        duration: 7000,
+                      });
+                    }}
+                    title="Copiar enlace"
+                    className="group"
+                  >
+                    <div className="rounded-full bg-gray-300 group-hover:bg-gray-400 transition-colors shadow-xl p-3 flex items-center justify-center">
+                      <Copy className="h-7 w-7 text-gray-700" />
+                    </div>
+                  </button>
+                  <span className="text-xs mt-2 text-gray-700 group-hover:font-semibold transition-all select-none">
+                    Copiar
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* Property Info Header */}

@@ -41,12 +41,12 @@ export function Header() {
           />
         </Link>
         <MainNav />
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          {/* Selector de moneda */}
+        <div className="flex flex-1 items-center justify-end gap-3">
+          {/* Selector de moneda mejorado */}
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as any)}
-            className="border rounded px-2 py-1 mr-2"
+            className="border border-gray-300 rounded-lg px-3 py-1.5 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition text-sm font-medium text-gray-700"
             aria-label="Seleccionar moneda"
           >
             <option value="CRC">₡ CRC</option>
@@ -54,9 +54,16 @@ export function Header() {
             <option value="EUR">€ EUR</option>
             <option value="MXN">$ MXN</option>
           </select>
-          <Button variant="ghost" size="icon" asChild>
+
+          {/* Botón de búsqueda más visible */}
+          <Button
+            variant="ghost"
+            size="icon"
+            asChild
+            className="hover:bg-blue-100 transition"
+          >
             <Link href="/properties" aria-label="Buscar Propiedades">
-              <Search className="h-5 w-5" />
+              <Search className="h-6 w-6 text-blue-600" />
               <span className="sr-only">Buscar Propiedades</span>
             </Link>
           </Button>
@@ -69,13 +76,17 @@ export function Header() {
                     variant="ghost"
                     size="icon"
                     aria-label="Menú de usuario"
+                    className="hover:bg-blue-100 transition"
                   >
-                    <UserCircle className="h-5 w-5" />
+                    <UserCircle className="h-6 w-6 text-blue-600" />
                     <span className="sr-only">Menú de usuario</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>
+                <DropdownMenuContent
+                  align="end"
+                  className="rounded-xl shadow-2xl border border-blue-100 bg-white/95 backdrop-blur-lg"
+                >
+                  <DropdownMenuLabel className="font-semibold text-blue-700">
                     Hola, {user.name || user.email.split("@")[0]}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
@@ -90,13 +101,18 @@ export function Header() {
                   )}
 
                   <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Cerrar Sesión
+                    <LogOut className="mr-2 h-4 w-4 text-red-500" />
+                    <span className="text-red-600">Cerrar Sesión</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button variant="outline" size="sm" asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                asChild
+                className="border-blue-500 text-blue-700 hover:bg-blue-50 transition"
+              >
                 <Link href="/login">
                   <LogIn className="mr-2 h-4 w-4" />
                   Acceder

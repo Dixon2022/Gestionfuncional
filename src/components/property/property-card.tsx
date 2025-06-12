@@ -123,22 +123,30 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <CardHeader className="p-0">
           <Link href={`/properties/${property.id}`} className="block">
             <div className="relative h-48 w-full overflow-hidden">
-              <Image
-                src={
-                  property.images && property.images.length > 0
-                    ? (typeof property.images[0] === "string"
-                        ? property.images[0]
-                        : (property.images[0] as { url: string }).url)
-                    : property.photoDataUri || "/placeholder.jpg"
-                }
-                alt={property.title}
-                fill
-                style={{ objectFit: "cover" }}
-                className="transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint="exterior casa"
-                onError={() => setImgError(true)}
-                priority
-              />
+              {property.images && property.images.length > 0 ? (
+                <Image
+                  src={
+                    typeof property.images[0] === "string"
+                      ? property.images[0]
+                      : (property.images[0] as { url: string }).url
+                  }
+                  alt={property.title}
+                  fill
+                  style={{ objectFit: "cover" }}
+                  className="transition-transform duration-300 group-hover:scale-105"
+                  data-ai-hint="exterior casa"
+                  onError={() => setImgError(true)}
+                  priority
+                />
+              ) : (
+                <div
+                  className="flex items-center justify-center h-full w-full bg-gray-200"
+                >
+                  <span className="text-gray-500 text-lg font-semibold text-center px-4">
+                    {property.title}
+                  </span>
+                </div>
+              )}
               <div className="absolute top-2 right-2 flex flex-col items-end space-y-1">
                 {property.listingType && (
                   <Badge
