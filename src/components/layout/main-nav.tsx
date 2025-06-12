@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Search, UserCircle } from 'lucide-react'; // Sparkles removed, UserCircle for Profile
+import { Home, Search, UserCircle, Info, MessageCircleQuestion } from 'lucide-react'; // Sparkles removed, UserCircle for Profile
 import { useAuth } from '@/contexts/auth-context';
 
 export function MainNav() {
@@ -14,6 +14,8 @@ export function MainNav() {
   const navItems = [
     { href: '/', label: 'Inicio', icon: Home },
     { href: '/properties', label: 'Propiedades', icon: Search },
+    { href: '/about', label: 'Nosotros', icon: Info },
+    { href: '/FAQ', label: 'Preguntas Frecuentes', icon: MessageCircleQuestion },
     // { href: '/generate-description', label: 'Descripción IA', icon: Sparkles }, // Removed
     // Add profile link if user is logged in
     ...(user ? [{ href: '/profile', label: 'Mi Perfil', icon: UserCircle }] : []),
