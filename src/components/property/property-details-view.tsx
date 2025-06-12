@@ -41,6 +41,8 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<any[]>([]);
   const { convert, symbol } = useCurrency();
+  const [mainImgError, setMainImgError] = useState(false);
+  const [thumbsError, setThumbsError] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     async function fetchProperty() {
@@ -100,14 +102,23 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
           {/* Image Gallery */}
           <div className="mb-6">
             <div className="relative w-full h-[300px] md:h-[450px] rounded-lg overflow-hidden shadow-lg">
-              <Image
-                src={property.photoDataUri || property.images[0]}
-                alt={property.title}
-                layout="fill"
-                objectFit="cover"
-                priority
-                data-ai-hint="imagen principal propiedad"
-              />
+              {!mainImgError && (property.photoDataUri || property.images[0]) ? (
+                <Image
+                  src={property.photoDataUri || property.images[0]}
+                  alt={property.title}
+                  layout="fill"
+                  objectFit="cover"
+                  priority
+                  data-ai-hint="imagen principal propiedad"
+                  onError={() => setMainImgError(true)}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full w-full bg-gray-200">
+                  <span className="text-gray-600 font-semibold text-center px-2">
+                    {property.title}
+                  </span>
+                </div>
+              )}
               <div className="absolute top-4 left-4 flex flex-col space-y-2">
                 {property.listingType && (
                   <Badge
@@ -138,13 +149,27 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                     key={index}
                     className="relative h-24 w-full rounded-md overflow-hidden shadow-md"
                   >
-                    <Image
-                      src={img}
-                      alt={`${property.title} - imagen ${index + 2}`}
-                      layout="fill"
-                      objectFit="cover"
-                      data-ai-hint="miniatura propiedad"
-                    />
+                    {!thumbsError[index] ? (
+                      <Image
+                        src={img}
+                        alt={`${property.title} - imagen ${index + 2}`}
+                        layout="fill"
+                        objectFit="cover"
+                        data-ai-hint="miniatura propiedad"
+                        onError={() =>
+                          setThumbsError((prev) => ({
+                            ...prev,
+                            [index]: true,
+                          }))
+                        }
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full w-full bg-gray-200">
+                        <span className="text-gray-600 font-semibold text-center px-2 text-xs">
+                          {property.title}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
