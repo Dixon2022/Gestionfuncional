@@ -302,7 +302,7 @@ export function PropertySearchFilters({
             />
           </div>
         </form>
-        <div className="flex flex-row gap-4 mt-4 justify-end">
+        <div className="flex flex-row gap-4 mt-4 justify-end col-span-full">
           <Button
             type="button"
             variant="outline"
@@ -313,6 +313,7 @@ export function PropertySearchFilters({
           </Button>
           <Button
             type="submit"
+            onClick={handleSubmit}
             className="w-full sm:w-auto bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-semibold shadow hover:from-blue-600 hover:to-indigo-600"
           >
             <Search className="mr-2 h-4 w-4" /> Buscar
