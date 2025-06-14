@@ -30,7 +30,7 @@ import { useAuth } from "@/contexts/auth-context";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from "next/link";
-import { SimilarPropertiesCarousel } from "./similarPropertiesCarousel";
+import SimilarPropertiesCarousel from "./similarPropertiesCarousel";
 
 // Update the path below if your report-form file is in a different directory
 
