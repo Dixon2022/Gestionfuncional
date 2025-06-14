@@ -462,17 +462,8 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                 </div>
               </div>
             )}
-
-            {/* Propiedades Similares */}
-            {similarProperties.length > 0 ? (
-              <SimilarPropertiesCarousel properties={similarProperties} />
-            ) : (
-              <p className="text-center text-muted-foreground mt-8">
-                No se encontraron propiedades similares.
-              </p>
-            )}
           </div>
-
+          
           {/* Sidebar Column (Agent Info & Contact Form) */}
           <div className="md:col-span-1 space-y-8">
             {/* Agent Info Card */}
@@ -509,7 +500,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                     <p>
                       <strong>Email: </strong>
                       {property.owner.email ? (
-                        <a 
+                        <a
                           href={`https://mail.google.com/mail/?view=cm&fs=1&to=${
                             property.owner.email
                           }&su=Hola%20desde%20la%20plataforma&body=Hola%20${encodeURIComponent(
@@ -565,7 +556,20 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
               />
             )}
           </div>
+          <div className="md:col-span-3 space-y-8 mt-1">
+            {similarProperties.length > 0 ? (
+              <SimilarPropertiesCarousel
+                properties={similarProperties}
+                currentPropertyId={property.id}
+              />
+            ) : (
+              <p className="text-center text-muted-foreground mt-8">
+                No se encontraron propiedades similares.
+              </p>
+            )}
+          </div>
         </div>
+        
       </div>
     </div>
   );

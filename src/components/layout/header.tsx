@@ -1,18 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import {
-  Home,
-  Building2,
-  Sparkles,
-  Search,
-  UserCircle,
-  LogOut,
-  LogIn,
-} from "lucide-react";
+import { Search, UserCircle, LogOut, LogIn, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainNav } from "./main-nav";
 import { useAuth } from "@/contexts/auth-context";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,14 +16,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { useCurrency } from "@/contexts/currency-context";
+import { useState } from "react";
 
 export function Header() {
   const { user, logout, loading } = useAuth();
   const { currency, setCurrency } = useCurrency();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 max-w-screen-2xl items-center">
+      <div className="container flex h-16 max-w-screen-2xl items-center justify-between px-4">
         <Link href="/" className="mr-6 flex items-center space-x-2">
           <Image
             src="/favicon.ico"
@@ -40,9 +35,15 @@ export function Header() {
             className="rounded-sm"
           />
         </Link>
-        <MainNav />
-        <div className="flex flex-1 items-center justify-end gap-3">
-          {/* Selector de moneda mejorado */}
+
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex flex-1">
+          <MainNav />
+        </nav>
+
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          {/* Currency selector */}
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value as any)}
@@ -55,7 +56,7 @@ export function Header() {
             <option value="MXN">$ MXN</option>
           </select>
 
-          {/* Botón de búsqueda más visible */}
+          {/* Search button */}
           <Button
             variant="ghost"
             size="icon"
@@ -68,6 +69,7 @@ export function Header() {
             </Link>
           </Button>
 
+          {/* User menu */}
           {!loading &&
             (user ? (
               <DropdownMenu>
@@ -94,12 +96,6 @@ export function Header() {
                     <Link href="/profile">Mi Perfil</Link>
                   </DropdownMenuItem>
 
-                  {user.role === "admin" && (
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/">Propiedades Reportadas</Link>
-                    </DropdownMenuItem>
-                  )}
-
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4 text-red-500" />
                     <span className="text-red-600">Cerrar Sesión</span>
@@ -119,8 +115,54 @@ export function Header() {
                 </Link>
               </Button>
             ))}
+
+          {/* Mobile menu toggle */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="ml-2 inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 md:hidden"
+            aria-label="Abrir menú móvil"
+          >
+            {mobileMenuOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <nav className="md:hidden bg-white border-t border-gray-200 shadow-md">
+          <Link
+            href="/"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-4 py-3 hover:bg-blue-100"
+          >
+            Inicio
+          </Link>
+          <Link
+            href="/properties"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-4 py-3 hover:bg-blue-100"
+          >
+            Propiedades
+          </Link>
+          <Link
+            href="/about"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-4 py-3 hover:bg-blue-100"
+          >
+            Nosotros
+          </Link>
+          <Link
+            href="/faq"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-4 py-3 hover:bg-blue-100"
+          >
+            Preguntas Frecuentes
+          </Link>
+        </nav>
+      )}
     </header>
   );
 }

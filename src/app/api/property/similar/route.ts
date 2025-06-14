@@ -12,8 +12,11 @@ export async function GET(req: NextRequest) {
   }
 
   // Obtén todas las propiedades (ajusta según tu fuente de datos)
-  const allProperties = await prisma.property.findMany();
-
+  const allProperties = await prisma.property.findMany({
+    include: {
+      images: true, // <-- esto es lo que falta
+    },
+  });
   // Filtra propiedades similares
   const similar = allProperties
     .filter(

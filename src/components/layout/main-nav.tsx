@@ -1,28 +1,31 @@
-
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Home, Search, UserCircle, Info, MessageCircleQuestion } from 'lucide-react'; // Sparkles removed, UserCircle for Profile
+import { Home, Search, Info, MessageCircleQuestion, UserCircle, Flag, FlagOff, FlashlightOff, FlagIcon } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 
 export function MainNav() {
   const pathname = usePathname();
   const { user } = useAuth();
 
+  // NavItems fijos que siempre se muestran
   const navItems = [
     { href: '/', label: 'Inicio', icon: Home },
     { href: '/properties', label: 'Propiedades', icon: Search },
     { href: '/about', label: 'Nosotros', icon: Info },
     { href: '/FAQ', label: 'Preguntas Frecuentes', icon: MessageCircleQuestion },
-    // { href: '/generate-description', label: 'Descripción IA', icon: Sparkles }, // Removed
-    // Add profile link if user is logged in
-    ...(user ? [{ href: '/profile', label: 'Mi Perfil', icon: UserCircle }] : []),
-
-
   ];
 
+  // Si el usuario es admin, agrega el enlace admin
+  if (user?.role === 'admin') {
+    navItems.push({
+      href: '/admin',
+      label: 'Propiedades Reportadas',
+      icon: FlagIcon, // Puedes cambiar el icono si quieres
+    });
+  }
 
   return (
     <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">

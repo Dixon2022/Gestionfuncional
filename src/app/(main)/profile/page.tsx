@@ -175,7 +175,7 @@ export default function ProfilePage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+          <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-3">
             {/* Botones de acción */}
             <Button
               asChild
