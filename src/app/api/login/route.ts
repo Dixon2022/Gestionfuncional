@@ -29,6 +29,16 @@ export async function POST(req: Request) {
       );
     }
 
+    if (user.blocked) {
+      return NextResponse.json(
+        {
+          error:
+            "Tu cuenta ha sido bloqueada. Por favor, contacta al administrador.",
+        },
+        { status: 403 }
+      );
+    }
+
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (!isPasswordCorrect) {
@@ -44,7 +54,7 @@ export async function POST(req: Request) {
       email: user.email,
       name: user.name,
       phone: user.phone,
-      role: user.role
+      role: user.role,
     });
   } catch (error) {
     console.error(error);

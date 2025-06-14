@@ -5,6 +5,10 @@ import { Search, UserCircle, LogOut, LogIn, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MainNav } from "./main-nav";
 import { useAuth } from "@/contexts/auth-context";
+import { useCurrency } from "@/contexts/currency-context";
+import Image from "next/image";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 import {
   DropdownMenu,
@@ -14,10 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Image from "next/image";
-import { useCurrency } from "@/contexts/currency-context";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
 
 export function Header() {
   const { user, logout, loading } = useAuth();
@@ -169,6 +169,18 @@ export function Header() {
             className="block px-4 py-3 hover:bg-blue-100"
           >
             Preguntas Frecuentes
+          </Link>
+        </nav>
+      )}
+
+      {/* Admin Links */}
+      {user?.role === "admin" && (
+        <nav className="hidden md:flex">
+          <Link
+            href="/admin/users"
+            className="font-semibold px-4 py-2 hover:underline"
+          >
+            Users
           </Link>
         </nav>
       )}
