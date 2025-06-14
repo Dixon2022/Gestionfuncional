@@ -17,6 +17,7 @@ import {
 import Image from "next/image";
 import { useCurrency } from "@/contexts/currency-context";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export function Header() {
   const { user, logout, loading } = useAuth();
@@ -107,11 +108,19 @@ export function Header() {
                 variant="outline"
                 size="sm"
                 asChild
-                className="border-blue-500 text-blue-700 hover:bg-blue-50 transition"
+                className={cn(
+                  "flex-grow relative z-0 overflow-hidden group",
+                  "bg-white border border-blue-500 text-blue-700 font-semibold shadow-md",
+                  "hover:bg-gradient-to-r hover:from-blue-500 hover:via-sky-400 hover:to-indigo-400",
+                  "hover:text-white hover:scale-105 hover:shadow-lg",
+                  "transition-all duration-200"
+                )}
               >
-                <Link href="/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Acceder
+                <Link href="/login" className="flex items-center">
+                  <LogIn className="mr-2 h-4 w-4 transition-transform group-hover:scale-110" />
+                  <span className="px-3 transition-transform group-hover:scale-110 group-hover:underline">
+                    Acceder
+                  </span>
                 </Link>
               </Button>
             ))}

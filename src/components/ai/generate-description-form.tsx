@@ -553,7 +553,7 @@ export function GenerateDescriptionForm() {
                 <FormLabel>Descripción de la Propiedad</FormLabel>
                 <FormControl>
                     <Textarea
-                    placeholder="Describe tu propiedad detalladamente o usa la IA para generarla y luego edítala aquí."
+                    placeholder="Describe tu propiedad detalladamente (Min. 20 caracteres)"
                     className="min-h-[120px]"
                     {...field}
                     disabled={isAIGenerating || isSaving}

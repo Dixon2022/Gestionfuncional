@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/contexts/auth-context";
 import { CurrencyProvider } from "@/contexts/currency-context";
+import { AutoLogout } from "@/components/layout/AutoLogout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <CurrencyProvider>
           <AuthProvider>
+            <AutoLogout>
             {children}
+            </AutoLogout>
             <Toaster />
           </AuthProvider>
         </CurrencyProvider>

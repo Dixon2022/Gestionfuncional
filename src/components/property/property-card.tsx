@@ -78,7 +78,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
       const ownerId = await getOwnerIdByEmail(ownerEmail);
       console.log("Owner ID:", ownerId);
 
-
       if (!ownerId) {
         toast({
           title: "Error",
@@ -139,9 +138,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
                   priority
                 />
               ) : (
-                <div
-                  className="flex items-center justify-center h-full w-full bg-gray-200"
-                >
+                <div className="flex items-center justify-center h-full w-full bg-gray-200">
                   <span className="text-gray-500 text-lg font-semibold text-center px-4">
                     {property.title}
                   </span>
@@ -213,7 +210,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
           {/* Botones sociales y copiar enlace */}
           <div className="flex items-center justify-center gap-3 mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 shadow-inner w-fit mx-auto">
             <FacebookShareButton
-              url={`${typeof window !== "undefined" ? window.location.origin : ""}/properties/${property.id}`}
+              url={`${
+                typeof window !== "undefined" ? window.location.origin : ""
+              }/properties/${property.id}`}
               className="transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-blue-400 rounded-full"
               title="Compartir en Facebook"
             >
@@ -221,7 +220,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </FacebookShareButton>
 
             <WhatsappShareButton
-              url={`${typeof window !== "undefined" ? window.location.origin : ""}/properties/${property.id}`}
+              url={`${
+                typeof window !== "undefined" ? window.location.origin : ""
+              }/properties/${property.id}`}
               className="transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-green-400 rounded-full"
               title="Compartir en WhatsApp"
             >
@@ -260,11 +261,25 @@ export function PropertyCard({ property }: PropertyCardProps) {
               )}
             >
               <Link href={`/properties/${property.id}`}>
-                <span className="flex items-center">
+                {/* Texto */}
+                <span
+                  className={cn(
+                    "whitespace-nowrap transition-transform duration-300 ease-in-out",
+                    "transform group-hover:-translate-x-full group-hover:opacity-0"
+                  )}
+                >
                   Ver Detalles
-                  <ArrowRight
-                    className="ml-2 h-4 w-4 transition-transform duration-200 group-hover:translate-x-1"
-                  />
+                </span>
+
+                {/* Flecha */}
+                <span
+                  className={cn(
+                    "absolute left-1/2 flex items-center justify-center",
+                    "whitespace-nowrap transition-transform duration-300 ease-in-out",
+                    "transform translate-x-full opacity-0 group-hover:translate-x-0 group-hover:-translate-x-1/2 group-hover:opacity-100"
+                  )}
+                >
+                  <ArrowRight className="h-5 w-5 text-white" />
                 </span>
               </Link>
             </Button>
