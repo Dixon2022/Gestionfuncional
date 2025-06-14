@@ -27,6 +27,10 @@ import {
 import { Copy } from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { useAuth } from "@/contexts/auth-context";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Link from "next/link";
+import { SimilarPropertiesCarousel } from "./similarPropertiesCarousel";
 
 // Update the path below if your report-form file is in a different directory
 
@@ -47,6 +51,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   );
   const [mainImageIdx, setMainImageIdx] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const [similarProperties, setSimilarProperties] = useState<Property[]>([]);
 
   useEffect(() => {
     async function fetchProperty() {
@@ -81,6 +86,19 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
     }
     fetchReports();
   }, [propertyId, user]);
+
+  useEffect(() => {
+    async function fetchSimilar() {
+      if (!property) return;
+      const res = await fetch(
+        `/api/property/similar?city=${property.city}&type=${property.type}&exclude=${property.id}`
+      );
+      if (res.ok) {
+        setSimilarProperties(await res.json());
+      }
+    }
+    fetchSimilar();
+  }, [property]);
 
   if (loading) return <p>Cargando propiedad...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
@@ -443,6 +461,15 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Propiedades Similares */}
+            {similarProperties.length > 0 ? (
+              <SimilarPropertiesCarousel properties={similarProperties} />
+            ) : (
+              <p className="text-center text-muted-foreground mt-8">
+                No se encontraron propiedades similares.
+              </p>
             )}
           </div>
 
