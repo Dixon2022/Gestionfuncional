@@ -164,7 +164,7 @@ export function Header() {
             Nosotros
           </Link>
           <Link
-            href="/faq"
+            href="/FAQ"
             onClick={() => setMobileMenuOpen(false)}
             className="block px-4 py-3 hover:bg-blue-100"
           >
