@@ -173,17 +173,6 @@ export function Header() {
         </nav>
       )}
 
-      {/* Admin Links */}
-      {user?.role === "admin" && (
-        <nav className="hidden md:flex">
-          <Link
-            href="/admin/users"
-            className="font-semibold px-4 py-2 hover:underline"
-          >
-            Users
-          </Link>
-        </nav>
-      )}
     </header>
   );
 }

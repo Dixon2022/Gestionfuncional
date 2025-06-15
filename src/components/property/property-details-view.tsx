@@ -539,6 +539,15 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                       )}
                     </p>
                   </div>
+                  {property.owner.userDescription && (
+                    <div className="mb-2">
+                      <br></br>
+                       <strong>Sobre mí: </strong>
+                      <p className="text-sm text-muted-foreground whitespace-pre-line">
+                        {property.owner.userDescription}
+                      </p>
+                    </div>
+                  )}
                 </>
               ) : (
                 <p>Información del ownere no disponible</p>

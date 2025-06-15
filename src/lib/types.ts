@@ -1,5 +1,3 @@
-
-
 export type PropertyType = "Casa" | "Apartamento" | "Condominio" | "Adosado" | "Terreno";
 export type ListingType = "Venta" | "Alquiler";
 export type Role = 'user' | 'admin';
@@ -8,6 +6,7 @@ export interface Owner {
   phone: string;
   email: string;
   avatarUrl?: string;
+  userDescription?: string; // <--- CAMBIO AQUÍ
 }
 
 export interface Property {
@@ -44,11 +43,13 @@ export interface SearchFilters {
 }
 
 export interface User {
-  id: string; // Stable unique ID for the user
-  email: string; 
+  id: string;
+  email: string;
   name: string;
   phone: string;
   role: Role;
+  description?: string;
+  userDescription?: string; // <--- CAMBIO AQUÍ
 }
 
 

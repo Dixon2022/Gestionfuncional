@@ -18,6 +18,7 @@ const signupSchema = z.object({
   email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
   phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.'}),
   password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
+  userDescription: z.string().max(500, { message: 'La descripción es muy larga.' }).optional(),
 });
 
 type SignupFormValues = z.infer<typeof signupSchema>;
@@ -35,6 +36,7 @@ export default function SignupPage() {
       email: '',
       phone: '',
       password: '',
+      userDescription: '',
     },
   });
 
@@ -52,6 +54,7 @@ export default function SignupPage() {
         email: data.email,
         phone: data.phone,
         password: data.password,
+        userDescription: data.userDescription, // <--- CAMBIO AQUÍ
       }),
     });
 
@@ -146,6 +149,21 @@ export default function SignupPage() {
           />
           {form.formState.errors.password && (
             <p className="text-xs text-destructive">{form.formState.errors.password.message}</p>
+          )}
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="description">Descripción</Label>
+          <textarea
+            id="userDescription"
+            placeholder="Cuéntanos sobre ti (opcional)"
+            {...form.register('userDescription')}
+            disabled={isLoading}
+            className="w-full rounded border px-3 py-2"
+            rows={3}
+            maxLength={500}
+          />
+          {form.formState.errors.userDescription && (
+            <p className="text-xs text-destructive">{form.formState.errors.userDescription.message}</p>
           )}
         </div>
         <Button type="submit" className="w-full" disabled={isLoading}>

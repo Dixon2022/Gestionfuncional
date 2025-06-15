@@ -22,8 +22,9 @@ import { Loader2, Save, UserCircle2, Phone, Mail } from 'lucide-react'; // Added
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }), 
+  email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
   phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.' }),
+  userDescription: z.string().max(500, { message: 'La descripción es muy larga.' }).optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -47,6 +48,7 @@ export default function EditProfilePage() {
       name: '',
       email: '',
       phone: '',
+      userDescription: '',
     },
   });
 
@@ -57,8 +59,9 @@ export default function EditProfilePage() {
     if (user) {
       form.reset({
         name: user?.name || '',
-        email: user?.email || '', 
+        email: user?.email || '',
         phone: user?.phone || '',
+        userDescription: user?.userDescription || '', 
       });
     }
   }, [user, authLoading, router, form, isClient]);
@@ -67,7 +70,12 @@ export default function EditProfilePage() {
     setIsLoading(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    updateUser({ name: data.name, email: data.email, phone: data.phone }); 
+    updateUser({
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      userDescription: data.userDescription, 
+    }); 
     
     toast({
       title: '¡Perfil Actualizado!',
@@ -167,6 +175,21 @@ export default function EditProfilePage() {
               />
               {form.formState.errors.phone && (
                 <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>
+              )}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="userDescription">Descripción</Label>
+              <textarea
+                id="userDescription"
+                placeholder="Cuéntanos sobre ti (opcional)"
+                {...form.register('userDescription')}
+                disabled={isLoading}
+                className="w-full rounded border px-3 py-2"
+                rows={3}
+                maxLength={500}
+              />
+              {form.formState.errors.userDescription && (
+                <p className="text-xs text-destructive">{form.formState.errors.userDescription.message}</p>
               )}
             </div>
             <div className="flex justify-end space-x-3">

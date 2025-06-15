@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, name: string, phone: string, role: Role) => void;
   logout: () => void;
-  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'  >>) => Promise<void>;
+  updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone' | 'userDescription'>>) => Promise<void>;
   loading: boolean;
 }
 
@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
   };
 
-  const updateUser = async (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone'>>) => {
+  const updateUser = async (updatedInfo: Partial<User>) => {
     if (user) {
       const oldUser = { ...user };
       const newUserData: User = {
@@ -89,7 +89,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: updatedInfo.name !== undefined ? updatedInfo.name : user.name,
         email: updatedInfo.email !== undefined ? updatedInfo.email : user.email,
         phone: updatedInfo.phone !== undefined ? updatedInfo.phone : user.phone,
-
+        userDescription: updatedInfo.userDescription !== undefined ? updatedInfo.userDescription : user.userDescription,
       };
 
       if (newUserData.email !== oldUser.email) {
@@ -126,6 +126,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
       } catch (err) {
         console.error("Error actualizando propiedades del usuario", err);
+      }
+
+      // Sincroniza con el servidor
+      try {
+        await fetch("/api/user/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: newUserData.email,
+            name: newUserData.name,
+            phone: newUserData.phone,
+            userDescription: newUserData.userDescription,
+          }),
+        });
+      } catch (err) {
+        console.error("Error sincronizando usuario con el servidor", err);
       }
     }
   };

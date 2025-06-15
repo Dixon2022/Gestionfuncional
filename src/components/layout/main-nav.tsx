@@ -18,27 +18,29 @@ export function MainNav() {
     { href: '/FAQ', label: 'Preguntas Frecuentes', icon: MessageCircleQuestion },
   ];
 
-  // Si el usuario es admin, agrega el enlace admin
+  // Si el usuario es admin, agrega el enlace users
   if (user?.role === 'admin') {
     navItems.push({
-      href: '/admin',
-      label: 'Propiedades Reportadas',
-      icon: FlagIcon, // Puedes cambiar el icono si quieres
+      href: '/admin/users',
+      label: 'Usuarios',
+      icon: UserCircle, // Usa el icono que prefieras
     });
   }
 
   return (
-    <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
+    <nav className="flex items-center space-x-6 text-sm font-medium">
       {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
           className={cn(
-            'transition-colors hover:text-foreground/80',
-            pathname === item.href ? 'text-foreground' : 'text-foreground/60'
+            "flex items-center gap-2 px-3 py-2 rounded transition",
+            pathname === item.href
+              ? "bg-blue-100 text-blue-700 font-semibold"
+              : "text-gray-700 hover:bg-blue-50 hover:text-blue-700"
           )}
         >
-          <item.icon className="mr-2 inline-block h-4 w-4" />
+          <item.icon className="h-5 w-5" />
           {item.label}
         </Link>
       ))}

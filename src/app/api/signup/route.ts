@@ -7,7 +7,7 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name, phone, role } = body;
+    const { email, password, name, phone, role, userDescription } = body;
 
     // Validación básica
     if (!email || !password || !name || !phone) {
@@ -48,7 +48,8 @@ export async function POST(req: Request) {
         password: hashedPassword,
         name,
         phone,
-        role: "admin", // Asignar rol por defecto
+        role: "admin",
+        userDescription,
       },
     });
 

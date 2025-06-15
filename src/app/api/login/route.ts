@@ -55,6 +55,7 @@ export async function POST(req: Request) {
       name: user.name,
       phone: user.phone,
       role: user.role,
+      description: user.userDescription, // Cambiado para coincidir con el modelo real
     });
   } catch (error) {
     console.error(error);
