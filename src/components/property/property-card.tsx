@@ -39,7 +39,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   FacebookShareButton,
   FacebookIcon,
@@ -53,6 +53,7 @@ import { cn } from "@/lib/utils";
 
 interface PropertyCardProps {
   property: Property;
+  isFavorite?: boolean;
 }
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
@@ -60,16 +61,30 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 export function PropertyCard({ property }: PropertyCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { convert, symbol } = useCurrency();
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [imgError, setImgError] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false); // Estado para favorito
+  const [favorites, setFavorites] = useState<Property[]>([]);
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew =
     property.createdAt &&
     Date.now() - property.createdAt < TWENTY_FOUR_HOURS_MS;
   const isOwner = user && user.name === property.owner.name;
+
+  // Al cargar, consulta si la propiedad está en favoritos
+  useEffect(() => {
+    if (user?.email) {
+      fetch(`/api/favorite?email=${encodeURIComponent(user.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          const favs = data.favorites || [];
+          setIsFavorite(
+            favs.some((fav: any) => String(fav.id) === String(property.id))
+          );
+        });
+    }
+  }, [user, property.id]);
 
   const handleDelete = async () => {
     if (!isOwner || !user) return;
@@ -118,27 +133,24 @@ export function PropertyCard({ property }: PropertyCardProps) {
     }
   };
 
-  const handleFavorite = async () => {
-    try {
-      const method = isFavorite ? "DELETE" : "POST";
-
-      const res = await fetch("/api/favorite", {
-        method: isFavorite ? "DELETE" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          propertyId: property.id,
-          email: user?.email,
-        }),
+  // Alterna favorito en la base de datos y en el estado local
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!user?.email) {
+      toast({
+        title: "Debes iniciar sesión para usar favoritos",
+        variant: "destructive",
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Error al actualizar favorito");
-      }
-
+      return;
+    }
+    const method = isFavorite ? "DELETE" : "POST";
+    const res = await fetch("/api/favorite", {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ propertyId: property.id }),
+    });
+    if (res.ok) {
       setIsFavorite(!isFavorite);
-
       toast({
         title: isFavorite ? "Eliminado de Favoritos" : "Añadido a Favoritos",
         description: `La propiedad "${property.title}" ha sido ${
@@ -146,15 +158,16 @@ export function PropertyCard({ property }: PropertyCardProps) {
         } a tus favoritos.`,
         duration: 3000,
       });
-    } catch (error: any) {
-      console.error(error);
+    } else {
       toast({
         title: "Error",
-        description: error.message || "No se pudo actualizar el favorito.",
+        description: "No se pudo actualizar el favorito.",
         variant: "destructive",
       });
     }
   };
+
+  const { convert, symbol } = useCurrency();
 
   return (
     <Card className="flex flex-col overflow-hidden rounded-lg shadow-lg transition-all hover:shadow-xl h-full">
@@ -219,9 +232,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
                 }
                 onClick={(e) => {
                   e.preventDefault();
-                  handleFavorite();
+                  handleFavorite(e);
                 }}
-                className="absolute bottom-2 right-2 bg-white/80 hover:bg-red-100 border border-red-200 shadow transition"
+                className="absolute bottom-2 right-2 bg-white/80 hover:bg-red-100 border border-red-200 shadow rounded-full p-2 transition"
               >
                 <Heart
                   fill={isFavorite ? "red" : "none"}
