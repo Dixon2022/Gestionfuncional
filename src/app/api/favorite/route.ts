@@ -1,58 +1,101 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 import prisma from "../../../../lib/prisma";
 
+// GET: obtener favoritos
 export async function GET(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    const { searchParams } = new URL(req.url);
+    const email = searchParams.get("email");
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-    include: {
-      favorites: {
-        include: {
-          property: true,
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email no proporcionado" },
+        { status: 400 }
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        favorites: {
+          include: {
+            property: {
+              include: {
+                images: true, // aquí incluyes las imágenes de la propiedad
+              },
+            },
+          },
         },
       },
-    },
-  });
-  console.log("User found:", user);
-  if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    });
 
-  // Extrae las propiedades favoritas
-  const favorites = user.favorites.map((fav) => fav.property);
+    if (!user)
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
 
-  return NextResponse.json({ favorites });
+    const favorites = user.favorites.map((fav) => fav.property);
+    return NextResponse.json({ favorites });
+  } catch (error) {
+    console.error("Error en GET /favorites:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor" },
+      { status: 500 }
+    );
+  }
 }
 
+// POST: agregar favorito
 export async function POST(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    const body = await req.json();
+    console.log("BODY recibido en POST /api/favorite:", body);
 
-  const { propertyId } = await req.json();
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    const { propertyId, email } = body;
 
-  // Agregar favorito
-  await prisma.favorite.create({
-    data: { userId: user.id, propertyId }
-  });
+    if (!email || !propertyId) {
+      return NextResponse.json({ error: "Datos incompletos" }, { status: 400 });
+    }
 
-  return NextResponse.json({ ok: true });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user)
+      return NextResponse.json(
+        { error: "Usuario no encontrado" },
+        { status: 404 }
+      );
+
+    await prisma.favorite.create({
+      data: { userId: user.id, propertyId },
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error: any) {
+    console.error("Error en POST /api/favorite:", error);
+    return NextResponse.json(
+      { error: "Error interno del servidor", detail: error.message },
+      { status: 500 }
+    );
+  }
 }
 
+// DELETE: eliminar favorito
 export async function DELETE(req: Request) {
-  const session = await getServerSession();
-  if (!session?.user?.email) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+  try {
+    const { propertyId, email } = await req.json();
 
-  const { propertyId } = await req.json();
-  const user = await prisma.user.findUnique({ where: { email: session.user.email } });
-  if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+    if (!email) return NextResponse.json({ error: "No autorizado: falta email" }, { status: 401 });
 
-  // Eliminar favorito
-  await prisma.favorite.deleteMany({
-    where: { userId: user.id, propertyId }
-  });
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
-  return NextResponse.json({ ok: true });
+    await prisma.favorite.deleteMany({
+      where: { userId: user.id, propertyId }
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Error en DELETE /favorite:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+  }
 }

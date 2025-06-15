@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import FavoritePropertyCard from "./favoritePropertyCard";
 
-// Elimina la importación de property-card y define el tipo localmente
 type Property = {
   id: string;
   title: string;
@@ -33,21 +32,34 @@ export default function FavoritesPage() {
   }, [user, loading, router]);
 
   useEffect(() => {
-    fetch("/api/favorite", { credentials: "include" })
-      .then((res) => res.json())
-      .then((data) => setFavorites(data.favorites));
-  }, []);
+    if (!loading && user?.email) {
+      fetch(`/api/favorite?email=${encodeURIComponent(user.email)}`)
+        .then((res) => {
+          if (!res.ok) throw new Error("Error al obtener favoritos");
+          return res.json();
+        })
+        .then((data) => setFavorites(data.favorites || []))
+        .catch((error) => {
+          console.error(error);
+          setFavorites([]);
+        });
+    }
+  }, [loading, user]);
 
   if (!favorites) return <div>Cargando favoritos...</div>;
 
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Mis Favoritos</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(favorites ?? []).map((property) => (
-          <FavoritePropertyCard key={property.id} property={property} />
-        ))}
-      </div>
+      {favorites.length === 0 ? (
+        <p>No tienes propiedades favoritas aún.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {favorites.map((property) => (
+            <FavoritePropertyCard key={property.id} property={property} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -118,15 +118,42 @@ export function PropertyCard({ property }: PropertyCardProps) {
     }
   };
 
-  const handleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast({
-      title: isFavorite ? "Eliminado de Favoritos" : "Añadido a Favoritos",
-      description: `La propiedad "${property.title}" ha sido ${
-        isFavorite ? "eliminada" : "añadida"
-      } a tus favoritos.`,
-      duration: 3000,
-    });
+  const handleFavorite = async () => {
+    try {
+      const method = isFavorite ? "DELETE" : "POST";
+
+      const res = await fetch("/api/favorite", {
+        method: isFavorite ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId: property.id,
+          email: user?.email,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Error al actualizar favorito");
+      }
+
+      setIsFavorite(!isFavorite);
+
+      toast({
+        title: isFavorite ? "Eliminado de Favoritos" : "Añadido a Favoritos",
+        description: `La propiedad "${property.title}" ha sido ${
+          isFavorite ? "eliminada" : "añadida"
+        } a tus favoritos.`,
+        duration: 3000,
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el favorito.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -187,14 +214,19 @@ export function PropertyCard({ property }: PropertyCardProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
-                onClick={e => {
+                aria-label={
+                  isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"
+                }
+                onClick={(e) => {
                   e.preventDefault();
                   handleFavorite();
                 }}
                 className="absolute bottom-2 right-2 bg-white/80 hover:bg-red-100 border border-red-200 shadow transition"
               >
-                <Heart fill={isFavorite ? "red" : "none"} className={isFavorite ? "text-red-500" : "text-gray-400"} />
+                <Heart
+                  fill={isFavorite ? "red" : "none"}
+                  className={isFavorite ? "text-red-500" : "text-gray-400"}
+                />
               </Button>
               {/* --- END FAVORITE ICON BUTTON --- */}
             </div>

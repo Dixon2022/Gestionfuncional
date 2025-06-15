@@ -9,6 +9,7 @@ import { useCurrency } from "@/contexts/currency-context";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/auth-context";
 
 // Define el tipo localmente para independencia
 type Property = {
@@ -29,12 +30,14 @@ type Property = {
 
 interface FavoritePropertyCardProps {
   property: Property;
+  
 }
 
 export default function FavoritePropertyCard({ property }: FavoritePropertyCardProps) {
   const { convert, symbol } = useCurrency();
   const [isFavorite, setIsFavorite] = useState(true);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const displayArea = property.area ? `${property.area.toLocaleString()} m²` : "N/A";
   const isNew =
@@ -74,16 +77,27 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
     }
   };
 
-  const handleUnfavorite = async () => {
+ const handleUnfavorite = async () => {
+    if (!user?.email) {
+      toast({
+        title: "Error",
+        description: "No estás autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       const res = await fetch("/api/favorite", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ propertyId: property.id }),
+        body: JSON.stringify({ propertyId: property.id, email: user.email }),
       });
+
+      const data = await res.json();
+
       if (res.ok) {
-        setIsFavorite(false);
+        // lógica para actualizar estado
         toast({
           title: "Eliminado de Favoritos",
           description: `La propiedad "${property.title}" ha sido eliminada de tus favoritos.`,
@@ -92,11 +106,12 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
       } else {
         toast({
           title: "Error",
-          description: "No se pudo eliminar de favoritos.",
+          description: data.error || "No se pudo eliminar de favoritos.",
           variant: "destructive",
         });
       }
-    } catch {
+    } catch (error) {
+      console.error("Error al eliminar favorito:", error);
       toast({
         title: "Error",
         description: "No se pudo eliminar de favoritos.",
@@ -105,9 +120,12 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
     }
   };
 
+
+
   const handleFavoriteClick = () => {
     if (isFavorite) {
       handleUnfavorite();
+      window.location.reload(); // Recargar la página para reflejar el cambio
     } else {
       handleFavorite();
     }
