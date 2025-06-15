@@ -96,6 +96,9 @@ export function Header() {
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Mi Perfil</Link>
                   </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile/favorite">Mis Favoritos</Link>
+                  </DropdownMenuItem>
 
                   <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4 text-red-500" />
@@ -172,7 +175,6 @@ export function Header() {
           </Link>
         </nav>
       )}
-
     </header>
   );
 }

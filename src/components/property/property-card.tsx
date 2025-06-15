@@ -23,6 +23,7 @@ import {
   Pencil,
   Loader2,
   Tag,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { deleteProperty } from "@/lib/property-store";
@@ -62,6 +63,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const { convert, symbol } = useCurrency();
   const [isDeleting, setIsDeleting] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false); // Estado para favorito
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew =
@@ -114,6 +116,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
     } finally {
       setIsDeleting(false);
     }
+  };
+
+  const handleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    toast({
+      title: isFavorite ? "Eliminado de Favoritos" : "Añadido a Favoritos",
+      description: `La propiedad "${property.title}" ha sido ${
+        isFavorite ? "eliminada" : "añadida"
+      } a tus favoritos.`,
+      duration: 3000,
+    });
   };
 
   return (
@@ -170,6 +183,20 @@ export function PropertyCard({ property }: PropertyCardProps) {
                   </Badge>
                 )}
               </div>
+              {/* --- FAVORITE ICON BUTTON --- */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+                onClick={e => {
+                  e.preventDefault();
+                  handleFavorite();
+                }}
+                className="absolute bottom-2 right-2 bg-white/80 hover:bg-red-100 border border-red-200 shadow transition"
+              >
+                <Heart fill={isFavorite ? "red" : "none"} className={isFavorite ? "text-red-500" : "text-gray-400"} />
+              </Button>
+              {/* --- END FAVORITE ICON BUTTON --- */}
             </div>
           </Link>
         </CardHeader>
