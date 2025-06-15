@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../../../lib/prisma";
 
 export async function POST(
-  req: NextRequest,
+  req: Request,
   context: { params: { id: string } }
 ) {
-  const propertyId = parseInt(context.params.id);
+  const { id } = await context.params; // <-- Usa await si es necesario
+  const propertyId = parseInt(id);
   if (isNaN(propertyId)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }

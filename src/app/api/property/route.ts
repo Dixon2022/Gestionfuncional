@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         description,
         address,
         city,
-        price,
+        price: Number(price), 
         area,
         lotSize,
         bedrooms,
