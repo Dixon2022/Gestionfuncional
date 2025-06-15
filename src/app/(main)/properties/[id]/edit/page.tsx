@@ -104,7 +104,7 @@ export default function EditPropertyPage() {
         return;
       }
 
-      if (fetchedProperty.owner.name !== user.name) {
+      if (fetchedProperty.owner.name !== user.name && user.role !== 'admin') {
         toast({
           title: "Acceso Denegado",
           description: "No tienes permiso para editar esta propiedad.",
@@ -197,7 +197,7 @@ export default function EditPropertyPage() {
       !user ||
       // Cambia esta línea:
       // user.id !== property.ownerId
-      ( user.name !== property.owner.name)
+      ( user.name !== property.owner.name && user.role !== 'admin')
     ) {
       toast({ title: "Error de autorización", description: "No puedes editar esta propiedad.", variant: "destructive" });
       return;
