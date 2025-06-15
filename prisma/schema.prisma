@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  phone     String
-  password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now())
-  role Role @default(user)
-  properties Property[]
-  blocked Boolean? @default(false)
+  id              Int        @id @default(autoincrement())
+  name            String
+  email           String     @unique
+  phone           String
+  password        String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @default(now())
+  role            Role       @default(user)
+  properties      Property[]
+  favorites       Favorite[]
+  blocked         Boolean?   @default(false)
   userDescription String?
-
 }
 
 enum Role {
@@ -28,7 +28,7 @@ enum Role {
 }
 
 model Property {
-  id           Int      @id @default(autoincrement())
+  id           Int          @id @default(autoincrement())
   title        String
   description  String
   address      String
@@ -42,26 +42,27 @@ model Property {
   type         PropertyType
   listingType  ListingType
   features     Json?
-  isFeatured   Boolean         @default(false)
+  isFeatured   Boolean      @default(false)
   mainImageUri String
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @default(now())
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @default(now())
 
-  ownerId      Int
-  owner        User            @relation(fields: [ownerId], references: [id])
+  ownerId   Int
+  owner     User       @relation(fields: [ownerId], references: [id])
+  favorites Favorite[]
 
-  images       PropertyImage[]
-  reports      PropertyReport[]
+  images  PropertyImage[]
+  reports PropertyReport[]
 }
 
 model PropertyImage {
-  id           Int      @id @default(autoincrement())
-  url        String
-  order      Int
-  createdAt  DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  url       String
+  order     Int
+  createdAt DateTime @default(now())
 
-  propertyId   Int
-  property     Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
 enum PropertyType {
@@ -80,12 +81,12 @@ enum ListingType {
 }
 
 model PropertyReport {
-  id          Int      @id @default(autoincrement())
-  reason      String
-  message     String?
-  property    Property @relation(fields: [propertyId], references: [id])
-  propertyId  Int
-  createdAt   DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  reason     String
+  message    String?
+  property   Property @relation(fields: [propertyId], references: [id])
+  propertyId Int
+  createdAt  DateTime @default(now())
 }
 
 model PasswordResetToken {
@@ -93,4 +94,15 @@ model PasswordResetToken {
   email     String
   token     String   @unique
   expiresAt DateTime
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId Int
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
 }
