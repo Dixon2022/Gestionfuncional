@@ -214,7 +214,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
                   </Badge>
                 )}
                 {property.isFeatured && (
-                  <Badge variant="destructive">Destacada</Badge>
+                  <Badge variant="destructive" className="flex items-center gap-1">
+                    <SparklesIcon className="h-4 w-4 text-yellow-400" />
+                    Destacada
+                  </Badge>
                 )}
                 {isNew && (
                   <Badge className="bg-green-500 hover:bg-green-600 text-white">

@@ -40,6 +40,7 @@ const editPropertySchema = z.object({
   area: z.coerce.number().min(1, { message: 'Los metros cuadrados deben ser mayores que 0.' }),
   keyFeatures: z.string().min(5, { message: 'Por favor, lista al menos una característica clave.' }),
   description: z.string().min(20, { message: 'La descripción debe tener al menos 20 caracteres.' }),
+  isFeatured: z.boolean().optional(), 
 });
 
 type EditPropertyFormValues = z.infer<typeof editPropertySchema>;
@@ -75,6 +76,7 @@ export default function EditPropertyPage() {
       area: 0,
       keyFeatures: '',
       description: '',
+      isFeatured: false,
     },
   });
 
@@ -127,6 +129,7 @@ export default function EditPropertyPage() {
         area: fetchedProperty.area,
         keyFeatures: Array.isArray(fetchedProperty.features) ? fetchedProperty.features.join(', ') : '',
         description: fetchedProperty.description,
+        isFeatured: fetchedProperty.isFeatured ?? false,
       });
 
       setIsLoading(false); // ✅ Solo se ejecuta si la propiedad fue cargada exitosamente
@@ -217,6 +220,7 @@ export default function EditPropertyPage() {
       area: data.area,
       features: data.keyFeatures.split(',').map(f => f.trim()).filter(Boolean),
       description: data.description,
+      isFeatured: data.isFeatured, // Asegúrate de que este campo se envíe en la actualización
     };
 
     try {
@@ -580,8 +584,41 @@ export default function EditPropertyPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="isFeatured"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={e => field.onChange(e.target.checked)}
+                        className="mr-2"
+                      />
+                      Destacar propiedad
+                    </FormLabel>
+                    <FormDescription>
+                      Si marcas esta opción, la propiedad aparecerá como destacada.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="flex items-center gap-4">
-
+                <Button
+                  type="button"
+                  variant={form.watch('isFeatured') ? 'default' : 'secondary'}
+                  onClick={() => form.setValue('isFeatured', !form.watch('isFeatured'))}
+                  className="flex items-center gap-2"
+                >
+                  {form.watch('isFeatured') ? (
+                    <Sparkles className="h-5 w-5" />
+                  ) : (
+                    <Sparkles className="h-5 w-5 opacity-50" />
+                  )}
+                  {form.watch('isFeatured') ? 'Destacar Propiedad' : 'No Destacar'}
+                </Button>
                 <Button type="submit" disabled={isSaving}>
                   {isSaving ? (
                     <>

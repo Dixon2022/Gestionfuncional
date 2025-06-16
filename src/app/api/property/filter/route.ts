@@ -23,6 +23,10 @@ export async function GET(req: NextRequest) {
     const filtered = await prisma.property.findMany({
       where: filters,
       include: { images: true, owner: true },
+      orderBy: [
+        { isFeatured: "desc" }, 
+        { createdAt: "desc" },
+      ],
     });
 
     return NextResponse.json(filtered);
