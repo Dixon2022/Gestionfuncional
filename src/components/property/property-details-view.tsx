@@ -565,7 +565,10 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
               />
             )}
           </div>
-          <div className="md:col-span-3 space-y-8 mt-1">
+          <div className="md:col-span-2 space-y-8 mt-1 bg-white/90 p-4 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-semibold mb-4 justify-center text-center ">
+              Propiedades Similares
+            </h2>
             {similarProperties.length > 0 ? (
               <SimilarPropertiesCarousel
                 properties={similarProperties}
