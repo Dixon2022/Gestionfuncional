@@ -82,20 +82,36 @@ export async function POST(req: Request) {
 // DELETE: eliminar favorito
 export async function DELETE(req: Request) {
   try {
-    const { propertyId, email } = await req.json();
+    const { searchParams } = new URL(req.url);
+    const propertyId = searchParams.get("propertyId");
+    const email = searchParams.get("email");
 
-    if (!email) return NextResponse.json({ error: "No autorizado: falta email" }, { status: 401 });
+    if (!email || !propertyId) {
+      return NextResponse.json({ error: "Faltan parámetros" }, { status: 400 });
+    }
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
 
+    // Si propertyId es numérico, convertirlo:
+    const propertyIdNum = Number(propertyId);
+    if (isNaN(propertyIdNum)) {
+      return NextResponse.json({ error: "propertyId inválido" }, { status: 400 });
+    }
+
     await prisma.favorite.deleteMany({
-      where: { userId: user.id, propertyId }
+      where: { userId: user.id, propertyId: propertyIdNum },
     });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error en DELETE /favorite:", error);
+
+    // Si error es objeto Error con mensaje
+    if (error instanceof Error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

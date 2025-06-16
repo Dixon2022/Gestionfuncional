@@ -2,16 +2,25 @@
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { Search, ArrowRight, Home as HomeIcon, Building, LandPlot, Building2 as Building2Icon, Hotel } from 'lucide-react';
-import { getProperties } from '@/lib/property-store'; // <-- solo getProperties, quitamos subscribeToProperties
-import { useEffect, useState } from 'react';
+import {
+  Search,
+  ArrowRight,
+  Home as HomeIcon,
+  Building,
+  LandPlot,
+  Building2 as Building2Icon,
+  Hotel
+} from 'lucide-react';
+import { getProperties } from '@/lib/property-store';
+import { useEffect, useState, useRef } from 'react';
 import type { Property, PropertyType } from '@/lib/types';
 import { PROPERTY_TYPES } from '@/lib/constants';
 import { Skeleton } from '@/components/ui/skeleton';
-import { date } from 'zod';
 import { PropertyCard } from '@/components/property/property-card';
+import { useSession, signOut } from 'next-auth/react';
 
-// Helpers para iconos y pluralización (igual que antes)
+
+// Helpers para iconos y pluralización
 const getPropertyTypeIcon = (type: PropertyType) => {
   switch (type) {
     case 'Casa': return <HomeIcon className="mr-2 h-4 w-4" />;
@@ -40,8 +49,106 @@ export default function HomePage() {
   const [propertyCounts, setPropertyCounts] = useState<Record<PropertyType, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const INACTIVITY_LIMIT_MS = 15 * 60 * 1000; // 15 minutos
+  const lastActivityRef = useRef(Date.now());
+  const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Actualiza el timestamp de última actividad
+  const updateActivity = () => {
+    lastActivityRef.current = Date.now();
+    localStorage.setItem('lastActivity', lastActivityRef.current.toString());
+  };
+
+  // Maneja logout por inactividad
+  const setupInactivityLogout = () => {
+    if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+
+    inactivityTimeoutRef.current = setTimeout(() => {
+      signOut();
+    }, INACTIVITY_LIMIT_MS);
+  };
+
+  // Evento que marca cierre de pestaña en localStorage
   useEffect(() => {
-    // Solo cargar propiedades una vez
+    const handleBeforeUnload = () => {
+      localStorage.setItem('closed-tab', 'true');
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Chequear al abrir la página si cerró pestaña o está inactivo
+  useEffect(() => {
+    const closedTab = localStorage.getItem('closed-tab');
+    if (closedTab === 'true') {
+      localStorage.removeItem('closed-tab');
+      signOut();
+      return;
+    }
+
+    const lastActivity = localStorage.getItem('lastActivity');
+    if (lastActivity) {
+      const lastActivityTime = parseInt(lastActivity, 10);
+      if (Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
+        signOut();
+        return;
+      }
+    }
+
+    // Si no hay cierre o timeout, iniciamos el contador de inactividad
+    setupInactivityLogout();
+  }, []);
+
+  // Escuchar eventos de actividad para resetear timer
+  useEffect(() => {
+    const events = ['mousemove', 'keydown', 'scroll', 'touchstart'];
+
+    const activityHandler = () => {
+      updateActivity();
+      setupInactivityLogout();
+    };
+
+    events.forEach(evt => window.addEventListener(evt, activityHandler));
+
+    return () => {
+      events.forEach(evt => window.removeEventListener(evt, activityHandler));
+      if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+    };
+  }, []);
+
+  // Carga de propiedades igual que antes
+  useEffect(() => {
+    const fetchProperties = async () => {
+      const properties = await getProperties();
+      const sorted = [...properties].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+      setAllProperties(sorted);
+
+      const counts = sorted.reduce((acc, property) => {
+        acc[property.type] = (acc[property.type] || 0) + 1;
+        return acc;
+      }, {} as Record<PropertyType, number>);
+
+      setPropertyCounts(counts);
+      setIsLoading(false);
+    };
+
+    fetchProperties();
+  }, []);
+
+
+  useEffect(() => {
+    // Si detectas que 'closed-tab' está en true, forzar logout
+    if (localStorage.getItem('closed-tab') === 'true') {
+      localStorage.removeItem('closed-tab');
+      signOut(); // Aquí sí haces logout al abrir la pestaña NUEVAMENTE
+    }
+  }, []);
+
+  useEffect(() => {
     const fetchProperties = async () => {
       const properties = await getProperties();
       const sorted = [...properties].sort((a, b) => {
