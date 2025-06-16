@@ -92,12 +92,17 @@ export default function PropertiesPage() {
     setCurrentFilters(filters);
   };
 
+  // Separa destacadas y generales
+  const featuredProperties = filteredProperties.filter((p) => p.isFeatured);
+  const generalProperties = filteredProperties.filter((p) => !p.isFeatured);
+
   return (
     <div className="container py-8 px-2 md:px-4">
       <h1 className="text-4xl font-bold mb-8 text-center">Encuentra Tu Próxima Propiedad</h1>
       <div className="mb-6">
         <PropertySearchFilters onSearch={handleSearch} initialFilters={currentFilters} />
       </div>
+
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
@@ -111,16 +116,39 @@ export default function PropertiesPage() {
             </div>
           ))}
         </div>
-      ) : filteredProperties.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProperties.map((property) => (
-            <PropertyCard key={property.id} property={property} />
-          ))}
-        </div>
       ) : (
-        <p className="text-center text-muted-foreground text-lg py-10">
-          Ninguna propiedad coincide con tus filtros actuales. ¡Intenta ajustar tu búsqueda!
-        </p>
+        <>
+          {/* Apartado de propiedades destacadas */}
+          {featuredProperties.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold mb-4 flex items-center gap-2 text-yellow-600">
+                <span className="text-yellow-400 text-3xl">★</span>
+                Propiedades Destacadas
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredProperties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Apartado general */}
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Todas las Propiedades</h2>
+            {generalProperties.length === 0 ? (
+              <p className="text-center text-muted-foreground text-lg py-10">
+                Ninguna propiedad coincide con tus filtros actuales. ¡Intenta ajustar tu búsqueda!
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {generalProperties.map((property) => (
+                  <PropertyCard key={property.id} property={property} />
+                ))}
+              </div>
+            )}
+          </section>
+        </>
       )}
     </div>
   );
