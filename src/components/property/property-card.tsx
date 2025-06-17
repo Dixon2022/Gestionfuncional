@@ -24,6 +24,7 @@ import {
   Loader2,
   Tag,
   Heart,
+  User,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { deleteProperty } from "@/lib/property-store";
@@ -143,12 +144,23 @@ export function PropertyCard({ property }: PropertyCardProps) {
       });
       return;
     }
+
     const method = isFavorite ? "DELETE" : "POST";
-    const res = await fetch("/api/favorite", {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ propertyId: property.id }),
-    });
+
+    const res = await fetch(
+      method === "DELETE"
+        ? `/api/favorite?propertyId=${property.id}&email=${user.email}`
+        : "/api/favorite",
+      {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body:
+          method === "POST"
+            ? JSON.stringify({ propertyId: property.id, email: user.email })
+            : undefined,
+      }
+    );
+
     if (res.ok) {
       setIsFavorite(!isFavorite);
       toast({
@@ -214,7 +226,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
                   </Badge>
                 )}
                 {property.isFeatured && (
-                  <Badge variant="destructive" className="flex items-center gap-1">
+                  <Badge
+                    variant="destructive"
+                    className="flex items-center gap-1"
+                  >
                     <SparklesIcon className="h-4 w-4 text-yellow-400" />
                     Destacada
                   </Badge>
