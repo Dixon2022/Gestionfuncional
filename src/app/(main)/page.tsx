@@ -188,35 +188,30 @@ export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <section className="py-16 md:py-24 bg-gradient-to-br from-primary to-indigo-700 text-primary-foreground">
-        <div className="container text-center">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Encuentra la Propiedad de Tus Sueños
-          </h1>
-          <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Descubre una amplia gama de propiedades con FindHome. Búsqueda
-            avanzada, listados detallados. Explora casas, apartamentos, terrenos
-            y más. ¡Tu nuevo hogar te espera!
-          </p>
-          <div className="flex justify-center">
-            <Button
-              size="lg"
-              asChild
-              className="bg-[#568259] hover:bg-[#4e754f] text-white"
-            >
-              <Link href="/properties">
-                <Search className="mr-2 h-5 w-5" />
-                Explorar Propiedades
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        </div>
+      <section className="flex flex-col items-center justify-center py-16 md:py-24 bg-gradient-to-br from-primary to-indigo-700 text-primary-foreground text-center px-4 min-h-[400px] md:min-h-[500px]">
+        <h1 className="text-4xl md:text-5xl font-bold mb-6 max-w-3xl">
+          Encuentra la Propiedad de Tus Sueños
+        </h1>
+        <p className="text-lg md:text-xl mb-8 max-w-2xl opacity-90">
+          Descubre una amplia gama de propiedades con FindHome. Búsqueda
+          avanzada, listados detallados. Explora casas, apartamentos, terrenos y
+          más. ¡Tu nuevo hogar te espera!
+        </p>
+        <Button
+          size="lg"
+          asChild
+          className="bg-[#568259] hover:bg-[#4e754f] text-white"
+        >
+          <Link href="/properties" className="flex items-center justify-center">
+            <Search className="mr-2 h-5 w-5" />
+            Explorar Propiedades
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Link>
+        </Button>
       </section>
 
       {/* Property Type Filter Buttons Section */}
       <section className="py-8 md:py-12">
-        <div className="container">
           <h2 className="text-2xl font-bold mb-6 text-center">
             Explora por Tipo de Propiedad
           </h2>
@@ -248,7 +243,6 @@ export default function HomePage() {
               })}
             </div>
           )}
-        </div>
       </section>
 
       {/* Featured Listings Section */}
