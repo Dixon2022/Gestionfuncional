@@ -1,10 +1,25 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, BedDouble, Bath, Home, ArrowRight, SparklesIcon, Tag, Heart } from "lucide-react";
+import {
+  MapPin,
+  BedDouble,
+  Bath,
+  Home,
+  ArrowRight,
+  SparklesIcon,
+  Tag,
+  Heart,
+} from "lucide-react";
 import { useCurrency } from "@/contexts/currency-context";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -30,21 +45,26 @@ type Property = {
 
 interface FavoritePropertyCardProps {
   property: Property;
-  
 }
 
-export default function FavoritePropertyCard({ property }: FavoritePropertyCardProps) {
+export default function FavoritePropertyCard({
+  property,
+}: FavoritePropertyCardProps) {
   const { convert, symbol } = useCurrency();
   const [isFavorite, setIsFavorite] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
 
-  const displayArea = property.area ? `${property.area.toLocaleString()} m²` : "N/A";
+  const displayArea = property.area
+    ? `${property.area.toLocaleString()} m²`
+    : "N/A";
   const isNew =
     property.createdAt &&
-    (typeof property.createdAt === "string" || typeof property.createdAt === "number"
+    (typeof property.createdAt === "string" ||
+    typeof property.createdAt === "number"
       ? Date.now() - new Date(property.createdAt).getTime()
-      : Date.now() - property.createdAt.getTime()) < 24 * 60 * 60 * 1000;
+      : Date.now() - property.createdAt.getTime()) <
+      24 * 60 * 60 * 1000;
 
   const handleFavorite = async () => {
     try {
@@ -77,7 +97,7 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
     }
   };
 
- const handleUnfavorite = async () => {
+  const handleUnfavorite = async () => {
     if (!user?.email) {
       toast({
         title: "Error",
@@ -88,11 +108,12 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
     }
 
     try {
-      const res = await fetch("/api/favorite", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId: property.id, email: user.email }),
-      });
+      const res = await fetch(
+        `/api/favorite?propertyId=${property.id}&email=${user.email}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await res.json();
 
@@ -120,8 +141,6 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
     }
   };
 
-
-
   const handleFavoriteClick = () => {
     if (isFavorite) {
       handleUnfavorite();
@@ -141,9 +160,11 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
             <div className="relative h-52 w-full overflow-hidden rounded-t-2xl">
               {property.images && property.images.length > 0 ? (
                 <Image
-                  src={typeof property.images[0] === "string"
-                    ? property.images[0]
-                    : (property.images[0] as { url: string }).url}
+                  src={
+                    typeof property.images[0] === "string"
+                      ? property.images[0]
+                      : (property.images[0] as { url: string }).url
+                  }
                   alt={property.title}
                   fill
                   style={{ objectFit: "cover" }}
@@ -161,10 +182,14 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
               <div className="absolute top-2 right-2 flex flex-col items-end space-y-1 z-10">
                 {property.listingType && (
                   <Badge
-                    variant={property.listingType === "Venta" ? "default" : "secondary"}
-                    className={property.listingType === "Alquiler"
-                      ? "bg-blue-500 hover:bg-blue-600 text-white"
-                      : ""}
+                    variant={
+                      property.listingType === "Venta" ? "default" : "secondary"
+                    }
+                    className={
+                      property.listingType === "Alquiler"
+                        ? "bg-blue-500 hover:bg-blue-600 text-white"
+                        : ""
+                    }
                   >
                     <Tag className="mr-1 h-3 w-3" />
                     {property.listingType}
@@ -184,14 +209,19 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
-                onClick={e => {
+                aria-label={
+                  isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"
+                }
+                onClick={(e) => {
                   e.preventDefault();
                   handleFavoriteClick();
                 }}
                 className="absolute bottom-2 right-2 bg-white/80 hover:bg-red-100 border border-red-200 shadow transition"
               >
-                <Heart fill={isFavorite ? "red" : "none"} className={isFavorite ? "text-red-500" : "text-gray-400"} />
+                <Heart
+                  fill={isFavorite ? "red" : "none"}
+                  className={isFavorite ? "text-red-500" : "text-gray-400"}
+                />
               </Button>
             </div>
           </Link>
@@ -203,7 +233,9 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
             </CardTitle>
             <div className="flex items-center text-sm text-muted-foreground mb-2">
               <MapPin className="mr-1 h-4 w-4 text-blue-400" />
-              <span className="font-medium text-blue-700">{property.address}, {property.city}</span>
+              <span className="font-medium text-blue-700">
+                {property.address}, {property.city}
+              </span>
             </div>
             <p className="text-2xl font-extrabold text-blue-700 mb-2 drop-shadow">
               {symbol}
@@ -220,17 +252,21 @@ export default function FavoritePropertyCard({ property }: FavoritePropertyCardP
             </p>
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-base text-blue-800 font-medium">
               <span className="flex items-center">
-                <BedDouble className="mr-1 h-4 w-4 text-indigo-500" /> {property.bedrooms} Hab
+                <BedDouble className="mr-1 h-4 w-4 text-indigo-500" />{" "}
+                {property.bedrooms} Hab
               </span>
               <span className="flex items-center">
-                <Bath className="mr-1 h-4 w-4 text-sky-500" /> {property.bathrooms} Baños
+                <Bath className="mr-1 h-4 w-4 text-sky-500" />{" "}
+                {property.bathrooms} Baños
               </span>
               <span className="flex items-center">
                 <Home className="mr-1 h-4 w-4 text-blue-400" /> {displayArea}
               </span>
             </div>
             {property.description && (
-              <p className="mt-3 text-sm text-blue-900/80 line-clamp-2">{property.description}</p>
+              <p className="mt-3 text-sm text-blue-900/80 line-clamp-2">
+                {property.description}
+              </p>
             )}
           </Link>
         </CardContent>
