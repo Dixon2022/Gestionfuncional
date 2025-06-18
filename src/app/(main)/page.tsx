@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import {
   Search,
   ArrowRight,
@@ -9,44 +9,58 @@ import {
   Building,
   LandPlot,
   Building2 as Building2Icon,
-  Hotel
-} from 'lucide-react';
-import { getProperties } from '@/lib/property-store';
-import { useEffect, useState, useRef } from 'react';
-import type { Property, PropertyType } from '@/lib/types';
-import { PROPERTY_TYPES } from '@/lib/constants';
-import { Skeleton } from '@/components/ui/skeleton';
-import { PropertyCard } from '@/components/property/property-card';
-import { useSession, signOut } from 'next-auth/react';
-
+  Hotel,
+} from "lucide-react";
+import { getProperties } from "@/lib/property-store";
+import { useEffect, useState, useRef } from "react";
+import type { Property, PropertyType } from "@/lib/types";
+import { PROPERTY_TYPES } from "@/lib/constants";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PropertyCard } from "@/components/property/property-card";
+import { useSession, signOut } from "next-auth/react";
 
 // Helpers para iconos y pluralización
 const getPropertyTypeIcon = (type: PropertyType) => {
   switch (type) {
-    case 'Casa': return <HomeIcon className="mr-2 h-4 w-4" />;
-    case 'Apartamento': return <Building className="mr-2 h-4 w-4" />;
-    case 'Condominio': return <Building2Icon className="mr-2 h-4 w-4" />;
-    case 'Adosado': return <Hotel className="mr-2 h-4 w-4" />;
-    case 'Terreno': return <LandPlot className="mr-2 h-4 w-4" />;
-    default: return <HomeIcon className="mr-2 h-4 w-4" />;
+    case "Casa":
+      return <HomeIcon className="mr-2 h-4 w-4" />;
+    case "Apartamento":
+      return <Building className="mr-2 h-4 w-4" />;
+    case "Condominio":
+      return <Building2Icon className="mr-2 h-4 w-4" />;
+    case "Adosado":
+      return <Hotel className="mr-2 h-4 w-4" />;
+    case "Terreno":
+      return <LandPlot className="mr-2 h-4 w-4" />;
+    default:
+      return <HomeIcon className="mr-2 h-4 w-4" />;
   }
 };
 
 const pluralizePropertyType = (type: PropertyType, count: number): string => {
   if (count === 1) return type;
   switch (type) {
-    case 'Casa': return 'Casas';
-    case 'Apartamento': return 'Apartamentos';
-    case 'Condominio': return 'Condominios';
-    case 'Adosado': return 'Adosados';
-    case 'Terreno': return 'Terrenos';
-    default: return `${type}s`;
+    case "Casa":
+      return "Casas";
+    case "Apartamento":
+      return "Apartamentos";
+    case "Condominio":
+      return "Condominios";
+    case "Adosado":
+      return "Adosados";
+    case "Terreno":
+      return "Terrenos";
+    default:
+      return `${type}s`;
   }
 };
 
 export default function HomePage() {
   const [allProperties, setAllProperties] = useState<Property[]>([]);
-  const [propertyCounts, setPropertyCounts] = useState<Record<PropertyType, number> | null>(null);
+  const [propertyCounts, setPropertyCounts] = useState<Record<
+    PropertyType,
+    number
+  > | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const INACTIVITY_LIMIT_MS = 15 * 60 * 1000; // 15 minutos
@@ -56,12 +70,13 @@ export default function HomePage() {
   // Actualiza el timestamp de última actividad
   const updateActivity = () => {
     lastActivityRef.current = Date.now();
-    localStorage.setItem('lastActivity', lastActivityRef.current.toString());
+    localStorage.setItem("lastActivity", lastActivityRef.current.toString());
   };
 
   // Maneja logout por inactividad
   const setupInactivityLogout = () => {
-    if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+    if (inactivityTimeoutRef.current)
+      clearTimeout(inactivityTimeoutRef.current);
 
     inactivityTimeoutRef.current = setTimeout(() => {
       signOut();
@@ -71,22 +86,22 @@ export default function HomePage() {
   // Evento que marca cierre de pestaña en localStorage
   useEffect(() => {
     const handleBeforeUnload = () => {
-      localStorage.setItem('closed-tab', 'true');
+      localStorage.setItem("closed-tab", "true");
     };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   // Chequear al abrir la página si cerró pestaña o está inactivo
   useEffect(() => {
-    const closedTab = localStorage.getItem('closed-tab');
-    if (closedTab === 'true') {
-      localStorage.removeItem('closed-tab');
+    const closedTab = localStorage.getItem("closed-tab");
+    if (closedTab === "true") {
+      localStorage.removeItem("closed-tab");
       signOut();
       return;
     }
 
-    const lastActivity = localStorage.getItem('lastActivity');
+    const lastActivity = localStorage.getItem("lastActivity");
     if (lastActivity) {
       const lastActivityTime = parseInt(lastActivity, 10);
       if (Date.now() - lastActivityTime > INACTIVITY_LIMIT_MS) {
@@ -101,18 +116,19 @@ export default function HomePage() {
 
   // Escuchar eventos de actividad para resetear timer
   useEffect(() => {
-    const events = ['mousemove', 'keydown', 'scroll', 'touchstart'];
+    const events = ["mousemove", "keydown", "scroll", "touchstart"];
 
     const activityHandler = () => {
       updateActivity();
       setupInactivityLogout();
     };
 
-    events.forEach(evt => window.addEventListener(evt, activityHandler));
+    events.forEach((evt) => window.addEventListener(evt, activityHandler));
 
     return () => {
-      events.forEach(evt => window.removeEventListener(evt, activityHandler));
-      if (inactivityTimeoutRef.current) clearTimeout(inactivityTimeoutRef.current);
+      events.forEach((evt) => window.removeEventListener(evt, activityHandler));
+      if (inactivityTimeoutRef.current)
+        clearTimeout(inactivityTimeoutRef.current);
     };
   }, []);
 
@@ -139,11 +155,10 @@ export default function HomePage() {
     fetchProperties();
   }, []);
 
-
   useEffect(() => {
     // Si detectas que 'closed-tab' está en true, forzar logout
-    if (localStorage.getItem('closed-tab') === 'true') {
-      localStorage.removeItem('closed-tab');
+    if (localStorage.getItem("closed-tab") === "true") {
+      localStorage.removeItem("closed-tab");
       signOut(); // Aquí sí haces logout al abrir la pestaña NUEVAMENTE
     }
   }, []);
@@ -179,11 +194,16 @@ export default function HomePage() {
             Encuentra la Propiedad de Tus Sueños
           </h1>
           <p className="text-lg md:text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Descubre una amplia gama de propiedades con FindHome. Búsqueda avanzada, listados detallados.
-            Explora casas, apartamentos, terrenos y más. ¡Tu nuevo hogar te espera!
+            Descubre una amplia gama de propiedades con FindHome. Búsqueda
+            avanzada, listados detallados. Explora casas, apartamentos, terrenos
+            y más. ¡Tu nuevo hogar te espera!
           </p>
           <div className="flex justify-center">
-            <Button size="lg" asChild className="bg-accent hover:bg-accent/90 text-accent-foreground">
+            <Button
+              size="lg"
+              asChild
+              className="bg-[#568259] hover:bg-[#4e754f] text-white"
+            >
               <Link href="/properties">
                 <Search className="mr-2 h-5 w-5" />
                 Explorar Propiedades
@@ -197,21 +217,27 @@ export default function HomePage() {
       {/* Property Type Filter Buttons Section */}
       <section className="py-8 md:py-12">
         <div className="container">
-          <h2 className="text-2xl font-bold mb-6 text-center">Explora por Tipo de Propiedad</h2>
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Explora por Tipo de Propiedad
+          </h2>
           {isLoading || !propertyCounts ? (
             <div className="flex flex-wrap justify-center gap-3">
-              {PROPERTY_TYPES.map(type => (
+              {PROPERTY_TYPES.map((type) => (
                 <Skeleton key={type} className="h-10 w-32 rounded-md" />
               ))}
             </div>
           ) : (
             <div className="flex flex-wrap justify-center gap-3">
-              {PROPERTY_TYPES.map(type => {
+              {PROPERTY_TYPES.map((type) => {
                 const count = propertyCounts[type] || 0;
                 if (count > 0) {
                   return (
                     <Button key={type} variant="outline" size="lg" asChild>
-                      <Link href={`/properties?propertyType=${encodeURIComponent(type)}`}>
+                      <Link
+                        href={`/properties?propertyType=${encodeURIComponent(
+                          type
+                        )}`}
+                      >
                         {getPropertyTypeIcon(type)}
                         {count} {pluralizePropertyType(type, count)}
                       </Link>
@@ -227,8 +253,10 @@ export default function HomePage() {
 
       {/* Featured Listings Section */}
       <section className="py-8 md:py-12">
-        <div className="container">
-          <h2 className="text-2xl font-bold mb-6 text-center">Propiedades Destacadas</h2>
+        <div className="container mx-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6 text-center">
+            Propiedades Destacadas
+          </h2>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-4">
               {[...Array(6)].map((_, index) => (

@@ -61,7 +61,7 @@ export function ReportForm({ propertyId }: ReportFormProps) {
         value={message}
         onChange={(e) => setMessage(e.target.value)}
       />
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" className="w-full sm:w-full bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200" disabled={loading}>
         {loading ? 'Enviando...' : 'Reportar Propiedad'}
       </Button>
     </form>

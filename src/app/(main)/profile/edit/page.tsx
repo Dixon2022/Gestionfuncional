@@ -5,26 +5,40 @@
 // State variables (resetLoading, resetMessage) manage UI feedback for this process.
 // --- End Password Reset Feature ---
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/auth-context';
-import { useToast } from '@/hooks/use-toast';
-import { Loader2, Save, UserCircle2, Phone, Mail } from 'lucide-react'; // Added Mail icon
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Save, UserCircle2, Phone, Mail } from "lucide-react"; // Added Mail icon
 
 const profileSchema = z.object({
-  name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
-  phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.' }),
-  userDescription: z.string().max(500, { message: 'La descripción es muy larga.' }).optional(),
+  name: z
+    .string()
+    .min(2, { message: "El nombre debe tener al menos 2 caracteres." }),
+  email: z.string().email({ message: "Por favor ingresa un email válido." }),
+  phone: z.string().regex(/^\d{8}$/, {
+    message:
+      "El número de teléfono debe tener exactamente 8 dígitos numéricos.",
+  }),
+  userDescription: z
+    .string()
+    .max(500, { message: "La descripción es muy larga." })
+    .optional(),
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -45,51 +59,53 @@ export default function EditProfilePage() {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      userDescription: '',
+      name: "",
+      email: "",
+      phone: "",
+      userDescription: "",
     },
   });
 
   useEffect(() => {
     if (isClient && !authLoading && !user) {
-      router.push('/login?redirect=/profile/edit');
+      router.push("/login?redirect=/profile/edit");
     }
     if (user) {
       form.reset({
-        name: user?.name || '',
-        email: user?.email || '',
-        phone: user?.phone || '',
-        userDescription: user?.userDescription || '', 
+        name: user?.name || "",
+        email: user?.email || "",
+        phone: user?.phone || "",
+        userDescription: user?.userDescription || "",
       });
     }
   }, [user, authLoading, router, form, isClient]);
 
   const onSubmit = async (data: ProfileFormValues) => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     updateUser({
       name: data.name,
       email: data.email,
       phone: data.phone,
-      userDescription: data.userDescription, 
-    }); 
-    
-    toast({
-      title: '¡Perfil Actualizado!',
-      description: 'Tu información de perfil ha sido guardada.',
+      userDescription: data.userDescription,
     });
-    router.push('/profile');
+
+    toast({
+      title: "¡Perfil Actualizado!",
+      description: "Tu información de perfil ha sido guardada.",
+    });
+    router.push("/profile");
     setIsLoading(false);
   };
-  
+
   // Handler for sending password reset email to the user's email address
   // Calls /api/request-password-reset and shows feedback
   const handleSendResetEmail = async () => {
     if (!user || !user.email) {
-      setResetMessage("No se puede enviar el email de recuperación porque no hay usuario autenticado.");
+      setResetMessage(
+        "No se puede enviar el email de recuperación porque no hay usuario autenticado."
+      );
       return;
     }
     setResetLoading(true);
@@ -120,10 +136,15 @@ export default function EditProfilePage() {
 
   if (!user) {
     return (
-         <div className="container py-8 text-center">
-            <p>Debes iniciar sesión para editar tu perfil.</p>
-            <Button onClick={() => router.push('/login?redirect=/profile/edit')} className="mt-4">Iniciar Sesión</Button>
-        </div>
+      <div className="container py-8 text-center">
+        <p>Debes iniciar sesión para editar tu perfil.</p>
+        <Button
+          onClick={() => router.push("/login?redirect=/profile/edit")}
+          className="mt-4"
+        >
+          Iniciar Sesión
+        </Button>
+      </div>
     );
   }
 
@@ -144,11 +165,13 @@ export default function EditProfilePage() {
               <Input
                 id="name"
                 placeholder="Tu Nombre"
-                {...form.register('name')}
+                {...form.register("name")}
                 disabled={isLoading}
               />
               {form.formState.errors.name && (
-                <p className="text-xs text-destructive">{form.formState.errors.name.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.name.message}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -157,11 +180,13 @@ export default function EditProfilePage() {
                 id="email"
                 type="email"
                 placeholder="tu@ejemplo.com"
-                {...form.register('email')}
+                {...form.register("email")}
                 disabled={isLoading} // Email is now editable
               />
               {form.formState.errors.email && (
-                <p className="text-xs text-destructive">{form.formState.errors.email.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.email.message}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -170,11 +195,13 @@ export default function EditProfilePage() {
                 id="phone"
                 type="tel"
                 placeholder="Ej: 88887777"
-                {...form.register('phone')}
+                {...form.register("phone")}
                 disabled={isLoading}
               />
               {form.formState.errors.phone && (
-                <p className="text-xs text-destructive">{form.formState.errors.phone.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.phone.message}
+                </p>
               )}
             </div>
             <div className="space-y-1">
@@ -182,38 +209,61 @@ export default function EditProfilePage() {
               <textarea
                 id="userDescription"
                 placeholder="Cuéntanos sobre ti (opcional)"
-                {...form.register('userDescription')}
+                {...form.register("userDescription")}
                 disabled={isLoading}
                 className="w-full rounded border px-3 py-2"
                 rows={3}
                 maxLength={500}
               />
               {form.formState.errors.userDescription && (
-                <p className="text-xs text-destructive">{form.formState.errors.userDescription.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.userDescription.message}
+                </p>
               )}
             </div>
-            <div className="flex justify-end space-x-3">
-                {/* Button to trigger password reset email for the user */}
-                <Button type="button" variant="secondary" onClick={handleSendResetEmail} disabled={resetLoading || isLoading}>
-                  {resetLoading ? "Enviando..." : "Cambiar contraseña"}
-                </Button>
-                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isLoading}>
-                    Cancelar
-                </Button>
-                <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? (
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+              <Button
+                type="button"
+                onClick={() => router.back()}
+                disabled={isLoading}
+                className="w-full sm:w-full bg-gradient-to-r from-red-400 to-red-600 text-white shadow-lg hover:from-red-500 hover:to-red-700 hover:scale-105 transition-transform duration-200"
+              >
+                Cancelar
+              </Button>
+
+              <Button
+                type="button"
+                onClick={handleSendResetEmail}
+                disabled={resetLoading || isLoading}
+                className="w-full sm:w-full bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+              >
+                {resetLoading ? "Enviando..." : "Cambiar contraseña"}
+              </Button>
+
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full sm:w-full bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+                >
+                  {isLoading ? (
                     <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Guardando...
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />{" "}
+                      Guardando...
                     </>
-                ) : (
+                  ) : (
                     <>
-                    <Save className="mr-2 h-4 w-4" /> Guardar Cambios
+                      <Save className="mr-2 h-4 w-4" /> Guardar Cambios
                     </>
-                )}
+                  )}
                 </Button>
+              </div>
             </div>
+
             {/* Feedback message for password reset email */}
-            {resetMessage && <div className="text-center text-sm mt-2">{resetMessage}</div>}
+            {resetMessage && (
+              <div className="text-center text-sm mt-2">{resetMessage}</div>
+            )}
           </form>
         </CardContent>
       </Card>

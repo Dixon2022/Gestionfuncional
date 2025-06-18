@@ -143,7 +143,7 @@ export function ContactForm({ propertyId, propertyName, agentEmail, agentName }:
               </FormItem>
             )}
           />
-          <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={form.formState.isSubmitting}>
+          <Button type="submit" className="w-full sm:w-full bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200" disabled={form.formState.isSubmitting}>
             {form.formState.isSubmitting ? 'Enviando...' : <> <Send className="mr-2 h-4 w-4" /> Enviar Consulta </>}
           </Button>
         </form>

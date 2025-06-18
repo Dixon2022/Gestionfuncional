@@ -13,13 +13,33 @@ import { useAuth } from '@/contexts/auth-context';
 import { Building2, UserPlus, Phone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&()\-_=+{}[\]|\\;:'",.<>\/]).{6,}$/;
+
 const signupSchema = z.object({
-  name: z.string().min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
-  email: z.string().email({ message: 'Por favor ingresa un email válido.' }),
-  phone: z.string().min(8, { message: 'El número de teléfono debe tener al menos 8 caracteres.'}),
-  password: z.string().min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' }),
-  userDescription: z.string().max(500, { message: 'La descripción es muy larga.' }).optional(),
+  name: z
+    .string()
+    .min(2, { message: 'El nombre debe tener al menos 2 caracteres.' }),
+  email: z
+    .string()
+    .email({ message: 'Por favor ingresa un email válido.' }),
+  phone: z
+    .string()
+    .regex(/^\d{8}$/, {
+      message: 'El número de teléfono debe tener exactamente 8 dígitos numéricos.',
+    }),
+  password: z
+    .string()
+    .min(6, { message: 'La contraseña debe tener al menos 6 caracteres.' })
+    .regex(passwordRegex, {
+      message:
+        'La contraseña debe contener mayúsculas, minúsculas, números y caracteres especiales.',
+    }),
+  userDescription: z
+    .string()
+    .max(500, { message: 'La descripción es muy larga.' })
+    .optional(),
 });
+
 
 type SignupFormValues = z.infer<typeof signupSchema>;
 
@@ -166,13 +186,13 @@ export default function SignupPage() {
             <p className="text-xs text-destructive">{form.formState.errors.userDescription.message}</p>
           )}
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button type="submit" className="w-full text-white bg-gradient-to-br from-green-400 to-blue-600 hover:bg-gradient-to-bl focus:ring-4 focus:outline-none focus:ring-green-200 dark:focus:ring-green-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2" disabled={isLoading}>
           {isLoading ? 'Creando cuenta...' : <> <UserPlus className="mr-2"/> Crear Cuenta </>}
         </Button>
       </form>
       <p className="mt-6 text-center text-sm text-muted-foreground">
         ¿Ya tienes una cuenta?{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link href="/login" className="font-medium text-success hover:underline">
           Inicia Sesión
         </Link>
       </p>

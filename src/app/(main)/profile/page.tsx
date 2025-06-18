@@ -180,12 +180,7 @@ export default function ProfilePage() {
             <Button
               asChild
               className={cn(
-                "w-full sm:w-auto",
-                "bg-gradient-to-r from-indigo-400 via-sky-400 to-blue-500",
-                "text-white font-semibold shadow-md",
-                "hover:from-indigo-500 hover:via-sky-500 hover:to-blue-600",
-                "hover:scale-105 hover:shadow-lg",
-                "transition-all duration-200 border-0"
+                "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
               )}
             >
               <Link href="/profile/edit">
@@ -207,6 +202,20 @@ export default function ProfilePage() {
                 <span className="font-semibold">Agregar Propiedad</span>
               </Link>
             </Button>
+            {user?.role === "admin" && (
+              <Button
+                variant="secondary"
+                asChild
+                className={cn(
+                  "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+                )}
+              >
+                <Link href="/admin">
+                  <Flag className="mr-2 h-4 w-4" />
+                  <span className="font-semibold">Administrar Reportes</span>
+                </Link>
+              </Button>
+            )}
             <Button
               variant="destructive"
               onClick={() => {
@@ -220,20 +229,6 @@ export default function ProfilePage() {
               <LogOut className="mr-2 h-4 w-4" />
               <span className="font-semibold">Cerrar Sesión</span>
             </Button>
-            {user?.role === "admin" && (
-              <Button
-                variant="secondary"
-                asChild
-                className={cn(
-                  "w-full sm:w-auto bg-gradient-to-r from-yellow-400 to-yellow-600 text-white shadow-lg hover:from-yellow-500 hover:to-yellow-700 hover:scale-105 transition-transform duration-200"
-                )}
-              >
-                <Link href="/admin">
-                  <Flag className="mr-2 h-4 w-4" />
-                  <span className="font-semibold">Administrar Reportes</span>
-                </Link>
-              </Button>
-            )}
           </div>
 
           {/* Buscador y filtro debajo de los botones */}

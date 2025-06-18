@@ -305,12 +305,12 @@ export function PropertySearchFilters({
         <div className="flex flex-row gap-4 mt-4 justify-end col-span-full">
           <Button
             type="button"
-            variant="outline"
             onClick={handleReset}
-            className="w-full sm:w-auto border-blue-300 text-blue-700 hover:bg-blue-100"
+            className="w-full sm:w-auto bg-red-500 hover:bg-red-600 text-white font-semibold shadow-md"
           >
             <X className="mr-2 h-4 w-4" /> Reiniciar
           </Button>
+
           <Button
             type="submit"
             onClick={handleSubmit}

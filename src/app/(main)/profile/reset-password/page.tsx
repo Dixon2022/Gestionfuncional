@@ -1,53 +1,70 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function ResetPasswordByTokenPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get('token') || '';
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
+  const token = searchParams.get("token") || "";
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
-  const [msg, setMsg] = useState('');
+  const [msg, setMsg] = useState("");
+
+  const securePasswordRegex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&()\-_=+{}[\]|\\;:'",.<>\/]).{6,}$/;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMsg('');
+    setMsg("");
     if (!token) {
-      setMsg('Token inválido.');
+      setMsg("Token inválido.");
       return;
     }
     if (!currentPassword || !newPassword || !confirm) {
-      setMsg('Completa todos los campos.');
+      setMsg("Completa todos los campos.");
       return;
     }
+
+    if (newPassword === currentPassword) {
+      setMsg("La nueva contraseña no puede ser igual a la anterior.");
+      return;
+    }
+
     if (newPassword !== confirm) {
-      setMsg('Las contraseñas nuevas no coinciden.');
+      setMsg("Las contraseñas nuevas no coinciden.");
       return;
     }
+
+    if (!securePasswordRegex.test(newPassword)) {
+      setMsg(
+        "La nueva contraseña debe tener al menos 6 caracteres, incluyendo una mayúscula, una minúscula, un número y un carácter especial."
+      );
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch('/api/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, currentPassword, newPassword }),
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg('¡Contraseña cambiada! Ahora puedes iniciar sesión.');
-        setTimeout(() => router.push('/login'), 2000);
+        setMsg("¡Contraseña cambiada! Ahora puedes iniciar sesión.");
+        setTimeout(() => router.push("/login"), 2000);
       } else {
-        setMsg(data.message || 'Error al cambiar la contraseña.');
+        setMsg(data.message || "Error al cambiar la contraseña.");
       }
     } catch {
-      setMsg('Error de red.');
+      setMsg("Error de red.");
     } finally {
       setLoading(false);
     }
@@ -66,7 +83,7 @@ export default function ResetPasswordByTokenPage() {
               <Input
                 type="password"
                 value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
+                onChange={(e) => setCurrentPassword(e.target.value)}
                 required
               />
             </div>
@@ -75,7 +92,7 @@ export default function ResetPasswordByTokenPage() {
               <Input
                 type="password"
                 value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
+                onChange={(e) => setNewPassword(e.target.value)}
                 required
               />
             </div>
@@ -84,12 +101,12 @@ export default function ResetPasswordByTokenPage() {
               <Input
                 type="password"
                 value={confirm}
-                onChange={e => setConfirm(e.target.value)}
+                onChange={(e) => setConfirm(e.target.value)}
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Guardando...' : 'Guardar'}
+            <Button type="submit" className="w-full sm:w-full bg-gradient-to-r from-red-400 to-red-600 text-white shadow-lg hover:from-red-500 hover:to-red-700 hover:scale-105 transition-transform duration-200" disabled={loading}>
+              {loading ? "Guardando..." : "Guardar"}
             </Button>
             {msg && <div className="text-center text-sm mt-2">{msg}</div>}
           </form>

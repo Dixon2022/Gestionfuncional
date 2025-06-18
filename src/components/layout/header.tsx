@@ -93,16 +93,31 @@ export function Header() {
                     Hola, {user.name || user.email.split("@")[0]}
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile">Mi Perfil</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile/favorite">Mis Favoritos</Link>
+
+                  <DropdownMenuItem
+                    asChild
+                    className="transition-all hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+                  >
+                    <Link href="/profile" className="w-full">
+                      Mi Perfil
+                    </Link>
                   </DropdownMenuItem>
 
-                  <DropdownMenuItem onClick={logout}>
-                    <LogOut className="mr-2 h-4 w-4 text-red-500" />
-                    <span className="text-red-600">Cerrar Sesión</span>
+                  <DropdownMenuItem
+                    asChild
+                    className="transition-all hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+                  >
+                    <Link href="/profile/favorite" className="w-full">
+                      Mis Favoritos
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="transition-all hover:text-white hover:bg-gradient-to-r from-red-500 via-red-600 to-red-700 hover:bg-gradient-to-br focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm px-5 py-2.5 text-center me-2 mb-2"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Cerrar Sesión</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -148,31 +163,40 @@ export function Header() {
           <Link
             href="/"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-3 hover:bg-blue-100"
+            className="block px-4 py-3 transition hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-md mx-2 my-1 text-sm font-medium text-center"
           >
             Inicio
           </Link>
           <Link
             href="/properties"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-3 hover:bg-blue-100"
+            className="block px-4 py-3 transition hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-md mx-2 my-1 text-sm font-medium text-center"
           >
             Propiedades
           </Link>
           <Link
             href="/about"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-3 hover:bg-blue-100"
+            className="block px-4 py-3 transition hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-md mx-2 my-1 text-sm font-medium text-center"
           >
             Nosotros
           </Link>
           <Link
             href="/FAQ"
             onClick={() => setMobileMenuOpen(false)}
-            className="block px-4 py-3 hover:bg-blue-100"
+            className="block px-4 py-3 transition hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-md mx-2 my-1 text-sm font-medium text-center"
           >
             Preguntas Frecuentes
           </Link>
+          {user?.role === "admin" && (
+            <Link
+              href="/admin/users"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-3 transition hover:text-white hover:bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 rounded-md mx-2 my-1 text-sm font-medium text-center"
+            >
+              Usuarios
+            </Link>
+          )}
         </nav>
       )}
     </header>
