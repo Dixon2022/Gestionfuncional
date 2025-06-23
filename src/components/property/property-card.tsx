@@ -87,50 +87,45 @@ export function PropertyCard({ property }: PropertyCardProps) {
     }
   }, [user, property.id]);
 
-  const handleDelete = async () => {
-    if (!isOwner || !user) return;
-    setIsDeleting(true);
+  const handleDelete = async (): Promise<{
+    success: boolean;
+    message?: string;
+  }> => {
+    const ownerId = await getOwnerIdByEmail(user?.email || "");
     try {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const ownerEmail = property.owner.email;
-      const ownerId = await getOwnerIdByEmail(ownerEmail);
-      console.log("Owner ID:", ownerId);
+      const response = await fetch("/api/property", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          propertyId: property.id,
+          ownerId: ownerId,
+        }),
+      });
 
-      if (!ownerId) {
-        toast({
-          title: "Error",
-          description: "No se pudo obtener el ID del propietario.",
-          variant: "destructive",
-        });
-        setIsDeleting(false);
-        return;
-      }
-
-      const success = await deleteProperty(
-        property.id,
-        ownerId // ownerId es number
-      );
-      if (success) {
+      const data = await response.json();
+      if (response.ok) {
         toast({
           title: "Propiedad Eliminada",
           description: `La propiedad "${property.title}" ha sido eliminada.`,
         });
-        window.location.reload();
-      } else {
-        toast({
-          title: "Error al Eliminar",
-          description: "No se pudo eliminar la propiedad o no tienes permiso.",
-          variant: "destructive",
-        });
+        setTimeout(() => {
+          window.location.reload();
+        }, 4000); //recargar la página después de 4 segundos
+      } else if (!response.ok) {
+        return {
+          success: false,
+          message: data.error || "No se pudo eliminar la propiedad.",
+        };
       }
+
+      return { success: true };
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Ocurrió un error al intentar eliminar la propiedad.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsDeleting(false);
+      return {
+        success: false,
+        message: "Error de red al intentar eliminar la propiedad.",
+      };
     }
   };
 

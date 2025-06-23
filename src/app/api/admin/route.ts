@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 // Código para manejar la creación del token de restablecimiento de contraseña
 export async function createResetToken(email: string) {
   const token = crypto.randomUUID();
-  const expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hora
+  const expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // 1 hora
   await prisma.passwordResetToken.create({
     data: {
       email,

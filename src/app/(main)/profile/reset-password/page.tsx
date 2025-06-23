@@ -71,7 +71,7 @@ export default function ResetPasswordByTokenPage() {
   };
 
   return (
-    <div className="container py-8 md:py-12">
+    <div className="container mx-auto py-8 md:py-12">
       <Card className="max-w-md mx-auto shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl">Restablecer Contraseña</CardTitle>
@@ -105,7 +105,7 @@ export default function ResetPasswordByTokenPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full sm:w-full bg-gradient-to-r from-red-400 to-red-600 text-white shadow-lg hover:from-red-500 hover:to-red-700 hover:scale-105 transition-transform duration-200" disabled={loading}>
+            <Button type="submit" className="w-full bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200" disabled={loading}>
               {loading ? "Guardando..." : "Guardar"}
             </Button>
             {msg && <div className="text-center text-sm mt-2">{msg}</div>}

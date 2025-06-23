@@ -1,6 +1,7 @@
 // GET all properties / POST new property
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "../../../../lib/prisma";
+import { number } from "zod";
 
 export async function GET() {
   try {
@@ -51,15 +52,15 @@ export async function POST(req: NextRequest) {
         price: Number(price), 
         area,
         lotSize,
-        bedrooms,
-        bathrooms,
+        bedrooms: Number(bedrooms), // <-- asegúrate de convertir a número
+        bathrooms: Number(bathrooms), // <-- asegúrate de convertir a número
         yearBuilt,
         type,
         listingType,
         features,
         isFeatured,
-        mainImageUri, // <-- pásalo aquí
-        ownerId: parseInt(ownerId), // <-- ver siguiente error
+        mainImageUri,
+        ownerId: parseInt(ownerId),
       },
     });
 
@@ -69,3 +70,55 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const { propertyId, ownerId } = await req.json();
+
+    if (!propertyId || !ownerId) {
+      return NextResponse.json(
+        { error: 'Faltan datos para eliminar la propiedad.' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar que la propiedad exista y pertenezca al usuario
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { ownerId: true },
+    });
+
+    if (!property) {
+      return NextResponse.json(
+        { error: 'La propiedad no existe o ya fue eliminada.' },
+        { status: 404 }
+      );
+    }
+
+    if (property.ownerId !== ownerId) {
+      return NextResponse.json(
+        { error: 'No tienes permiso para eliminar esta propiedad.' },
+        { status: 403 }
+      );
+    }
+
+    // Eliminar reportes y luego la propiedad, de forma atómica
+    await prisma.$transaction([
+      prisma.propertyReport.deleteMany({
+        where: { propertyId },
+      }),
+      prisma.property.delete({
+        where: { id: propertyId },
+      }),
+    ]);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error al eliminar propiedad:', error);
+    return NextResponse.json(
+      { error: 'Hubo un problema al eliminar la propiedad. Intenta más tarde.' },
+      { status: 500 }
+    );
+  }
+}
+
