@@ -599,7 +599,15 @@ export default function EditPropertyPage() {
                       Destacar propiedad
                     </FormLabel>
                     <FormDescription>
-                      Si marcas esta opción, la propiedad aparecerá como destacada.
+                      {field.value ? (
+                        <span className="text-yellow-700">
+                          Si desmarcas esta opción, tu propiedad dejará de estar destacada y aparecerá en el listado general.
+                        </span>
+                      ) : (
+                        <span>
+                          Marca esta opción para que tu propiedad aparezca como destacada y sea más visible para los usuarios.
+                        </span>
+                      )}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

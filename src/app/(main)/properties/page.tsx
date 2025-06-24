@@ -136,13 +136,13 @@ export default function PropertiesPage() {
           {/* Apartado general */}
           <section>
             <h2 className="text-2xl font-bold mb-4">Todas las Propiedades</h2>
-            {generalProperties.length === 0 ? (
+            {filteredProperties.length === 0 ? (
               <p className="text-center text-muted-foreground text-lg py-10">
                 Ninguna propiedad coincide con tus filtros actuales. ¡Intenta ajustar tu búsqueda!
               </p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {generalProperties.map((property) => (
+                {filteredProperties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
               </div>

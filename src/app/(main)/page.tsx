@@ -249,7 +249,7 @@ export default function HomePage() {
       <section className="py-8 md:py-12">
         <div className="container mx-w-7xl mx-auto">
           <h2 className="text-2xl font-bold mb-6 text-center">
-            Propiedades Destacadas
+            Encuentra Tu Propiedad Ideal
           </h2>
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 px-2 md:px-4">

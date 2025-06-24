@@ -22,6 +22,8 @@ export default function UsersAdminPage() {
   const { toast } = useToast();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) {
@@ -67,6 +69,16 @@ export default function UsersAdminPage() {
     }
   };
 
+  // Filtrado en frontend
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch =
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase());
+    const matchesRole =
+      roleFilter === "all" ? true : u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
+
   return (
     <>
       <Header />
@@ -75,89 +87,111 @@ export default function UsersAdminPage() {
           <div className="w-full max-w-5xl">
             <div className="bg-white rounded-3xl shadow-lg overflow-hidden p-8 md:p-12">
               <h1 className="text-2xl font-bold mb-6 text-center">Gestión de Usuarios</h1>
+              
+              <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o correo..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="border rounded px-3 py-2 w-full md:w-1/2"
+                />
+                <select
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value as "all" | "admin" | "user")}
+                  className="border rounded px-3 py-2 w-full md:w-1/4"
+                >
+                  <option value="all">Todos los roles</option>
+                  <option value="admin">Administrador</option>
+                  <option value="user">Usuario</option>
+                </select>
+              </div>
+
               {isLoading ? (
                 <p>Cargando...</p>
               ) : (
-                <table className="min-w-full bg-white rounded-lg shadow overflow-hidden">
-                  <thead>
-                    <tr className="bg-gradient-to-r from-blue-500 to-blue-700 text-white">
-                      <th className="px-4 py-3 text-left font-semibold">Nombre</th>
-                      <th className="px-4 py-3 text-left font-semibold">Email</th>
-                      <th className="px-4 py-3 text-left font-semibold">Teléfono</th>
-                      <th className="px-4 py-3 text-left font-semibold">Rol</th>
-                      <th className="px-4 py-3 text-left font-semibold">Bloqueado</th>
-                      <th className="px-4 py-3 text-center font-semibold">Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u, idx) => (
-                      <tr
-                        key={u.id}
-                        className={idx % 2 === 0 ? "bg-gray-50 hover:bg-blue-50" : "bg-white hover:bg-blue-50"}
-                      >
-                        <td className="px-4 py-2">{u.name}</td>
-                        <td className="px-4 py-2">{u.email}</td>
-                        <td className="px-4 py-2">{u.phone}</td>
-                        <td className="px-4 py-2">
-                          <select
-                            value={u.role}
-                            onChange={async (e) => {
-                              const newRole = e.target.value as "admin" | "user";
-                              if (newRole === u.role) return;
-                              const res = await fetch("/api/admin/users/role", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ id: u.id, role: newRole }),
-                              });
-                              if (res.ok) {
-                                setUsers((prev) =>
-                                  prev.map((user) =>
-                                    user.id === u.id ? { ...user, role: newRole } : user
-                                  )
-                                );
-                                toast({
-                                  title: "Rol actualizado",
-                                  description: `El usuario ahora es ${newRole}.`,
-                                });
-                              }
-                            }}
-                            className={`px-2 py-1 rounded text-xs font-bold border ${
-                              u.role === "admin"
-                                ? "bg-green-100 text-green-700"
-                                : "bg-gray-200 text-gray-700"
-                            }`}
-                          >
-                            <option value="user">user</option>
-                            <option value="admin">admin</option>
-                          </select>
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          {u.blocked ? (
-                            <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">
-                              Sí
-                            </span>
-                          ) : (
-                            <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
-                              No
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <button
-                            onClick={() => handleBlockToggle(u.id, u.blocked)}
-                            className={`px-3 py-1 rounded font-semibold text-xs shadow transition
-                              ${u.blocked
-                                ? "bg-green-500 hover:bg-green-600 text-white"
-                                : "bg-red-500 hover:bg-red-600 text-white"}
-                            `}
-                          >
-                            {u.blocked ? "Desbloquear" : "Bloquear"}
-                          </button>
-                        </td>
+                <div className="w-full overflow-x-auto rounded-lg">
+                  <table className="min-w-full bg-white rounded-lg shadow overflow-hidden text-sm">
+                    <thead>
+                      <tr className="bg-gradient-to-r from-blue-500 to-blue-700 text-white">
+                        <th className="px-2 md:px-4 py-3 text-left font-semibold whitespace-nowrap">Nombre</th>
+                        <th className="px-2 md:px-4 py-3 text-left font-semibold whitespace-nowrap">Email</th>
+                        <th className="px-2 md:px-4 py-3 text-left font-semibold whitespace-nowrap hidden sm:table-cell">Teléfono</th>
+                        <th className="px-2 md:px-4 py-3 text-left font-semibold whitespace-nowrap">Rol</th>
+                        <th className="px-2 md:px-4 py-3 text-left font-semibold whitespace-nowrap">Bloqueado</th>
+                        <th className="px-2 md:px-4 py-3 text-center font-semibold whitespace-nowrap">Acciones</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredUsers.map((u, idx) => (
+                        <tr
+                          key={u.id}
+                          className={idx % 2 === 0 ? "bg-gray-50 hover:bg-blue-50" : "bg-white hover:bg-blue-50"}
+                        >
+                          <td className="px-2 md:px-4 py-2">{u.name}</td>
+                          <td className="px-2 md:px-4 py-2">{u.email}</td>
+                          <td className="px-2 md:px-4 py-2 hidden sm:table-cell">{u.phone}</td>
+                          <td className="px-2 md:px-4 py-2">
+                            <select
+                              value={u.role}
+                              onChange={async (e) => {
+                                const newRole = e.target.value as "admin" | "user";
+                                if (newRole === u.role) return;
+                                const res = await fetch("/api/admin/users/role", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ id: u.id, role: newRole }),
+                                });
+                                if (res.ok) {
+                                  setUsers((prev) =>
+                                    prev.map((user) =>
+                                      user.id === u.id ? { ...user, role: newRole } : user
+                                    )
+                                  );
+                                  toast({
+                                    title: "Rol actualizado",
+                                    description: `El usuario ahora es ${newRole}.`,
+                                  });
+                                }
+                              }}
+                              className={`px-2 py-1 rounded text-xs font-bold border ${
+                                u.role === "admin"
+                                  ? "bg-green-100 text-green-700"
+                                  : "bg-gray-200 text-gray-700"
+                              }`}
+                            >
+                              <option value="user">user</option>
+                              <option value="admin">admin</option>
+                            </select>
+                          </td>
+                          <td className="px-2 md:px-4 py-2 text-center">
+                            {u.blocked ? (
+                              <span className="inline-block px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">
+                                Sí
+                              </span>
+                            ) : (
+                              <span className="inline-block px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">
+                                No
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-2 md:px-4 py-2 text-center">
+                            <button
+                              onClick={() => handleBlockToggle(u.id, u.blocked)}
+                              className={`px-3 py-1 rounded font-semibold text-xs shadow transition
+                                ${u.blocked
+                                  ? "bg-green-500 hover:bg-green-600 text-white"
+                                  : "bg-red-500 hover:bg-red-600 text-white"}
+                              `}
+                            >
+                              {u.blocked ? "Desbloquear" : "Bloquear"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           </div>
