@@ -33,7 +33,6 @@ function useProperty(id?: string) {
     };
     fetchProperty();
   }, [id]);
-  console.log('useProperty', { id, property, isLoading });
   return { property, isLoading };
 }
 

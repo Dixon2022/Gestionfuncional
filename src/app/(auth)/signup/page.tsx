@@ -77,7 +77,6 @@ export default function SignupPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("Error al crear el usuario:", errorData);
         throw new Error(errorData.message || "No se pudo crear el usuario.");
       }
 
