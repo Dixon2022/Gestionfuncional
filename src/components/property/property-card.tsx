@@ -97,9 +97,11 @@ export function PropertyCard({ property }: PropertyCardProps) {
       return { success: false, message: "No autenticado" };
     }
 
+    setIsDeleting(true);
+
     const isAdmin = user.role === "admin";
     const endpoint = isAdmin ? "/api/admin" : "/api/property";
-    const ownerId = getOwnerIdByEmail(user.email); // Siempre el id del usuario autenticado
+    const ownerId = getOwnerIdByEmail(user.email); // Usa el id del usuario autenticado
 
     try {
       const response = await fetch(endpoint, {
@@ -123,6 +125,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           window.location.reload();
         }, 4000);
       } else {
+        setIsDeleting(false);
         return {
           success: false,
           message: data.error || "No se pudo eliminar la propiedad.",
@@ -131,6 +134,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
       return { success: true };
     } catch (error) {
+      setIsDeleting(false);
       return {
         success: false,
         message: "Error de red al intentar eliminar la propiedad.",

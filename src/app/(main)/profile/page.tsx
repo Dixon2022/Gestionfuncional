@@ -63,7 +63,7 @@ export default function ProfilePage() {
           const properties = await getPropertiesByOwner(String(userId));
           setMyProperties(properties);
           setVisibleProperties(
-            properties.filter((property) => String(property.ownerId) === String(userId))
+            properties.filter((property) => Number(property.ownerId) === Number(userId))
           );
         } else {
           setMyProperties([]);
