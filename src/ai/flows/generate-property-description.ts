@@ -14,7 +14,7 @@ const GeneratePropertyDescriptionInputSchema = z.object({
   location: z.string().describe('La ubicación de la propiedad (ciudad, vecindario).'),
   numberOfBedrooms: z.number().describe('El número de habitaciones en la propiedad.'),
   numberOfBathrooms: z.number().describe('El número de baños en la propiedad.'),
-  squareFootage: z.number().describe('La superficie de la propiedad en pies cuadrados.'), 
+  squareFootage: z.number().describe('La superficie de la propiedad en metros cuadrados (se convertirá internamente a pies cuadrados).'), 
   keyFeatures: z.string().describe('Una lista separada por comas de las características clave de la propiedad.'),
 });
 export type GeneratePropertyDescriptionInput = z.infer<typeof GeneratePropertyDescriptionInputSchema>;
@@ -40,7 +40,7 @@ Tipo de Propiedad: {{{propertyType}}}
 Ubicación: {{{location}}}
 Número de Habitaciones: {{{numberOfBedrooms}}}
 Número de Baños: {{{numberOfBathrooms}}}
-Superficie (pies cuadrados): {{{squareFootage}}}
+Superficie (metros cuadrados): {{{squareFootage}}}
 Características Clave: {{{keyFeatures}}}
 Foto: {{media url=photoDataUri}}
 

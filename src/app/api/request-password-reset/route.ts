@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import crypto from "crypto";
-import { prisma } from "../../../../lib/prisma"; // Asegúrate de importar prisma
+import { prisma } from "@/lib/prisma"; // Asegúrate de importar prisma
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

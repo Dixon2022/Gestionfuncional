@@ -80,8 +80,8 @@ export default function SignupPage() {
         throw new Error(errorData.message || "No se pudo crear el usuario.");
       }
 
-      // Si todo sale bien, loguea al usuario
-      login(data.email, data.name, data.phone, "user");
+    // Si todo sale bien, loguea al usuario
+    await login(data.email, data.name, data.phone,'user');
 
       toast({
         title: "¡Cuenta Creada!",

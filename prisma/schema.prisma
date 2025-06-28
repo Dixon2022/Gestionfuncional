@@ -8,17 +8,18 @@ datasource db {
 }
 
 model User {
-  id              Int        @id @default(autoincrement())
+  id              Int               @id @default(autoincrement())
   name            String
-  email           String     @unique
+  email           String            @unique
   phone           String
   password        String
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @default(now())
-  role            Role       @default(user)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @default(now())
+  role            Role              @default(user)
   properties      Property[]
   favorites       Favorite[]
-  blocked         Boolean?   @default(false)
+  comments        PropertyComment[]
+  blocked         Boolean?          @default(false)
   userDescription String?
 }
 
@@ -51,8 +52,10 @@ model Property {
   owner     User       @relation(fields: [ownerId], references: [id])
   favorites Favorite[]
 
-  images  PropertyImage[]
-  reports PropertyReport[]
+  images       PropertyImage[]
+  reports      PropertyReport[]
+  availability PropertyAvailability[]
+  comments     PropertyComment[]
 }
 
 model PropertyImage {
@@ -105,4 +108,24 @@ model Favorite {
   createdAt  DateTime @default(now())
 
   @@unique([userId, propertyId])
+}
+
+model PropertyAvailability {
+  id         Int      @id @default(autoincrement())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId Int
+  startDate  DateTime
+  endDate    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+}
+
+model PropertyComment {
+  id         Int      @id @default(autoincrement())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  propertyId Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     Int
+  comment    String
+  createdAt  DateTime @default(now())
 }

@@ -1,6 +1,6 @@
 // GET all properties / POST new property
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { number } from "zod";
 
 export async function GET() {
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       listingType,
       features,
       isFeatured,
-      mainImageUri, // <-- asegúrate de recibirlo
+      mainImageUri,
       ownerId,
     } = body;
 
@@ -49,24 +49,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Validate and convert ownerId
+    const ownerIdNumber = parseInt(ownerId);
+    if (isNaN(ownerIdNumber)) {
+      return NextResponse.json({ error: "ownerId debe ser un número válido" }, { status: 400 });
+    }
+
     const property = await prisma.property.create({
       data: {
         title,
         description,
         address,
         city,
-        price: Number(price),
-        area,
-        lotSize,
-        bedrooms: Number(bedrooms), // <-- asegúrate de convertir a número
-        bathrooms: Number(bathrooms), // <-- asegúrate de convertir a número
+        price: Number(price), 
+        area: area ? Number(area) : null,
+        lotSize: lotSize ? Number(lotSize) : null,
+        bedrooms: Number(bedrooms), 
+        bathrooms: Number(bathrooms), 
         yearBuilt: yearBuilt ? Number(yearBuilt) : null,
         type,
         listingType,
         features,
         isFeatured,
         mainImageUri,
-        ownerId: parseInt(ownerId),
+        ownerId: ownerIdNumber,
       },
     });
 

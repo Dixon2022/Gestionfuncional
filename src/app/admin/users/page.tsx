@@ -79,15 +79,10 @@ export default function UsersAdminPage() {
     return matchesSearch && matchesRole;
   });
 
+  // Paginación
   const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-  const paginatedUsers = filteredUsers.slice(
-    (currentPage - 1) * usersPerPage,
-    currentPage * usersPerPage
-  );
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) setCurrentPage(page);
-  };
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
 
   return (
     <>
@@ -203,27 +198,28 @@ export default function UsersAdminPage() {
                   </table>
                 </div>
               )}
-              <div className="mt-4">
-                <span className="text-sm text-gray-700">
-                  Página {currentPage} de {totalPages}
-                </span>
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => handlePageChange(currentPage - 1)}
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-6 gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-1 rounded bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600 transition-colors disabled:opacity-50"
                   >
                     Anterior
-                  </button>
-                  <button
-                    onClick={() => handlePageChange(currentPage + 1)}
+                  </Button>
+                  <span className="px-4 py-2 text-sm">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-1 rounded bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600 transition-colors disabled:opacity-50"
                   >
                     Siguiente
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </main>

@@ -4,6 +4,9 @@ import type { Property } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/hooks/use-toast";
 import { ContactForm } from "./contact-form";
+import { PropertyComments } from "./comments";
+import { PropertyAvailabilityCalendar } from "./availability-calendar";
+import { AvailabilityManager } from "./availability-manager";
 import {
   BedDouble,
   Bath,
@@ -531,6 +534,24 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                 </div>
               </div>
             )}
+
+            {/* Availability Manager (Only for property owners of rental properties) */}
+            {property.ownerId && (
+              <AvailabilityManager 
+                propertyId={property.id.toString()} 
+                ownerId={Number(property.ownerId)} 
+                listingType={property.listingType}
+              />
+            )}
+
+            {/* Availability Calendar (Public view for rental properties) */}
+            <PropertyAvailabilityCalendar 
+              propertyId={property.id.toString()} 
+              listingType={property.listingType}
+            />
+
+            {/* Property Comments */}
+            <PropertyComments propertyId={property.id.toString()} />
           </div>
 
           {/* Sidebar Column (Agent Info & Contact Form) */}
