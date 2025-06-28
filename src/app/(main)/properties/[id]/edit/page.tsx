@@ -200,14 +200,17 @@ export default function EditPropertyPage() {
   };
 
   const onSubmit = async (data: EditPropertyFormValues) => {
+    const userId = getOwnerIdByEmail(user?.email || '');
     if (
       !property ||
       !user ||
-      // Cambia esta línea:
-      // user.id !== property.ownerId
-      ( user.name !== property.owner.name && user.role !== 'admin')
+      (Number(userId) !== Number(property.ownerId) && user.role !== 'admin')
     ) {
-      toast({ title: "Error de autorización", description: "No puedes editar esta propiedad.", variant: "destructive" });
+      toast({
+        title: "Error de autorización",
+        description: "No puedes editar esta propiedad.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -673,4 +676,17 @@ export default function EditPropertyPage() {
       </Card>
     </div>
   );
+}
+
+async function getOwnerIdByEmail(email: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `/api/user/by-email?email=${encodeURIComponent(email)}`
+    );
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user.id ?? null;
+  } catch {
+    return null;
+  }
 }
