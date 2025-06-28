@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
         address,
         city,
         price: Number(price), 
-        area,
-        lotSize,
-        bedrooms: Number(bedrooms), // <-- asegúrate de convertir a número
-        bathrooms: Number(bathrooms), // <-- asegúrate de convertir a número
-        yearBuilt,
+        area: area ? Number(area) : null,
+        lotSize: lotSize ? Number(lotSize) : null,
+        bedrooms: Number(bedrooms), 
+        bathrooms: Number(bathrooms), 
+        yearBuilt: yearBuilt ? Number(yearBuilt) : null,
         type,
         listingType,
         features,
