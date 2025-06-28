@@ -46,8 +46,6 @@ export default function UsersAdminPage() {
       setIsLoading(true);
       const res = await fetch(`/api/admin/users?excludeId=${ownerId}`);
       const data = await res.json();
-      console.log("Fetched users:", data.users);
-       console.log("Fetched patooo:", user);
       setUsers(Array.isArray(data.users) ? data.users : []);
       setIsLoading(false);
     };
@@ -200,7 +198,6 @@ export default function UsersAdminPage() {
                   </table>
                 </div>
               )}
-
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex justify-center items-center mt-6 gap-2">

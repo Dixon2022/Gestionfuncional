@@ -34,7 +34,41 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from "next/link";
 import SimilarPropertiesCarousel from "./similarPropertiesCarousel";
+import Slider from "react-slick";
 
+function NextArrow(props: any) {
+  const { className, style, onClick } = props;
+  return (
+    <button
+      className={`${className} !right-2 z-20 bg-white/80 hover:bg-white rounded-full p-4 shadow-lg absolute top-1/2 -translate-y-1/2`}
+      style={{ ...style }}
+      onClick={onClick}
+      aria-label="Siguiente imagen"
+      type="button"
+    >
+      <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth={2.5}>
+        <path d="M12 9l9 9-9 9" />
+      </svg>
+    </button>
+  );
+}
+
+function PrevArrow(props: any) {
+  const { className, style, onClick } = props;
+  return (
+    <button
+      className={`${className} !left-2 z-20 bg-white/80 hover:bg-white rounded-full p-4 shadow-lg absolute top-1/2 -translate-y-1/2`}
+      style={{ ...style }}
+      onClick={onClick}
+      aria-label="Imagen anterior"
+      type="button"
+    >
+      <svg width="36" height="36" fill="none" stroke="currentColor" strokeWidth={2.5}>
+        <path d="M24 9l-9 9 9 9" />
+      </svg>
+    </button>
+  );
+}
 // Update the path below if your report-form file is in a different directory
 
 interface PropertyDetailsPageProps {
@@ -130,47 +164,26 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
             {/* Galería de imágenes principal con miniaturas debajo */}
             {property.images && property.images.length > 0 ? (
               <div className="mb-8 flex flex-col items-center">
-                {/* Imagen principal */}
-                <div
-                  className="relative w-full max-w-2xl h-[250px] md:h-[450px] rounded-xl overflow-hidden shadow-lg bg-white flex justify-center items-center cursor-pointer"
-                  onClick={() => setShowModal(true)}
-                  title="Ver imagen completa"
-                >
-                  <Image
-                    src={
-                      typeof property.images[mainImageIdx] === "string"
-                        ? property.images[mainImageIdx]
-                        : (property.images[mainImageIdx] as { url: string }).url
-                    }
-                    alt={`Imagen principal ${mainImageIdx + 1}`}
-                    fill
-                    style={{ objectFit: "cover" }}
-                    className="rounded-xl transition-transform hover:scale-105"
-                    priority
-                    data-ai-hint="imagen propiedad principal"
-                  />
-                </div>
-                {/* Miniaturas debajo */}
-                {property.images.length > 1 && (
-                  <div className="flex flex-row gap-2 mt-4 justify-start items-center">
+                {property.images.length > 2 ? (
+                  <Slider
+                    dots={true}
+                    infinite={true}
+                    speed={500}
+                    slidesToShow={1}
+                    slidesToScroll={1}
+                    className="w-full max-w-2xl"
+                    arrows={true}
+                    nextArrow={<NextArrow />}
+                    prevArrow={<PrevArrow />}
+                  >
                     {property.images.map((img, idx) => (
-                      <button
+                      <div
                         key={idx}
-                        type="button"
-                        onClick={() => setMainImageIdx(idx)}
-                        className={`
-                        relative rounded-lg overflow-hidden shadow
-                        border-2 ${
-                          mainImageIdx === idx
-                            ? "border-blue-500"
-                            : "border-transparent"
-                        }
-                        focus:outline-none focus:ring-2 focus:ring-blue-400
-                        transition-all
-                        bg-white
-                        ${mainImageIdx === idx ? "scale-105" : ""}
-                      `}
-                        style={{ width: 100, height: 84 }}
+                        className="relative w-full h-[250px] md:h-[450px] rounded-xl overflow-hidden shadow-lg bg-white flex justify-center items-center cursor-pointer"
+                        onClick={() => {
+                          setMainImageIdx(idx);
+                          setShowModal(true);
+                        }}
                         title={`Ver imagen ${idx + 1}`}
                       >
                         <Image
@@ -179,16 +192,78 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                               ? img
                               : (img as { url: string }).url
                           }
-                          alt={`Miniatura ${idx + 1}`}
+                          alt={`Imagen ${idx + 1}`}
                           fill
                           style={{ objectFit: "cover" }}
-                          className="rounded-lg"
-                          data-ai-hint="miniatura propiedad"
-                          sizes="64px"
+                          className="rounded-xl transition-transform hover:scale-105"
+                          priority={idx === 0}
+                          data-ai-hint="imagen propiedad principal"
                         />
-                      </button>
+                      </div>
                     ))}
-                  </div>
+                  </Slider>
+                ) : (
+                  <>
+                    <div
+                      className="relative w-full max-w-2xl h-[250px] md:h-[450px] rounded-xl overflow-hidden shadow-lg bg-white flex justify-center items-center cursor-pointer"
+                      onClick={() => setShowModal(true)}
+                      title="Ver imagen completa"
+                    >
+                      <Image
+                        src={
+                          typeof property.images[mainImageIdx] === "string"
+                            ? property.images[mainImageIdx]
+                            : (property.images[mainImageIdx] as { url: string }).url
+                        }
+                        alt={`Imagen principal ${mainImageIdx + 1}`}
+                        fill
+                        style={{ objectFit: "cover" }}
+                        className="rounded-xl transition-transform hover:scale-105"
+                        priority
+                        data-ai-hint="imagen propiedad principal"
+                      />
+                    </div>
+                    {/* Miniaturas debajo */}
+                    {property.images.length > 1 && (
+                      <div className="flex flex-row gap-2 mt-4 justify-start items-center">
+                        {property.images.map((img, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setMainImageIdx(idx)}
+                            className={`
+                            relative rounded-lg overflow-hidden shadow
+                            border-2 ${
+                              mainImageIdx === idx
+                                ? "border-blue-500"
+                                : "border-transparent"
+                            }
+                            focus:outline-none focus:ring-2 focus:ring-blue-400
+                            transition-all
+                            bg-white
+                            ${mainImageIdx === idx ? "scale-105" : ""}
+                          `}
+                            style={{ width: 100, height: 84 }}
+                            title={`Ver imagen ${idx + 1}`}
+                          >
+                            <Image
+                              src={
+                                typeof img === "string"
+                                  ? img
+                                  : (img as { url: string }).url
+                              }
+                              alt={`Miniatura ${idx + 1}`}
+                              fill
+                              style={{ objectFit: "cover" }}
+                              className="rounded-lg"
+                              data-ai-hint="miniatura propiedad"
+                              sizes="64px"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 )}
                 {/* Modal para ver imagen completa */}
                 {showModal && (
@@ -211,8 +286,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                         src={
                           typeof property.images[mainImageIdx] === "string"
                             ? property.images[mainImageIdx]
-                            : (property.images[mainImageIdx] as { url: string })
-                                .url
+                            : (property.images[mainImageIdx] as { url: string }).url
                         }
                         alt={`Imagen ampliada ${mainImageIdx + 1}`}
                         width={900}
@@ -352,11 +426,6 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                   label: "Año Const.",
                   value: property.yearBuilt || "N/A",
                 },
-                {
-                  icon: Layers,
-                  label: "Sup. Terreno (m²)",
-                  value: displayLotSize,
-                },
               ].map((detail) => (
                 <div
                   key={detail.label}
@@ -484,7 +553,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
             {/* Property Comments */}
             <PropertyComments propertyId={property.id.toString()} />
           </div>
-          
+
           {/* Sidebar Column (Agent Info & Contact Form) */}
           <div className="md:col-span-1 space-y-8">
             {/* Agent Info Card */}

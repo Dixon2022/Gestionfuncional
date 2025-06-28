@@ -50,7 +50,6 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log("BODY recibido en POST /api/favorite:", body);
 
     const { propertyId, email } = body;
 
@@ -92,8 +91,7 @@ export async function DELETE(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
-
-    console.log("Eliminando favorito para el usuario:", user.email, "con propertyId:", propertyId);
+    
     // Si propertyId es numérico, convertirlo:
     const propertyIdNum = Number(propertyId);
     if (isNaN(propertyIdNum)) {

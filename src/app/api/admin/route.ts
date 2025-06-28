@@ -27,20 +27,27 @@ export async function GET() {
 // DELETE: Eliminar una propiedad
 export async function DELETE(req: Request) {
   try {
-    const { propertyId } = await req.json();
+    const { propertyId, ownerId } = await req.json();
 
-    if (!propertyId) {
-      return NextResponse.json({ error: 'propertyId requerido' }, { status: 400 });
-    }
+    // ...aquí tu lógica de permisos...
 
-    await prisma.property.delete({
-      where: { id: propertyId },
-    });
+    // Elimina primero los reportes asociados y luego la propiedad
+    await prisma.$transaction([
+      prisma.propertyReport.deleteMany({
+        where: { propertyId },
+      }),
+      prisma.property.delete({
+        where: { id: propertyId },
+      }),
+    ]);
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('[ADMIN REPORTES DELETE]', error);
-    return NextResponse.json({ error: 'Error al eliminar propiedad' }, { status: 500 });
+    console.error('Error al eliminar propiedad:', error);
+    return NextResponse.json(
+      { error: 'Hubo un problema al eliminar la propiedad. Intenta más tarde.' },
+      { status: 500 }
+    );
   }
 }
 

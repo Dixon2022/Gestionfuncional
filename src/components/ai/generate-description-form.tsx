@@ -50,10 +50,14 @@ const generateDescriptionSchema = z.object({
   title: z.string().min(5, {message: 'El título debe tener al menos 5 caracteres.'}),
   price: z.coerce.number().min(1, {message: 'El precio debe ser mayor que 0.'}),
   numberOfBedrooms: z.coerce.number().min(0, { message: 'El número de habitaciones no puede ser negativo.' }),
-  numberOfBathrooms: z.coerce.number().min(0, { message: 'El número de baños no puede ser negativo.' }),
+  numberOfBathrooms: z.coerce.number().int().min(0, { message: 'El número de baños no puede ser negativo.' }),
   squareFootage: z.coerce.number().min(1, { message: 'Los metros cuadrados deben ser mayores que 0.' }),
   keyFeatures: z.string().min(5, { message: 'Por favor, lista al menos una característica clave.' }),
   description: z.string().min(20, { message: "La descripción debe tener al menos 20 caracteres."}),
+  yearBuilt: z.coerce.number()
+    .int()
+    .min(1800, { message: "El año debe ser mayor a 1800." })
+    .max(new Date().getFullYear(), { message: "No puede ser un año futuro." }),
 });
 
 type GenerateDescriptionFormValues = z.infer<typeof generateDescriptionSchema>;
@@ -279,11 +283,12 @@ export function GenerateDescriptionForm() {
         avatarUrl: `https://placehold.co/100x100.png?text=${user.name ? user.name.substring(0,1) : 'U'}`
       },
       features: currentFormData.keyFeatures.split(',').map(f => f.trim()).filter(f => f),
-      yearBuilt: new Date().getFullYear() - Math.floor(Math.random() * 20), 
+      yearBuilt: currentFormData.yearBuilt,
       lotSize: currentFormData.squareFootage + Math.floor(Math.random() * 50), 
       ownerId: realUserId,
       mainImageUri: photoDataUrisForSave[0],
       createdAt: Date.now(),
+      yearbuilt: currentFormData.yearBuilt,
       }),
     });
 
@@ -407,7 +412,7 @@ export function GenerateDescriptionForm() {
                   </div>
                 )}
                 <FormDescription>
-                  Sube fotos claras de la propiedad. La primera imagen será usada para generar la descripción con IA.
+                  Sube fotos claras de la propiedad.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -503,7 +508,7 @@ export function GenerateDescriptionForm() {
             )}
           />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <FormField
               control={form.control}
               name="numberOfBedrooms"
@@ -524,7 +529,7 @@ export function GenerateDescriptionForm() {
                 <FormItem>
                   <FormLabel>Baños</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" step="0.5" {...field} disabled={isAIGenerating || isSaving}/>
+                    <Input type="number" min={0} {...field} disabled={isAIGenerating || isSaving}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -538,6 +543,26 @@ export function GenerateDescriptionForm() {
                   <FormLabel>Superficie (m²)</FormLabel>
                   <FormControl>
                     <Input type="number" min="1" {...field} disabled={isAIGenerating || isSaving}/>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="yearBuilt"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Año de Construcción</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      min={1800}
+                      max={new Date().getFullYear()}
+                      placeholder="Ej: 2015"
+                      {...field}
+                      disabled={isAIGenerating || isSaving}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
