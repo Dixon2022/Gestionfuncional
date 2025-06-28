@@ -40,10 +40,10 @@ export default function ProfilePage() {
   const { user, logout, loading } = useAuth();
   const router = useRouter();
   const [myProperties, setMyProperties] = useState<Property[]>([]);
+  const [visibleProperties, setVisibleProperties] = useState<Property[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [search, setSearch] = useState("");
-  const [order, setOrder] = useState<"desc" | "asc">("desc"); // Nuevo estado
-  const [viewMode, setViewMode] = useState<"mine" | "all">("mine"); // Estado para el modo de vista
+  const [order, setOrder] = useState<"desc" | "asc">("desc");
 
   useEffect(() => {
     setIsClient(true);
@@ -57,7 +57,19 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user && isClient) {
-      getPropertiesByOwner(user.id).then(setMyProperties);
+      (async () => {
+        const userId = await getOwnerIdByEmail(user.email);
+        if (userId !== null) {
+          const properties = await getPropertiesByOwner(String(userId));
+          setMyProperties(properties);
+          setVisibleProperties(
+            properties.filter((property) => String(property.ownerId) === String(userId))
+          );
+        } else {
+          setMyProperties([]);
+          setVisibleProperties([]);
+        }
+      })();
     }
   }, [user, isClient]);
 
@@ -83,7 +95,7 @@ export default function ProfilePage() {
       </div>
     );
   }
-  const visibleProperties = myProperties.filter((property) => property.ownerId === user.id);
+
   const filteredProperties = visibleProperties
     .filter((property) =>
       [property.title, property.city, property.address]
@@ -252,7 +264,8 @@ export default function ProfilePage() {
 
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">
-              Propiedades            </h2>
+              Propiedades
+            </h2>
             {filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredProperties.map((property) => (
@@ -270,4 +283,16 @@ export default function ProfilePage() {
       </Card>
     </div>
   );
+}
+async function getOwnerIdByEmail(email: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `/api/user/by-email?email=${encodeURIComponent(email)}`
+    );
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user.id ?? null;
+  } catch {
+    return null;
+  }
 }
