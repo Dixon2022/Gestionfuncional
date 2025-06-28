@@ -13,7 +13,10 @@ export async function GET() {
     });
     return NextResponse.json(properties);
   } catch (error) {
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -40,7 +43,10 @@ export async function POST(req: NextRequest) {
     } = body;
 
     if (!mainImageUri) {
-      return NextResponse.json({ error: "mainImageUri es requerido" }, { status: 400 });
+      return NextResponse.json(
+        { error: "mainImageUri es requerido" },
+        { status: 400 }
+      );
     }
 
     const property = await prisma.property.create({
@@ -49,12 +55,12 @@ export async function POST(req: NextRequest) {
         description,
         address,
         city,
-        price: Number(price), 
+        price: Number(price),
         area,
         lotSize,
         bedrooms: Number(bedrooms), // <-- asegúrate de convertir a número
         bathrooms: Number(bathrooms), // <-- asegúrate de convertir a número
-        yearBuilt,
+        yearBuilt: yearBuilt ? Number(yearBuilt) : null,
         type,
         listingType,
         features,
@@ -76,7 +82,7 @@ export async function DELETE(req: Request) {
     const { propertyId, ownerId } = await req.json();
     if (!propertyId || !ownerId) {
       return NextResponse.json(
-        { error: 'Faltan datos para eliminar la propiedad.' },
+        { error: "Faltan datos para eliminar la propiedad." },
         { status: 400 }
       );
     }
@@ -89,14 +95,14 @@ export async function DELETE(req: Request) {
 
     if (!property) {
       return NextResponse.json(
-        { error: 'La propiedad no existe o ya fue eliminada.' },
+        { error: "La propiedad no existe o ya fue eliminada." },
         { status: 404 }
       );
     }
 
     if (property.ownerId !== ownerId) {
       return NextResponse.json(
-        { error: 'No tienes permiso para eliminar esta propiedad.' },
+        { error: "No tienes permiso para eliminar esta propiedad." },
         { status: 403 }
       );
     }
@@ -113,11 +119,12 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error al eliminar propiedad:', error);
+    console.error("Error al eliminar propiedad:", error);
     return NextResponse.json(
-      { error: 'Hubo un problema al eliminar la propiedad. Intenta más tarde.' },
+      {
+        error: "Hubo un problema al eliminar la propiedad. Intenta más tarde.",
+      },
       { status: 500 }
     );
   }
 }
-

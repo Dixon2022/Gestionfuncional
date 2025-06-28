@@ -393,7 +393,7 @@ export function GenerateDescriptionForm() {
                   </div>
                 )}
                 <FormDescription>
-                  Sube fotos claras de la propiedad. La primera imagen será usada para generar la descripción con IA.
+                  Sube fotos claras de la propiedad.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
