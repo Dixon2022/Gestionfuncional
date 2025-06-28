@@ -41,6 +41,10 @@ const editPropertySchema = z.object({
   keyFeatures: z.string().min(5, { message: 'Por favor, lista al menos una característica clave.' }),
   description: z.string().min(20, { message: 'La descripción debe tener al menos 20 caracteres.' }),
   isFeatured: z.boolean().optional(), 
+  yearBuilt: z.coerce.number()
+    .int()
+    .min(1800, { message: "El año debe ser mayor a 1800." })
+    .max(new Date().getFullYear(), { message: "No puede ser un año futuro." }),
 });
 
 type EditPropertyFormValues = z.infer<typeof editPropertySchema>;
@@ -77,6 +81,7 @@ export default function EditPropertyPage() {
       keyFeatures: '',
       description: '',
       isFeatured: false,
+      yearBuilt: new Date().getFullYear(),
     },
   });
 
@@ -130,9 +135,9 @@ export default function EditPropertyPage() {
         keyFeatures: Array.isArray(fetchedProperty.features) ? fetchedProperty.features.join(', ') : '',
         description: fetchedProperty.description,
         isFeatured: fetchedProperty.isFeatured ?? false,
+        yearBuilt: fetchedProperty.yearBuilt ?? new Date().getFullYear(),
       });
-
-      setIsLoading(false); // ✅ Solo se ejecuta si la propiedad fue cargada exitosamente
+      setIsLoading(false);
     };
 
     fetchProperty();
@@ -220,7 +225,8 @@ export default function EditPropertyPage() {
       area: data.area,
       features: data.keyFeatures.split(',').map(f => f.trim()).filter(Boolean),
       description: data.description,
-      isFeatured: data.isFeatured, // Asegúrate de que este campo se envíe en la actualización
+      isFeatured: data.isFeatured,
+      yearBuilt: data.yearBuilt,
     };
 
     try {
@@ -549,6 +555,25 @@ export default function EditPropertyPage() {
                       <FormLabel>Área (m²)</FormLabel>
                       <FormControl>
                         <Input type="number" min={1} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="yearBuilt"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormLabel>Año de Construcción</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min={1800}
+                          max={new Date().getFullYear()}
+                          placeholder="Ej: 2015"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

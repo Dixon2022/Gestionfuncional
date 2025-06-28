@@ -423,11 +423,6 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
                   label: "Año Const.",
                   value: property.yearBuilt || "N/A",
                 },
-                {
-                  icon: Layers,
-                  label: "Sup. Terreno (m²)",
-                  value: displayLotSize,
-                },
               ].map((detail) => (
                 <div
                   key={detail.label}
