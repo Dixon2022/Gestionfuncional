@@ -136,6 +136,19 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
     if (!user) return;
 
     try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+      if (!userResponse.ok) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive",
+        });
+        return;
+      }
+      const userData = await userResponse.json();
+      const realUserId = userData.id;
+
       const response = await fetch(`/api/property/${propertyId}/comments`, {
         method: 'DELETE',
         headers: {
@@ -143,7 +156,7 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
         },
         body: JSON.stringify({
           commentId,
-          userId: parseInt(user.id),
+          userId: realUserId,
         }),
       });
 
@@ -172,7 +185,9 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
 
   const canDeleteComment = (comment: Comment) => {
     if (!user) return false;
-    return comment.user.id === parseInt(user.id) || user.role === 'admin';
+    // Note: This is a UI-only check. The real authorization happens on the server
+    // We can't reliably compare IDs here due to the timestamp vs database ID issue
+    return user.role === 'admin' || comment.user.name === user.name;
   };
 
   if (loading) {

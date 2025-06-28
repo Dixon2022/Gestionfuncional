@@ -28,7 +28,7 @@ export interface Property {
   yearBuilt?: number;
   lotSize?: number; // in sq m
   photoDataUri?: string; // Used for newly created properties before image upload
-  ownerId?: string; // ID of the user who created this property
+  ownerId: number; // ID of the user who created this property (database ID is number)
   createdAt?: number; // Timestamp of creation
 }
 
@@ -43,7 +43,7 @@ export interface SearchFilters {
 }
 
 export interface User {
-  id: string;
+  id: string; // Keep as string for frontend compatibility, but ensure it contains database ID
   email: string;
   name: string;
   phone: string;

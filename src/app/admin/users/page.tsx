@@ -24,6 +24,8 @@ export default function UsersAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 8;
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) {
@@ -79,6 +81,11 @@ export default function UsersAdminPage() {
     return matchesSearch && matchesRole;
   });
 
+  // Paginación
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const startIndex = (currentPage - 1) * usersPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+
   return (
     <>
       <Header />
@@ -123,7 +130,7 @@ export default function UsersAdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((u, idx) => (
+                      {paginatedUsers.map((u, idx) => (
                         <tr
                           key={u.id}
                           className={idx % 2 === 0 ? "bg-gray-50 hover:bg-blue-50" : "bg-white hover:bg-blue-50"}
@@ -191,6 +198,29 @@ export default function UsersAdminPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex justify-center items-center mt-6 gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="px-4 py-2 text-sm">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Siguiente
+                  </Button>
                 </div>
               )}
             </div>

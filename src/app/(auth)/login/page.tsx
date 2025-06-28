@@ -52,7 +52,7 @@ export default function LoginPage() {
 
       const user = await response.json();
 
-     login(user.email, user.name, user.phone || "", user.role);
+      await login(user.email, user.name, user.phone || "", user.role);
 
       toast({
         title: "¡Bienvenido de nuevo!",

@@ -238,22 +238,22 @@ export function GenerateDescriptionForm() {
     }
 
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 1. Guarda la propiedad (sin ID)
-    // 1. Busca el usuario por email para obtener su ID real en la base de datos
-    const userRes = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
-    if (!userRes.ok) {
-      toast({
-      title: 'Error al obtener usuario',
-      description: 'No se pudo obtener el usuario desde la base de datos.',
-      variant: 'destructive',
-      });
-      setIsSaving(false);
-      return;
-    }
-    const userDb = await userRes.json();
-    const realUserId = userDb?.id || user.id;
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 1. Busca el usuario por email para obtener su ID real en la base de datos
+      const userRes = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+      if (!userRes.ok) {
+        toast({
+        title: 'Error al obtener usuario',
+        description: 'No se pudo obtener el usuario desde la base de datos.',
+        variant: 'destructive',
+        });
+        return;
+      }
+      const userDb = await userRes.json();
+      const realUserId = userDb?.id || user.id;
 
     // 2. Guarda la propiedad usando el ID real del usuario
     const response = await fetch('/api/property', {
@@ -286,6 +286,18 @@ export function GenerateDescriptionForm() {
       createdAt: Date.now(),
       }),
     });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      toast({
+        title: 'Error al Guardar Propiedad',
+        description: errorData.error || 'Ocurrió un error al guardar la propiedad.',
+        variant: 'destructive',
+      });
+      setIsSaving(false);
+      return;
+    }
+
     const savedProperty = await response.json();
     const propertyId = savedProperty.id; // Este sí es pequeño y válido
 
@@ -306,19 +318,26 @@ export function GenerateDescriptionForm() {
       });
       setIsSaving(false);
       return;
+    }      toast({
+        title: '¡Propiedad Guardada!',
+        description: 'Tu nueva propiedad ha sido añadida y está visible.',
+        action: (
+          <Button variant="outline" size="sm" onClick={() => router.push(`/properties/${propertyId}`)}>
+            Ver Propiedad
+          </Button>
+        )
+      });
+      router.push(`/properties/${propertyId}`);
+    } catch (error) {
+      console.error('Error saving property:', error);
+      toast({
+        title: 'Error Inesperado',
+        description: 'Ocurrió un error inesperado al guardar la propiedad. Intenta de nuevo.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSaving(false);
     }
-
-    toast({
-      title: '¡Propiedad Guardada!',
-      description: 'Tu nueva propiedad ha sido añadida y está visible.',
-      action: (
-        <Button variant="outline" size="sm" onClick={() => router.push(`/properties/${propertyId}`)}>
-          Ver Propiedad
-        </Button>
-      )
-    });
-    router.push(`/properties/${propertyId}`);
-    setIsSaving(false);
   };
 
   return (

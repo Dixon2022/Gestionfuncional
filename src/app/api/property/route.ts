@@ -1,6 +1,6 @@
 // GET all properties / POST new property
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { number } from "zod";
 
 export async function GET() {
@@ -43,6 +43,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "mainImageUri es requerido" }, { status: 400 });
     }
 
+    // Validate and convert ownerId
+    const ownerIdNumber = parseInt(ownerId);
+    if (isNaN(ownerIdNumber)) {
+      return NextResponse.json({ error: "ownerId debe ser un número válido" }, { status: 400 });
+    }
+
     const property = await prisma.property.create({
       data: {
         title,
@@ -60,7 +66,7 @@ export async function POST(req: NextRequest) {
         features,
         isFeatured,
         mainImageUri,
-        ownerId: parseInt(ownerId),
+        ownerId: ownerIdNumber,
       },
     });
 

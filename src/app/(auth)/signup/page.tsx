@@ -85,7 +85,7 @@ export default function SignupPage() {
     }
 
     // Si todo sale bien, loguea al usuario
-    login(data.email, data.name, data.phone,'user');
+    await login(data.email, data.name, data.phone,'user');
 
     toast({
       title: "¡Cuenta Creada!",

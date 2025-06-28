@@ -9,7 +9,7 @@ import { parseDomainOfCategoryAxis } from 'recharts/types/util/ChartUtils';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, name: string, phone: string, role: Role) => void;
+  login: (email: string, name: string, phone: string, role: Role) => Promise<void>;
   logout: () => void;
   updateUser: (updatedInfo: Partial<Pick<User, 'name' | 'email' | 'phone' | 'userDescription'>>) => Promise<void>;
   loading: boolean;
@@ -31,49 +31,110 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (storedUserData) {
         try {
           const parsedUser = JSON.parse(storedUserData) as User;
-          setUser({
-            ...parsedUser,
-            name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
-            phone: parsedUser.phone || '000-000-0000',
-          });
+          
+          // If user has a temporary ID (starts with temp_), fetch real ID from database
+          if (parsedUser.id.startsWith('temp_') || parsedUser.id === Date.now().toString()) {
+            fetch(`/api/user/by-email?email=${encodeURIComponent(currentUserEmail)}`)
+              .then(response => response.json())
+              .then(dbUser => {
+                const updatedUser: User = {
+                  ...parsedUser,
+                  id: dbUser.id.toString(), // Use real database ID
+                  name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
+                  phone: parsedUser.phone || '000-000-0000',
+                  userDescription: dbUser.userDescription || parsedUser.userDescription,
+                };
+                
+                // Update localStorage with real ID
+                localStorage.setItem(`${USER_DATA_PREFIX}${currentUserEmail}`, JSON.stringify(updatedUser));
+                setUser(updatedUser);
+              })
+              .catch(error => {
+                console.error('Error fetching real user ID:', error);
+                // Use the stored user data as fallback
+                setUser({
+                  ...parsedUser,
+                  name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
+                  phone: parsedUser.phone || '000-000-0000',
+                });
+              })
+              .finally(() => setLoading(false));
+          } else {
+            // User already has a real ID
+            setUser({
+              ...parsedUser,
+              name: parsedUser.name || parsedUser.email.split('@')[0] || 'Usuario',
+              phone: parsedUser.phone || '000-000-0000',
+            });
+            setLoading(false);
+          }
         } catch (e) {
           console.error("Error al parsear usuario desde localStorage", e);
           localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
           localStorage.removeItem(`${USER_DATA_PREFIX}${currentUserEmail}`);
+          setLoading(false);
         }
       } else {
         localStorage.removeItem(CURRENT_USER_EMAIL_KEY);
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  const login = (email: string, name: string, phone: string, role: Role) => {
-    const storageKey = `${USER_DATA_PREFIX}${email}`;
-    let existingUserDataString = localStorage.getItem(storageKey);
-    let userToLogin: User;
+  const login = async (email: string, name: string, phone: string, role: Role) => {
+    try {
+      // Fetch the real user from the database
+      const response = await fetch(`/api/user/by-email?email=${encodeURIComponent(email)}`);
+      if (!response.ok) {
+        throw new Error('Usuario no encontrado en la base de datos');
+      }
+      
+      const dbUser = await response.json();
+      
+      const userToLogin: User = {
+        id: dbUser.id.toString(), // Use the real database ID
+        email: dbUser.email,
+        name: dbUser.name || name || email.split('@')[0] || 'Usuario',
+        phone: dbUser.phone || phone || '000-000-0000',
+        role: dbUser.role || role || 'user',
+        userDescription: dbUser.userDescription,
+      };
 
-    if (existingUserDataString) {
-      const existingUser = JSON.parse(existingUserDataString) as User;
-      userToLogin = {
-        ...existingUser,
-        name: existingUser.name || name || email.split('@')[0] || 'Usuario',
-        phone: existingUser.phone || phone || '000-000-0000' ,
-        role: role || 'user', 
-      };
-    } else {
-      userToLogin = {
-        id: Date.now().toString(),
-        email,
-        name: name || email.split('@')[0] || 'Usuario',
-        phone: phone || '000-000-0000' , 
-        role: role ||'user' ,
-      };
+      const storageKey = `${USER_DATA_PREFIX}${email}`;
+      localStorage.setItem(storageKey, JSON.stringify(userToLogin));
+      localStorage.setItem(CURRENT_USER_EMAIL_KEY, email);
+      setUser(userToLogin);
+    } catch (error) {
+      console.error('Error during login:', error);
+      // Fallback to local storage if database fails (temporary)
+      const storageKey = `${USER_DATA_PREFIX}${email}`;
+      let existingUserDataString = localStorage.getItem(storageKey);
+      let userToLogin: User;
+
+      if (existingUserDataString) {
+        const existingUser = JSON.parse(existingUserDataString) as User;
+        userToLogin = {
+          ...existingUser,
+          name: existingUser.name || name || email.split('@')[0] || 'Usuario',
+          phone: existingUser.phone || phone || '000-000-0000',
+          role: role || 'user', 
+        };
+      } else {
+        userToLogin = {
+          id: `temp_${Date.now()}`, // Temporary ID with prefix to identify it's not real
+          email,
+          name: name || email.split('@')[0] || 'Usuario',
+          phone: phone || '000-000-0000',
+          role: role || 'user',
+        };
+      }
+
+      localStorage.setItem(storageKey, JSON.stringify(userToLogin));
+      localStorage.setItem(CURRENT_USER_EMAIL_KEY, email);
+      setUser(userToLogin);
     }
-
-    localStorage.setItem(storageKey, JSON.stringify(userToLogin));
-    localStorage.setItem(CURRENT_USER_EMAIL_KEY, email);
-    setUser(userToLogin);
   };
 
   const logout = () => {
@@ -100,48 +161,69 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(newUserData);
 
       try {
-        const allProperties = await getProperties(); // ✅ Esperar la promesa
-        const userProperties = allProperties.filter(p => p.ownerId === newUserData.id);
+        const allProperties = await getProperties();
+        // Only update properties if user has a real database ID (not temporary)
+        if (!newUserData.id.startsWith('temp_')) {
+          const userIdNumber = parseInt(newUserData.id);
+          if (!isNaN(userIdNumber)) {
+            const userProperties = allProperties.filter(p => p.ownerId === userIdNumber);
 
-        userProperties.forEach(prop => {
-          let agentUpdates: Partial<typeof prop.owner> = {};
-          let needsUpdate = false;
+            userProperties.forEach(prop => {
+              let agentUpdates: Partial<typeof prop.owner> = {};
+              let needsUpdate = false;
 
-          if (updatedInfo.name !== undefined && prop.owner.name === oldUser.name) {
-            agentUpdates.name = newUserData.name;
-            needsUpdate = true;
-          }
-          if (updatedInfo.email !== undefined && prop.owner.email === oldUser.email) {
-            agentUpdates.email = newUserData.email;
-            needsUpdate = true;
-          }
-          if (updatedInfo.phone !== undefined && prop.owner.phone === oldUser.phone) {
-            agentUpdates.phone = newUserData.phone;
-            needsUpdate = true;
-          }
+              if (updatedInfo.name !== undefined && prop.owner.name === oldUser.name) {
+                agentUpdates.name = newUserData.name;
+                needsUpdate = true;
+              }
+              if (updatedInfo.email !== undefined && prop.owner.email === oldUser.email) {
+                agentUpdates.email = newUserData.email;
+                needsUpdate = true;
+              }
+              if (updatedInfo.phone !== undefined && prop.owner.phone === oldUser.phone) {
+                agentUpdates.phone = newUserData.phone;
+                needsUpdate = true;
+              }
 
-          if (needsUpdate) {
-            updateStoreProperty(prop.id, { owner: { ...prop.owner, ...agentUpdates } }, newUserData.id);
+              if (needsUpdate) {
+                updateStoreProperty(prop.id, { owner: { ...prop.owner, ...agentUpdates } }, newUserData.id);
+              }
+            });
           }
-        });
+        }
       } catch (err) {
         console.error("Error actualizando propiedades del usuario", err);
       }
 
-      // Sincroniza con el servidor
-      try {
-        await fetch("/api/user/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: newUserData.email,
-            name: newUserData.name,
-            phone: newUserData.phone,
-            userDescription: newUserData.userDescription,
-          }),
-        });
-      } catch (err) {
-        console.error("Error sincronizando usuario con el servidor", err);
+      // Sync with server if user has real database ID
+      if (!newUserData.id.startsWith('temp_')) {
+        try {
+          const response = await fetch("/api/user/update", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: newUserData.email,
+              name: newUserData.name,
+              phone: newUserData.phone,
+              userDescription: newUserData.userDescription,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to update user on server');
+          }
+
+          const updatedServerUser = await response.json();
+          // Update local storage with server response
+          const finalUserData = {
+            ...newUserData,
+            id: updatedServerUser.id.toString(),
+          };
+          localStorage.setItem(`${USER_DATA_PREFIX}${newUserData.email}`, JSON.stringify(finalUserData));
+          setUser(finalUserData);
+        } catch (err) {
+          console.error("Error sincronizando usuario con el servidor", err);
+        }
       }
     }
   };

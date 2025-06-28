@@ -25,10 +25,37 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
   const [loading, setLoading] = useState(true);
   const [selectedRange, setSelectedRange] = useState<DateRange | undefined>();
   const [saving, setSaving] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
+  const [checkingOwnership, setCheckingOwnership] = useState(true);
 
   useEffect(() => {
     fetchAvailability();
-  }, [propertyId]);
+    checkOwnership();
+  }, [propertyId, user]);
+
+  const checkOwnership = async () => {
+    if (!user) {
+      setIsOwner(false);
+      setCheckingOwnership(false);
+      return;
+    }
+
+    try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setIsOwner(userData.id === ownerId);
+      } else {
+        setIsOwner(false);
+      }
+    } catch (error) {
+      console.error('Error checking ownership:', error);
+      setIsOwner(false);
+    } finally {
+      setCheckingOwnership(false);
+    }
+  };
 
   const fetchAvailability = async () => {
     try {
@@ -56,6 +83,20 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
 
     setSaving(true);
     try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user!.email)}`);
+      if (!userResponse.ok) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+      const userData = await userResponse.json();
+      const realUserId = userData.id;
+
       const response = await fetch(`/api/property/${propertyId}/availability`, {
         method: 'POST',
         headers: {
@@ -64,7 +105,7 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
         body: JSON.stringify({
           startDate: selectedRange.from.toISOString(),
           endDate: selectedRange.to.toISOString(),
-          ownerId: user?.id,
+          ownerId: realUserId,
         }),
       });
 
@@ -100,6 +141,19 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
     }
 
     try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user!.email)}`);
+      if (!userResponse.ok) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive",
+        });
+        return;
+      }
+      const userData = await userResponse.json();
+      const realUserId = userData.id;
+
       const response = await fetch(`/api/property/${propertyId}/availability`, {
         method: 'DELETE',
         headers: {
@@ -107,7 +161,7 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
         },
         body: JSON.stringify({
           availabilityId,
-          ownerId: user?.id,
+          ownerId: realUserId,
         }),
       });
 
@@ -141,11 +195,11 @@ export function AvailabilityManager({ propertyId, ownerId, listingType }: Availa
   };
 
   // Only show for property owners and rental properties
-  if (!user || Number(user.id) !== ownerId || listingType !== 'Alquiler') {
+  if (!user || !isOwner || listingType !== 'Alquiler') {
     return null;
   }
 
-  if (loading) {
+  if (loading || checkingOwnership) {
     return (
       <Card className="mb-8">
         <CardHeader>
