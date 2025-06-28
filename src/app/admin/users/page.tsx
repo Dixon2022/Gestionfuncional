@@ -24,6 +24,8 @@ export default function UsersAdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "admin" | "user">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 8;
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "admin")) {
@@ -79,6 +81,16 @@ export default function UsersAdminPage() {
     return matchesSearch && matchesRole;
   });
 
+  const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * usersPerPage,
+    currentPage * usersPerPage
+  );
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) setCurrentPage(page);
+  };
+
   return (
     <>
       <Header />
@@ -123,7 +135,7 @@ export default function UsersAdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredUsers.map((u, idx) => (
+                      {paginatedUsers.map((u, idx) => (
                         <tr
                           key={u.id}
                           className={idx % 2 === 0 ? "bg-gray-50 hover:bg-blue-50" : "bg-white hover:bg-blue-50"}
@@ -193,6 +205,27 @@ export default function UsersAdminPage() {
                   </table>
                 </div>
               )}
+              <div className="mt-4">
+                <span className="text-sm text-gray-700">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 rounded bg-blue-500 text-white text-sm font-semibold shadow hover:bg-blue-600 transition-colors disabled:opacity-50"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </main>

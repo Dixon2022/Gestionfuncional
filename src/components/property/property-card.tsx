@@ -87,20 +87,29 @@ export function PropertyCard({ property }: PropertyCardProps) {
     }
   }, [user, property.id]);
 
-  const handleDelete = async (): Promise<{
-    success: boolean;
-    message?: string;
-  }> => {
-    const ownerId = await getOwnerIdByEmail(user?.email || "");
+  const handleDelete = async (): Promise<{ success: boolean; message?: string }> => {
+    if (!user) {
+      toast({
+        title: "No autenticado",
+        description: "Debes iniciar sesión para eliminar propiedades.",
+        variant: "destructive",
+      });
+      return { success: false, message: "No autenticado" };
+    }
+
+    const isAdmin = user.role === "admin";
+    const endpoint = isAdmin ? "/api/admin" : "/api/property";
+    const ownerId = getOwnerIdByEmail(user.email); // Siempre el id del usuario autenticado
+
     try {
-      const response = await fetch("/api/property", {
+      const response = await fetch(endpoint, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
           propertyId: property.id,
-          ownerId: ownerId,
+          ownerId: Number(ownerId),
         }),
       });
 
@@ -112,8 +121,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
         });
         setTimeout(() => {
           window.location.reload();
-        }, 4000); //recargar la página después de 4 segundos
-      } else if (!response.ok) {
+        }, 4000);
+      } else {
         return {
           success: false,
           message: data.error || "No se pudo eliminar la propiedad.",

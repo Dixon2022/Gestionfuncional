@@ -47,13 +47,38 @@ export async function GET(req: Request) {
 
 // DELETE: Eliminar un reporte
 export async function DELETE(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const id = searchParams.get("id");
-  if (!id) {
-    return NextResponse.json({ error: "Falta id" }, { status: 400 });
-  }
-  await prisma.propertyReport.delete({
-    where: { id: Number(id) },
+  const { propertyId, ownerId } = await req.json();
+
+  // Busca el usuario (admin o no)
+  const user = await prisma.user.findUnique({
+    where: { id: ownerId },
+    select: { role: true },
   });
-  return NextResponse.json({ message: "Reporte eliminado" });
+
+  // Verificar que la propiedad exista
+  const property = await prisma.property.findUnique({
+    where: { id: propertyId },
+    select: { ownerId: true },
+  });
+
+  if (!property) {
+    return NextResponse.json(
+      { error: 'La propiedad no existe o ya fue eliminada.' },
+      { status: 404 }
+    );
+  }
+
+  // Permitir si es admin o si es el dueño
+  if (user?.role !== "admin" && property.ownerId !== ownerId) {
+    return NextResponse.json(
+      { error: 'No tienes permiso para eliminar esta propiedad.' },
+      { status: 403 }
+    );
+  }
+
+  await prisma.property.delete({
+    where: { id: propertyId },
+  });
+
+  return NextResponse.json({ message: "Propiedad eliminada" });
 }

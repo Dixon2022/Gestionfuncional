@@ -43,6 +43,7 @@ export default function ProfilePage() {
   const [isClient, setIsClient] = useState(false);
   const [search, setSearch] = useState("");
   const [order, setOrder] = useState<"desc" | "asc">("desc"); // Nuevo estado
+  const [viewMode, setViewMode] = useState<"mine" | "all">("mine"); // Estado para el modo de vista
 
   useEffect(() => {
     setIsClient(true);
@@ -82,11 +83,7 @@ export default function ProfilePage() {
       </div>
     );
   }
-  const visibleProperties =
-    user.role === "admin"
-      ? myProperties
-      : myProperties.filter((property) => property.ownerId === user.id);
-
+  const visibleProperties = myProperties.filter((property) => property.ownerId === user.id);
   const filteredProperties = visibleProperties
     .filter((property) =>
       [property.title, property.city, property.address]
@@ -102,8 +99,8 @@ export default function ProfilePage() {
     ); // Última propiedad primero
 
   return (
-    <div className="container py-8 md:py-12">
-      <Card className="max-w-3xl mx-auto shadow-xl">
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4 py-8 md:py-12">
+      <Card className="w-full shadow-xl">
         <CardHeader className="text-center">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 rounded-2xl p-6 shadow-inner">
             {/* Avatar y nombre a la izquierda, alineados horizontalmente */}
@@ -180,7 +177,7 @@ export default function ProfilePage() {
             <Button
               asChild
               className={cn(
-                "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+                "min-w-[180px] bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
               )}
             >
               <Link href="/profile/edit">
@@ -194,7 +191,7 @@ export default function ProfilePage() {
               variant="default"
               asChild
               className={cn(
-                "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+                "min-w-[180px] bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
               )}
             >
               <Link href="/generate-description">
@@ -207,7 +204,7 @@ export default function ProfilePage() {
                 variant="secondary"
                 asChild
                 className={cn(
-                  "w-full sm:w-auto bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
+                  "min-w-[180px] bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg hover:from-green-500 hover:to-blue-600 hover:scale-105 transition-transform duration-200"
                 )}
               >
                 <Link href="/admin">
@@ -223,7 +220,7 @@ export default function ProfilePage() {
                 router.push("/");
               }}
               className={cn(
-                "w-full sm:w-auto bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:from-red-600 hover:to-pink-600 hover:scale-105 transition-transform duration-200"
+                "min-w-[180px] bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg hover:from-red-600 hover:to-pink-600 hover:scale-105 transition-transform duration-200"
               )}
             >
               <LogOut className="mr-2 h-4 w-4" />
@@ -231,7 +228,6 @@ export default function ProfilePage() {
             </Button>
           </div>
 
-          {/* Buscador y filtro debajo de los botones */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mb-8 px-4 py-4 rounded-xl bg-gradient-to-r from-blue-50 via-sky-50 to-indigo-50 shadow-inner max-w-2xl mx-auto">
             <Input
               type="text"
@@ -256,8 +252,7 @@ export default function ProfilePage() {
 
           <div className="mt-8">
             <h2 className="text-2xl font-semibold mb-6 text-center">
-              Mis Propiedades Publicadas
-            </h2>
+              Propiedades            </h2>
             {filteredProperties.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {filteredProperties.map((property) => (

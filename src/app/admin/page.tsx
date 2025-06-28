@@ -62,17 +62,29 @@ export default function ReportedPropertiesPage() {
     fetchReported();
   }, [user, toast]);
 
-  const handleDelete = async (propertyId: string) => {
+  const handleDelete = async (propertyId: string, ownerId: number) => {
     const confirmDelete = window.confirm(
       "¿Estás seguro de que quieres eliminar esta propiedad?"
     );
     if (!confirmDelete) return;
 
     try {
+      if (!user || !user.email) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener el usuario autenticado.",
+          variant: "destructive",
+        });
+        return;
+      }
+      const userId = await getOwnerIdByEmail(user.email);
       const res = await fetch("/api/admin", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId }),
+        body: JSON.stringify({
+          propertyId: propertyId,
+          ownerId: ownerId, // <-- asegúrate que sea número
+        }),
       });
 
       if (!res.ok) {
@@ -118,6 +130,22 @@ export default function ReportedPropertiesPage() {
             {uniqueProperties.map((report) => (
               <div key={report.id} className="relative">
                 <PropertyCard property={report.property} />
+                <button
+                  className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded"
+                  onClick={() => {
+                    if (typeof report.property.ownerId === "number") {
+                      handleDelete(report.property.id, report.property.ownerId);
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: "El ID del propietario no está disponible.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                >
+                  Eliminar
+                </button>
               </div>
             ))}
           </div>
@@ -128,4 +156,16 @@ export default function ReportedPropertiesPage() {
       <Footer />
     </>
   );
+}
+async function getOwnerIdByEmail(email: string): Promise<number | null> {
+  try {
+    const res = await fetch(
+      `/api/user/by-email?email=${encodeURIComponent(email)}`
+    );
+    if (!res.ok) return null;
+    const user = await res.json();
+    return user.id ?? null;
+  } catch {
+    return null;
+  }
 }

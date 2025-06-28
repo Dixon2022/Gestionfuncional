@@ -74,7 +74,6 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: Request) {
   try {
     const { propertyId, ownerId } = await req.json();
-
     if (!propertyId || !ownerId) {
       return NextResponse.json(
         { error: 'Faltan datos para eliminar la propiedad.' },
