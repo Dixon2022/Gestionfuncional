@@ -87,7 +87,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
     }
   }, [user, property.id]);
 
-  const handleDelete = async (): Promise<{ success: boolean; message?: string }> => {
+  const handleDelete = async (): Promise<{
+    success: boolean;
+    message?: string;
+  }> => {
     if (!user) {
       toast({
         title: "No autenticado",
@@ -393,23 +396,25 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </Button>
             {(isOwner || user?.role === "admin") && (
               <>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  asChild
-                  aria-label="Editar propiedad"
-                  className={cn(
-                    "relative z-10",
-                    "bg-gradient-to-r from-indigo-400 via-sky-400 to-blue-500 text-white border-0 shadow-md",
-                    "hover:from-indigo-500 hover:via-sky-500 hover:to-blue-600 hover:scale-110",
-                    "transition-all duration-200"
-                  )}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Link href={`/properties/${property.id}/edit`}>
-                    <Pencil />
-                  </Link>
-                </Button>
+                {isOwner && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    asChild
+                    aria-label="Editar propiedad"
+                    className={cn(
+                      "relative z-10",
+                      "bg-gradient-to-r from-indigo-400 via-sky-400 to-blue-500 text-white border-0 shadow-md",
+                      "hover:from-indigo-500 hover:via-sky-500 hover:to-blue-600 hover:scale-110",
+                      "transition-all duration-200"
+                    )}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link href={`/properties/${property.id}/edit`}>
+                      <Pencil />
+                    </Link>
+                  </Button>
+                )}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
