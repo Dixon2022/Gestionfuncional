@@ -204,7 +204,7 @@ export default function EditPropertyPage() {
     if (
       !property ||
       !user ||
-      (Number(userId) !== Number(property.ownerId) && user.role !== 'admin')
+      (Number(userId) !== Number(property.ownerId))
     ) {
       toast({
         title: "Error de autorización",
