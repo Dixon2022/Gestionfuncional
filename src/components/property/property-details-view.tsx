@@ -7,6 +7,7 @@ import { ContactForm } from "./contact-form";
 import { PropertyComments } from "./comments";
 import { PropertyAvailabilityCalendar } from "./availability-calendar";
 import { AvailabilityManager } from "./availability-manager";
+import { AverageRating } from "@/components/ui/star-rating";
 import {
   BedDouble,
   Bath,
@@ -81,6 +82,7 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reports, setReports] = useState<any[]>([]);
+  const [propertyComments, setPropertyComments] = useState<any[]>([]);
   const { convert, symbol } = useCurrency();
   const [mainImgError, setMainImgError] = useState(false);
   const [thumbsError, setThumbsError] = useState<{ [key: number]: boolean }>(
@@ -123,6 +125,21 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
     }
     fetchReports();
   }, [propertyId, user]);
+
+  useEffect(() => {
+    async function fetchComments() {
+      try {
+        const res = await fetch(`/api/property/${propertyId}/comments`);
+        if (res.ok) {
+          const data = await res.json();
+          setPropertyComments(data);
+        }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    }
+    fetchComments();
+  }, [propertyId]);
 
   useEffect(() => {
     async function fetchSimilar() {
@@ -382,9 +399,19 @@ export function PropertyDetailsPage({ propertyId }: PropertyDetailsPageProps) {
 
             {/* Property Info Header */}
             <div className="mb-6 pb-4 border-b">
-              <h1 className="text-3xl md:text-4xl font-bold mb-2">
-                {property.title}
-              </h1>
+              <div className="flex items-start justify-between mb-2">
+                <h1 className="text-3xl md:text-4xl font-bold">
+                  {property.title}
+                </h1>
+                {propertyComments.length > 0 && (
+                  <div className="mt-1">
+                    <AverageRating 
+                      ratings={propertyComments.map((c: any) => c.rating).filter((rating: any): rating is number => rating !== null)} 
+                      size="md"
+                    />
+                  </div>
+                )}
+              </div>
 
               <div className="flex items-center text-muted-foreground mb-3">
                 <MapPin className="mr-2 h-5 w-5" />

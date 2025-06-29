@@ -186,8 +186,9 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
   const canDeleteComment = (comment: Comment) => {
     if (!user) return false;
     // Note: This is a UI-only check. The real authorization happens on the server
-    // We can't reliably compare IDs here due to the timestamp vs database ID issue
-    return user.role === 'admin' || comment.user.name === user.name;
+    // Compare using real user IDs for better security
+    const userIdNumber = parseInt(user.id);
+    return user.role === 'admin' || comment.user.id === userIdNumber;
   };
 
   if (loading) {

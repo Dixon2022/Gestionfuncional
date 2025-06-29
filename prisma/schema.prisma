@@ -127,5 +127,6 @@ model PropertyComment {
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
   comment    String
+  rating     Int?      // Rating from 1 to 5 stars
   createdAt  DateTime @default(now())
 }

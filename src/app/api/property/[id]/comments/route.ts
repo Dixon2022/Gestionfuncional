@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "../../../../../../lib/prisma";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/property/[id]/comments - Get all comments for a property
 export async function GET(_: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -43,11 +43,18 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
   try {
     const body = await req.json();
-    const { comment, userId } = body;
+    const { comment, rating, userId } = body;
 
     // Validate required fields
     if (!comment || !userId) {
       return NextResponse.json({ error: "Campos requeridos: comment, userId" }, { status: 400 });
+    }
+
+    // Validate rating if provided
+    if (rating !== undefined && rating !== null) {
+      if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+        return NextResponse.json({ error: "La calificación debe ser un número entre 1 y 5" }, { status: 400 });
+      }
     }
 
     // Convert userId to integer
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
 
     // Verify user exists and is not blocked
     const user = await prisma.user.findUnique({
-      where: { id: userIdInt },
+      where: { id: userId },
       select: { id: true, blocked: true },
     });
 
@@ -93,8 +100,9 @@ export async function POST(req: NextRequest, context: { params: Promise<{ id: st
     const newComment = await prisma.propertyComment.create({
       data: {
         propertyId,
-        userId: userIdInt,
+        userId,
         comment: comment.trim(),
+        ...(rating !== undefined && rating !== null && { rating }),
       },
       include: {
         user: {

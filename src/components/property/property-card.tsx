@@ -66,12 +66,25 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [favorites, setFavorites] = useState<Property[]>([]);
+  const [isOwner, setIsOwner] = useState(false);
 
   const displayArea = `${property.area.toLocaleString()} m²`;
   const isNew =
     property.createdAt &&
     Date.now() - property.createdAt < TWENTY_FOUR_HOURS_MS;
-  const isOwner = user && user.name === property.owner.name;
+
+  // Check ownership using real user ID
+  useEffect(() => {
+    const checkOwnership = async () => {
+      if (user?.email) {
+        const userId = await getOwnerIdByEmail(user.email);
+        setIsOwner(userId !== null && userId === property.ownerId);
+      } else {
+        setIsOwner(false);
+      }
+    };
+    checkOwnership();
+  }, [user, property.ownerId]);
 
   // Al cargar, consulta si la propiedad está en favoritos
   useEffect(() => {

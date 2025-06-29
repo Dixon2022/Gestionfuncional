@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { StarRating, AverageRating } from '@/components/ui/star-rating';
 import { MessageCircle, Send, Trash2 } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
 import { toast } from '@/hooks/use-toast';
@@ -14,6 +15,7 @@ interface PropertyCommentsProps {
 interface Comment {
   id: number;
   comment: string;
+  rating: number | null;
   createdAt: string;
   user: {
     id: number;
@@ -26,6 +28,7 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
+  const [newRating, setNewRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -67,8 +70,31 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
       return;
     }
 
+    if (newRating === 0) {
+      toast({
+        title: "Error",
+        description: "Por favor selecciona una calificación.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+      if (!userResponse.ok) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive",
+        });
+        setSubmitting(false);
+        return;
+      }
+      const userData = await userResponse.json();
+      const realUserId = userData.id;
+
       const response = await fetch(`/api/property/${propertyId}/comments`, {
         method: 'POST',
         headers: {
@@ -76,7 +102,8 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
         },
         body: JSON.stringify({
           comment: newComment.trim(),
-          userId: user.id,
+          rating: newRating,
+          userId: realUserId,
         }),
       });
 
@@ -84,6 +111,7 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
         const newCommentData = await response.json();
         setComments([newCommentData, ...comments]);
         setNewComment('');
+        setNewRating(0);
         toast({
           title: "Comentario publicado",
           description: "Tu comentario ha sido publicado exitosamente.",
@@ -115,6 +143,19 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
     }
 
     try {
+      // Get the real user ID from the database
+      const userResponse = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.email)}`);
+      if (!userResponse.ok) {
+        toast({
+          title: "Error",
+          description: "No se pudo obtener la información del usuario",
+          variant: "destructive",
+        });
+        return;
+      }
+      const userData = await userResponse.json();
+      const realUserId = userData.id;
+
       const response = await fetch(`/api/property/${propertyId}/comments`, {
         method: 'DELETE',
         headers: {
@@ -122,7 +163,7 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
         },
         body: JSON.stringify({
           commentId,
-          userId: user.id,
+          userId: realUserId,
         }),
       });
 
@@ -178,29 +219,51 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
   return (
     <Card className="mb-8">
       <CardHeader>
-        <CardTitle className="flex items-center">
-          <MessageCircle className="mr-2 h-5 w-5" />
-          Comentarios ({comments.length})
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center">
+            <MessageCircle className="mr-2 h-5 w-5" />
+            Comentarios ({comments.length})
+          </CardTitle>
+          {comments.length > 0 && (
+            <AverageRating 
+              ratings={comments.map(c => c.rating).filter((rating): rating is number => rating !== null)} 
+              size="sm"
+              showCount={false}
+            />
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Add Comment Form */}
         {user ? (
           <form onSubmit={handleSubmitComment} className="space-y-4">
-            <Textarea
-              placeholder="Comparte tu opinión sobre esta propiedad..."
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              className="min-h-[100px]"
-              maxLength={1000}
-            />
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Calificación
+                </label>
+                <StarRating 
+                  rating={newRating}
+                  onRatingChange={setNewRating}
+                  interactive={true}
+                  size="lg"
+                />
+              </div>
+              <Textarea
+                placeholder="Comparte tu opinión sobre esta propiedad..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="min-h-[100px]"
+                maxLength={1000}
+              />
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">
                 {newComment.length}/1000 caracteres
               </span>
               <Button 
                 type="submit" 
-                disabled={submitting || newComment.trim().length < 10}
+                disabled={submitting || newComment.trim().length < 10 || newRating === 0}
                 className="flex items-center"
               >
                 {submitting ? (
@@ -245,11 +308,18 @@ export function PropertyComments({ propertyId }: PropertyCommentsProps) {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <div>
+                      <div className="space-y-1">
                         <p className="font-semibold text-sm">{comment.user.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(comment.createdAt)}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          {comment.rating !== null ? (
+                            <StarRating rating={comment.rating} size="sm" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Sin calificación</span>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(comment.createdAt)}
+                          </p>
+                        </div>
                       </div>
                       {(Number(user?.id) === comment.user.id || user?.role === 'admin') && (
                         <Button

@@ -111,7 +111,16 @@ export default function EditPropertyPage() {
         return;
       }
 
-      if (fetchedProperty.owner.name !== user.name && user.role !== 'admin') {
+      // Get the real user ID from the database
+      const userId = await getOwnerIdByEmail(user.email);
+      if (!userId) {
+        toast({ title: "Error de autenticación", variant: "destructive" });
+        router.push('/login');
+        return;
+      }
+
+      // Check ownership using real user ID instead of name comparison
+      if (fetchedProperty.ownerId !== userId && user.role !== 'admin') {
         toast({
           title: "Acceso Denegado",
           description: "No tienes permiso para editar esta propiedad.",
@@ -200,15 +209,31 @@ export default function EditPropertyPage() {
   };
 
   const onSubmit = async (data: EditPropertyFormValues) => {
-    const userId = getOwnerIdByEmail(user?.email || '');
-    if (
-      !property ||
-      !user ||
-      (Number(userId) !== Number(property.ownerId))
-    ) {
+    if (!property || !user) {
       toast({
         title: "Error de autorización",
         description: "No puedes editar esta propiedad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Get the real user ID from the database
+    const userId = await getOwnerIdByEmail(user.email);
+    if (!userId) {
+      toast({
+        title: "Error de autenticación",
+        description: "No se pudo verificar tu identidad.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Verify ownership using real user IDs
+    if (property.ownerId !== userId && user.role !== 'admin') {
+      toast({
+        title: "Error de autorización",
+        description: "No tienes permiso para editar esta propiedad.",
         variant: "destructive",
       });
       return;
@@ -235,7 +260,12 @@ export default function EditPropertyPage() {
     try {
       // Elimina primero las imágenes que se van a borrar
       for (const imageId of imagesToDelete) {
-        await fetch(`/api/property/${property.id}/images/${imageId}`, { method: "DELETE" });
+        await fetch(`/api/property/${property.id}/images/${imageId}`, { 
+          method: "DELETE",
+          headers: {
+            'X-User-Id': userId.toString()
+          }
+        });
       }
 
       // Encuentra las imágenes nuevas (base64)
@@ -247,13 +277,16 @@ export default function EditPropertyPage() {
       if (newImages.length > 0) {
         await fetch(`/api/property/${property.id}/images`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            'X-User-Id': userId.toString()
+          },
           body: JSON.stringify({ images: newImages }),
         });
       }
 
       await new Promise(resolve => setTimeout(resolve, 1000));
-      const success = await updateProperty(property.id, updatedPropertyData, user.id);
+      const success = await updateProperty(property.id, updatedPropertyData, userId.toString());
       if (success) {
         toast({
           title: '¡Propiedad Actualizada!',
